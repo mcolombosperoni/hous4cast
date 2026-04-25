@@ -1,2 +1,45 @@
 # hous4cast
-A web application to create a customizable website for hose estimation based on local regulations and values
+
+Config-driven property estimation web app delivered through QR codes.
+
+## Stack
+- Vite + React + TypeScript (strict)
+- Tailwind CSS (mobile-first)
+- React Router (hash mode for GitHub Pages)
+- Vitest + Testing Library
+- Playwright (Chromium, Firefox, WebKit)
+
+## Local setup
+```bash
+pnpm install
+pnpm dev
+```
+
+## Quality checks
+```bash
+pnpm lint
+pnpm type-check
+pnpm test:run
+pnpm build
+pnpm test:e2e
+```
+
+## Release flow
+1. Push incremental work.
+2. CI validates lint, type-check, tests, build.
+3. Demo and approval happen outside CI.
+4. Create and push tag `release/*` only after approval.
+5. Tag-triggered workflow publishes GitHub Pages.
+
+## Environment
+Create `.env` from `.env.example`.
+
+```bash
+cp .env.example .env
+```
+
+- `VITE_BASE_PATH`: base path used by Vite build.
+- `VITE_PUBLIC_BASE_URL`: public URL used for QR generation.
+
+## Notes
+Project planning and decision records are maintained in `docs/`.
