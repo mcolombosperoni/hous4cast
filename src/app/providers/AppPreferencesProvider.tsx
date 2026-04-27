@@ -32,14 +32,32 @@ const normalizeNavigatorLocale = (value: string | undefined): SupportedLocale | 
   return null
 }
 
+const getHashQueryParams = (): URLSearchParams => {
+  const queryIndex = window.location.hash.indexOf('?')
+  if (queryIndex === -1) {
+    return new URLSearchParams()
+  }
+
+  return new URLSearchParams(window.location.hash.slice(queryIndex + 1))
+}
+
+const getQueryParam = (key: string): string | null => {
+  const searchParams = new URLSearchParams(window.location.search)
+  const fromSearch = searchParams.get(key)
+  if (fromSearch !== null) {
+    return fromSearch
+  }
+
+  return getHashQueryParams().get(key)
+}
+
 const resolveInitialLocale = (): SupportedLocale => {
-  const params = new URLSearchParams(window.location.search)
-  const langParam = params.get('lang')
+  const langParam = getQueryParam('lang')
   if (langParam === 'it' || langParam === 'en') {
     return langParam
   }
 
-  const defaultLocaleParam = params.get('dl')
+  const defaultLocaleParam = getQueryParam('dl')
   if (defaultLocaleParam === 'it' || defaultLocaleParam === 'en') {
     return defaultLocaleParam
   }

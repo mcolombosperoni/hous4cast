@@ -55,6 +55,22 @@ describe('AppPreferencesProvider', () => {
     expect(screen.getByTestId('locale')).toHaveTextContent('it')
   })
 
+  it('uses dl from hash query when search params are missing', () => {
+    window.history.replaceState(null, '', '/#/estimate/gabetti-busto-arsizio?dl=it')
+
+    renderProvider()
+
+    expect(screen.getByTestId('locale')).toHaveTextContent('it')
+  })
+
+  it('uses lang from hash query when search params are missing', () => {
+    window.history.replaceState(null, '', '/#/admin?lang=it')
+
+    renderProvider()
+
+    expect(screen.getByTestId('locale')).toHaveTextContent('it')
+  })
+
   it('uses stored locale when URL parameters are missing', () => {
     window.localStorage.setItem('preferredLocale', 'it')
 
