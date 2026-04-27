@@ -3,6 +3,7 @@ import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 
 export const HomePage = () => {
   const { locale } = useAppPreferences()
+  const deployedVersion = import.meta.env.VITE_APP_VERSION ?? '0.0.0'
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
@@ -28,6 +29,10 @@ export const HomePage = () => {
             : 'Estimate preview and QR generation start from Admin, based on the selected configuration.'}
         </p>
       </section>
+
+      <footer className="mt-auto pt-6 text-center text-xs text-slate-500 dark:text-slate-400">
+        {locale === 'it' ? 'Versione' : 'Version'}: v{deployedVersion}
+      </footer>
     </main>
   )
 }

@@ -34,6 +34,7 @@ describe('HomePage', () => {
       ),
     ).toBeInTheDocument()
     expect(screen.queryByText('Apri pagina stima')).not.toBeInTheDocument()
+    expect(screen.getByText(/Versione:\s*v\d+\.\d+\.\d+/)).toBeInTheDocument()
   })
 
   it('routes users to admin for configuration preview flow in english', () => {
@@ -48,6 +49,7 @@ describe('HomePage', () => {
         'Estimate preview and QR generation start from Admin, based on the selected configuration.',
       ),
     ).toBeInTheDocument()
+    expect(screen.getByText(/Version:\s*v\d+\.\d+\.\d+/)).toBeInTheDocument()
   })
 })
 
