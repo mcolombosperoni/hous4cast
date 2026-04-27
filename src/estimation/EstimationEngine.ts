@@ -1,12 +1,15 @@
 import type { AgencyConfig, EstimateInput, EstimateResult } from '../configs/types'
 
 export class EstimationEngineError extends Error {
+  readonly code: 'ZONE_NOT_FOUND' | 'TYPE_NOT_SUPPORTED' | 'SQM_OUT_OF_RANGE'
+
   constructor(
     message: string,
-    public readonly code: 'ZONE_NOT_FOUND' | 'TYPE_NOT_SUPPORTED' | 'SQM_OUT_OF_RANGE',
+    code: 'ZONE_NOT_FOUND' | 'TYPE_NOT_SUPPORTED' | 'SQM_OUT_OF_RANGE',
   ) {
     super(message)
     this.name = 'EstimationEngineError'
+    this.code = code
   }
 }
 

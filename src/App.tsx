@@ -14,6 +14,11 @@ const localeLabel: Record<SupportedLocale, string> = {
   en: 'EN',
 }
 
+const themeToggleLabel: Record<SupportedLocale, { toDark: string; toLight: string }> = {
+  it: { toDark: 'Scuro', toLight: 'Chiaro' },
+  en: { toDark: 'Dark', toLight: 'Light' },
+}
+
 const TopBar = () => {
   const { locale, setLocale, theme, toggleTheme } = useAppPreferences()
 
@@ -45,7 +50,7 @@ const TopBar = () => {
             onClick={toggleTheme}
             type="button"
           >
-            {theme === 'light' ? 'Dark' : 'Light'}
+            {theme === 'light' ? themeToggleLabel[locale].toDark : themeToggleLabel[locale].toLight}
           </button>
         </div>
       </div>
