@@ -28,7 +28,8 @@
 | T19 | Implement admin config list (`/admin`) | done | Render registry entries with IT/EN copy, multi-config coverage, and metadata tests |
 | T20 | Add QR generation for selected config | done | QR payload with `dl` locale hint, locale switcher in admin box, preview link with dl |
 | T21 | Add printable QR view | done | Route `/admin/qr/:configId?dl=`, print-friendly layout, Print button, fallback 404 |
-| T22 | Expand acceptance coverage for admin multi-config flow | developed | Playwright: selection state, preview link with `dl`, print QR page opening, hash-query locale regression |
+| T22 | Expand acceptance coverage for admin multi-config flow | done | Playwright: selection state, preview link with `dl`, print QR page opening, hash-query locale regression |
+| T23 | Add acceptance fallback coverage for invalid config routes | developed | Playwright: invalid estimate config and invalid print-QR config fallback |
 
 ## Waiting Approval
 - None

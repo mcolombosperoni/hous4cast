@@ -35,4 +35,19 @@ test('admin print qr link opens printable page for selected config', async ({ pa
   await expect(printPage.locator('svg')).toBeVisible()
 })
 
+test('estimate page shows fallback when configId is invalid', async ({ page }) => {
+  await page.goto('/?lang=en#/estimate/unknown-agency')
+
+  await expect(page.getByRole('heading', { name: 'Configuration not found' })).toBeVisible()
+  await expect(page.getByText('No agency matches the identifier "unknown-agency".')).toBeVisible()
+})
+
+test('print qr page shows fallback and no qr when configId is invalid', async ({ page }) => {
+  await page.goto('/#/admin/qr/unknown-agency?dl=en')
+
+  await expect(page.getByText('Configuration not found.')).toBeVisible()
+  await expect(page.locator('svg')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Print' })).toHaveCount(0)
+})
+
 
