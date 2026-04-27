@@ -11,6 +11,24 @@ if (!allowed.has(releaseType)) {
 }
 
 const run = (command) => execSync(command, { stdio: 'inherit' })
+const runOutput = (command) => execSync(command, { encoding: 'utf-8' }).trim()
+
+const bumpVersion = (version, type) => {
+  const [major, minor, patch] = version.split('.').map((part) => Number.parseInt(part, 10))
+  if ([major, minor, patch].some((value) => Number.isNaN(value))) {
+    throw new Error(`Invalid semver version: ${version}`)
+  }
+
+  if (type === 'major') {
+    return `${major + 1}.0.0`
+  }
+  if (type === 'minor') {
+    return `${major}.${minor + 1}.0`
+  }
+  return `${major}.${minor}.${patch + 1}`
+}
+
+const tagExists = (tag) => runOutput(`git tag -l ${tag}`) === tag
 
 const status = execSync('git status --porcelain', { encoding: 'utf-8' }).trim()
 if (status.length > 0) {
@@ -24,11 +42,16 @@ if (branch !== 'main') {
   process.exit(1)
 }
 
-run(`pnpm version ${releaseType} --no-git-tag-version`)
-
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'))
-const version = packageJson.version
-const tag = `release/v${version}`
+let version = bumpVersion(packageJson.version, releaseType)
+let tag = `release/v${version}`
+
+while (tagExists(tag)) {
+  version = bumpVersion(version, releaseType)
+  tag = `release/v${version}`
+}
+
+run(`pnpm version ${version} --no-git-tag-version`)
 
 run('git add package.json')
 run(`git commit -m "chore(release): v${version}"`)
