@@ -47,6 +47,14 @@
 - Expanded acceptance scenarios and multibrowser checks.
 - Bugfixing and release candidate stabilization.
 
+### Push F - Release automation
+- Automated release command (`pnpm release:patch|minor|major`).
+- Package version as source of truth and tag/version guardrail in CD.
+
+### Push G - Admin sharing UX
+- Copy-to-clipboard action for generated estimate link in Admin.
+- Localized success/error feedback and related unit/e2e coverage.
+
 ## Language Resolution Policy
 Order of precedence:
 1. `lang` query parameter

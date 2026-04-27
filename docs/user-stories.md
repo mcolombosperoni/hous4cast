@@ -38,3 +38,10 @@ Acceptance criteria:
 - `/admin` lists available configs.
 - QR includes `dl` default locale hint.
 
+### US-06 - Copy shareable estimate link from admin
+As a sales agent, I want to copy the generated estimate link from admin, so that I can quickly share it without printing a QR.
+
+Acceptance criteria:
+- Admin page exposes a copy action for the selected config URL.
+- User receives localized feedback when copy succeeds or is unavailable.
+

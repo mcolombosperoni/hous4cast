@@ -2,7 +2,7 @@
 
 ## Current Increment
 - Name: Push G - Admin sharing UX
-- Status: `waiting-approval`
+- Status: `done`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -36,7 +36,7 @@
 | T27 | Add copy QR link action in admin | done | Copy-to-clipboard CTA with localized feedback and test coverage |
 
 ## Waiting Approval
-- Push G — waiting for explicit approval before continuing
+- None
 
 ## Done
 - Push A — Foundation and CI/CD guardrails
@@ -45,7 +45,7 @@
 - Push D — Admin and QR
 - Push E — Hardening
 - Push F — Release automation
-- Push F — Release automation
+- Push G — Admin sharing UX
 
 ## Wont-Do
 - None
