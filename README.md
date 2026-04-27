@@ -28,8 +28,17 @@ pnpm test:e2e
 1. Push incremental work.
 2. CI validates lint, type-check, tests, build.
 3. Demo and approval happen outside CI.
-4. Create and push tag `release/*` only after approval.
-5. Tag-triggered workflow publishes GitHub Pages.
+4. Run one release command after approval:
+
+```bash
+pnpm release:patch
+# or
+pnpm release:minor
+pnpm release:major
+```
+
+5. The command bumps `package.json`, commits, tags `release/vX.Y.Z`, and pushes `main` + tag.
+6. Tag-triggered workflow publishes GitHub Pages.
 
 ## Environment
 Create `.env` from `.env.example`.
@@ -40,6 +49,7 @@ cp .env.example .env
 
 - `VITE_BASE_PATH`: base path used by Vite build.
 - `VITE_PUBLIC_BASE_URL`: public URL used for QR generation.
+- `VITE_APP_VERSION`: injected at build-time from `package.json` version.
 
 ## Notes
 Project planning and decision records are maintained in `docs/`.

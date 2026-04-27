@@ -50,6 +50,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify release tag matches package version
+        run: pnpm release:verify-tag
+
       - name: Lint
         run: pnpm lint
 

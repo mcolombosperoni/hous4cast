@@ -1,8 +1,8 @@
 # Task Board
 
 ## Current Increment
-- Name: Push E - Hardening
-- Status: `done`
+- Name: Push F - Release automation
+- Status: `developed`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -32,6 +32,7 @@
 | T23 | Add acceptance fallback coverage for invalid config routes | done | Playwright: invalid estimate config and invalid print-QR config fallback |
 | T24 | Add e2e regression coverage for lang/dl precedence in hash routing | done | Playwright: `lang` precedence over `dl` across search/hash query combinations |
 | T25 | Add e2e persistence coverage for locale/theme preferences | done | Playwright: locale + theme persist across route changes and reload |
+| T26 | Automate release command and enforce tag/version consistency | developed | Add `release:*` scripts and CI check `release/vX.Y.Z` == `package.json` version |
 
 ## Waiting Approval
 - None

@@ -11,7 +11,11 @@
     "test": "vitest",
     "test:run": "vitest --run",
     "test:e2e": "playwright test",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major",
+    "release:verify-tag": "node scripts/verify-release-tag.mjs"
   },
   "dependencies": {
     "qrcode.react": "^4.2.0",
