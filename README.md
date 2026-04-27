@@ -25,7 +25,7 @@ pnpm test:e2e
 ```
 
 ## Release flow
-1. Push incremental work.
+1. Deliver incremental work by epic.
 2. CI validates lint, type-check, tests, build.
 3. Demo and approval happen outside CI.
 4. Run one release command after approval:

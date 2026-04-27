@@ -1,7 +1,7 @@
 # Task Board
 
 ## Current Increment
-- Name: Push G - Admin sharing UX
+- Name: Epic G - Admin sharing UX
 - Status: `done`
 
 ## Tasks
@@ -39,13 +39,13 @@
 - None
 
 ## Done
-- Push A — Foundation and CI/CD guardrails
-- Push B — First estimator slice
-- Push C — UX baseline
-- Push D — Admin and QR
-- Push E — Hardening
-- Push F — Release automation
-- Push G — Admin sharing UX
+- Epic A — Foundation and CI/CD guardrails
+- Epic B — First estimator slice
+- Epic C — UX baseline
+- Epic D — Admin and QR
+- Epic E — Hardening
+- Epic F — Release automation
+- Epic G — Admin sharing UX
 
 ## Wont-Do
 - None

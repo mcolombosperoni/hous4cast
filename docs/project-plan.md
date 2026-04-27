@@ -7,7 +7,7 @@
 
 ## Working Agreement
 - Task statuses: `todo`, `in-progress`, `developed`, `waiting-approval`, `done`, `wont-do`.
-- Push only when an increment is complete and validated.
+- Advance to the next epic only when the current increment is complete and validated.
 - After each push, stop execution and wait for explicit approval to continue.
 - Publish GitHub Pages only from an approved release tag (`release/*`).
 - Create releases via `pnpm release:patch|minor|major` (bump, commit, tag, push).
@@ -22,36 +22,36 @@
 
 ## Increment Checkpoints
 
-### Push A - Foundation and CI/CD guardrails
+### Epic A - Foundation and CI/CD guardrails
 - Governance docs and ADRs in `docs/`.
 - Vite + React + TypeScript + Tailwind baseline.
 - Test stack wiring (Vitest + Playwright smoke).
 - CI workflow (test-only on push/PR).
 - Release workflow (publish only on approved release tags).
 
-### Push B - First estimator slice
+### Epic B - First estimator slice
 - Config registry + typed config model.
 - Estimation engine class + tests.
 - Public route `/#/estimate/:configId` with submit and inline result.
 
-### Push C - UX baseline
+### Epic C - UX baseline
 - i18n switch (IT/EN) with URL + storage resolution.
 - Dark mode + mobile-first UI pass.
 
-### Push D - Admin and QR
+### Epic D - Admin and QR
 - `/admin` config list.
 - QR generation with default locale hint.
 - Printable QR page.
 
-### Push E - Hardening
+### Epic E - Hardening
 - Expanded acceptance scenarios and multibrowser checks.
 - Bugfixing and release candidate stabilization.
 
-### Push F - Release automation
+### Epic F - Release automation
 - Automated release command (`pnpm release:patch|minor|major`).
 - Package version as source of truth and tag/version guardrail in CD.
 
-### Push G - Admin sharing UX
+### Epic G - Admin sharing UX
 - Copy-to-clipboard action for generated estimate link in Admin.
 - Localized success/error feedback and related unit/e2e coverage.
 
