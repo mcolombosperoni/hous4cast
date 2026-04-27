@@ -76,7 +76,7 @@ describe('AdminPage', () => {
     expect(screen.getByText('Selected configuration')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Open estimate preview' })).toHaveAttribute(
       'href',
-      '/estimate/gabetti-busto-arsizio',
+      '/estimate/gabetti-busto-arsizio?dl=en',
     )
     expect(screen.getByRole('button', { name: /gabetti busto arsizio/i })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /example agency milano/i })).toHaveAttribute('aria-pressed', 'false')
@@ -91,10 +91,44 @@ describe('AdminPage', () => {
 
     expect(screen.getByRole('link', { name: 'Open estimate preview' })).toHaveAttribute(
       'href',
-      '/estimate/gabetti-busto-arsizio',
+      '/estimate/gabetti-busto-arsizio?dl=en',
     )
     expect(screen.getByRole('button', { name: /gabetti busto arsizio/i })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: /example agency milano/i })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('shows QR code after selecting a config', async () => {
+    const user = userEvent.setup()
+    renderAdminPage('en')
+
+    await user.click(screen.getByRole('button', { name: /gabetti busto arsizio/i }))
+
+    expect(screen.getByTestId('qr-code')).toBeInTheDocument()
+  })
+
+  it('changes qr dl locale and updates preview link accordingly', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState(null, '', '/?lang=en#/admin')
+
+    render(
+      <MemoryRouter>
+        <AppPreferencesProvider>
+          <AdminPage />
+        </AppPreferencesProvider>
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /gabetti busto arsizio/i }))
+    expect(screen.getByRole('link', { name: 'Open estimate preview' })).toHaveAttribute(
+      'href',
+      '/estimate/gabetti-busto-arsizio?dl=en',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'IT', hidden: false }))
+    expect(screen.getByRole('link', { name: 'Open estimate preview' })).toHaveAttribute(
+      'href',
+      '/estimate/gabetti-busto-arsizio?dl=it',
+    )
   })
 })
 
