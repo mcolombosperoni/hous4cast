@@ -8,6 +8,7 @@ import { AdminPage } from './pages/AdminPage'
 import { EstimatePage } from './pages/EstimatePage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { QrPrintPage } from './pages/QrPrintPage'
 
 const localeLabel: Record<SupportedLocale, string> = {
   it: 'IT',
@@ -88,6 +89,7 @@ const AppRoutes = () => {
       <Route element={<HomePage />} path="/" />
       <Route element={<EstimatePage />} path="/estimate/:configId" />
       <Route element={<AdminPage />} path="/admin" />
+      <Route element={<QrPrintPage />} path="/admin/qr/:configId" />
       <Route element={<NotFoundPage />} path="*" />
     </Routes>
   )

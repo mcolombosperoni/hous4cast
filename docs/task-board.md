@@ -2,7 +2,7 @@
 
 ## Current Increment
 - Name: Push D - Admin and QR
-- Status: `in-progress`
+- Status: `waiting-approval`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -27,10 +27,10 @@
 | T18 | Complete UX baseline (language switch + dark mode polish) | done | Shell copy localized, topbar accessibility improved, locale/theme behavior covered by tests |
 | T19 | Implement admin config list (`/admin`) | done | Render registry entries with IT/EN copy, multi-config coverage, and metadata tests |
 | T20 | Add QR generation for selected config | done | QR payload with `dl` locale hint, locale switcher in admin box, preview link with dl |
-| T21 | Add printable QR view | todo | Print-friendly layout from selected config |
+| T21 | Add printable QR view | done | Route `/admin/qr/:configId?dl=`, print-friendly layout, Print button, fallback 404 |
 
 ## Waiting Approval
-- None
+- Push D — waiting for explicit approval before continuing
 
 ## Done
 - Push A — Foundation and CI/CD guardrails
