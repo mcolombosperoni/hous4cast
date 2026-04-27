@@ -13,5 +13,5 @@
 - [0005 - Result view inline after submit](0005-result-view-inline-after-submit.md) - accepted
 - [0006 - Testing strategy: Vitest + Playwright](0006-testing-strategy-vitest-playwright.md) - accepted
 - [0007 - Dark mode and mobile-first](0007-dark-mode-mobile-first.md) - accepted
-- [0008 - Release only by approval tag](0008-release-by-approval-tag.md) - accepted
+- [0008 - Release only by approval tag](0008-release-by-approval-tag.md) - accepted (automated `release:*`, tag/version guardrail)
 

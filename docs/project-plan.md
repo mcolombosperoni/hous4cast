@@ -10,6 +10,8 @@
 - Push only when an increment is complete and validated.
 - After each push, stop execution and wait for explicit approval to continue.
 - Publish GitHub Pages only from an approved release tag (`release/*`).
+- Create releases via `pnpm release:patch|minor|major` (bump, commit, tag, push).
+- Enforce `release/vX.Y.Z` == `package.json` version in the tag-based CD workflow.
 
 ## Quality Gates (required before increment push)
 1. `pnpm lint`
