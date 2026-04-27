@@ -2,7 +2,7 @@
 
 ## Current Increment
 - Name: Push C - UX baseline
-- Status: `in-progress`
+- Status: `waiting-approval`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -23,11 +23,11 @@
 | T14 | Unit tests for EstimationEngine | done | 7 test cases: nominal, zone not found, type not supported, sqm boundaries |
 | T15 | EstimateForm + EstimateResult components | done | Fully i18n-aware (IT/EN), Tailwind dark-mode styled |
 | T16 | Rewrite EstimatePage with form + inline result | done | Resolves configId via registry, 404-inline if missing |
-| T17 | Implement locale resolver order (`lang`/`dl`/storage/browser/fallback) | in-progress | Start Push C: align app preference bootstrap with ADR-0003 |
-| T18 | Complete UX baseline (language switch + dark mode polish) | todo | Finish IT/EN toggle persistence and mobile-first pass |
+| T17 | Implement locale resolver order (`lang`/`dl`/storage/browser/fallback) | done | Bootstrap aligned with ADR-0003 and covered by provider tests |
+| T18 | Complete UX baseline (language switch + dark mode polish) | done | Shell copy localized, topbar accessibility improved, locale/theme behavior covered by tests |
 
 ## Waiting Approval
-- None
+- Push C — waiting for explicit approval before continuing
 
 ## Done
 - Push A — Foundation and CI/CD guardrails

@@ -14,9 +14,24 @@ const localeLabel: Record<SupportedLocale, string> = {
   en: 'EN',
 }
 
+const localeButtonAriaLabel: Record<SupportedLocale, string> = {
+  it: 'Italiano',
+  en: 'English',
+}
+
 const themeToggleLabel: Record<SupportedLocale, { toDark: string; toLight: string }> = {
   it: { toDark: 'Scuro', toLight: 'Chiaro' },
   en: { toDark: 'Dark', toLight: 'Light' },
+}
+
+const localeGroupLabel: Record<SupportedLocale, string> = {
+  it: 'Selettore lingua',
+  en: 'Language selector',
+}
+
+const themeToggleAriaLabel: Record<SupportedLocale, { toDark: string; toLight: string }> = {
+  it: { toDark: 'Passa al tema scuro', toLight: 'Passa al tema chiaro' },
+  en: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
 }
 
 const TopBar = () => {
@@ -29,11 +44,17 @@ const TopBar = () => {
           hous4cast
         </Link>
         <div className="flex items-center gap-2">
-          <div className="rounded-lg border border-slate-300 p-1 dark:border-slate-700">
+          <div
+            aria-label={localeGroupLabel[locale]}
+            className="rounded-lg border border-slate-300 p-1 dark:border-slate-700"
+            role="group"
+          >
             {(['it', 'en'] as const).map((value) => (
               <button
+                aria-pressed={locale === value}
+                aria-label={localeButtonAriaLabel[value]}
                 key={value}
-                className={`rounded px-2 py-1 text-xs font-medium transition ${
+                className={`rounded px-2 py-1 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:focus-visible:ring-slate-300 ${
                   locale === value
                     ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
                     : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
@@ -46,7 +67,10 @@ const TopBar = () => {
             ))}
           </div>
           <button
-            className="rounded-lg border border-slate-300 px-3 py-1 text-xs text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            aria-label={
+              theme === 'light' ? themeToggleAriaLabel[locale].toDark : themeToggleAriaLabel[locale].toLight
+            }
+            className="rounded-lg border border-slate-300 px-3 py-1 text-xs text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-300"
             onClick={toggleTheme}
             type="button"
           >
