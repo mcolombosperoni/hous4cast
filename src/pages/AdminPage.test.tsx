@@ -20,6 +20,12 @@ describe('AdminPage', () => {
   beforeEach(() => {
     window.localStorage.clear()
     window.history.replaceState(null, '', '/#/')
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    })
   })
 
   it('renders italian copy and config metadata', () => {
@@ -129,6 +135,20 @@ describe('AdminPage', () => {
       'href',
       '/estimate/gabetti-busto-arsizio?dl=it',
     )
+  })
+
+  it('copies selected qr link and shows success feedback', async () => {
+    const user = userEvent.setup()
+    const writeTextSpy = vi.spyOn(window.navigator.clipboard, 'writeText').mockResolvedValue(undefined)
+    renderAdminPage('en')
+
+    await user.click(screen.getByRole('button', { name: /gabetti busto arsizio/i }))
+    await user.click(screen.getByRole('button', { name: 'Copy link' }))
+
+    expect(writeTextSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/#/estimate/gabetti-busto-arsizio?dl=en'),
+    )
+    expect(screen.getByText('Link copied to clipboard.')).toBeInTheDocument()
   })
 })
 

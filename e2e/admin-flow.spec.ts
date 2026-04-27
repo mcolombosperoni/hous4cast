@@ -17,6 +17,7 @@ test('admin flow supports config selection and preview link with dl', async ({ p
   const dlSection = page.locator('section').filter({ hasText: 'QR default locale (dl)' })
   await dlSection.getByRole('button', { name: 'IT' }).click()
   await expect(previewLink).toHaveAttribute('href', '#/estimate/gabetti-busto-arsizio?dl=it')
+  await expect(page.getByRole('button', { name: /copy link|copia link/i })).toBeVisible()
 })
 
 test('admin print qr link opens printable page for selected config', async ({ page, context }) => {

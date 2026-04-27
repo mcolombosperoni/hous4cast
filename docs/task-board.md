@@ -1,8 +1,8 @@
 # Task Board
 
 ## Current Increment
-- Name: Push F - Release automation
-- Status: `done`
+- Name: Push G - Admin sharing UX
+- Status: `waiting-approval`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -33,9 +33,10 @@
 | T24 | Add e2e regression coverage for lang/dl precedence in hash routing | done | Playwright: `lang` precedence over `dl` across search/hash query combinations |
 | T25 | Add e2e persistence coverage for locale/theme preferences | done | Playwright: locale + theme persist across route changes and reload |
 | T26 | Automate release command and enforce tag/version consistency | done | Add `release:*` scripts and CI check `release/vX.Y.Z` == `package.json` version |
+| T27 | Add copy QR link action in admin | done | Copy-to-clipboard CTA with localized feedback and test coverage |
 
 ## Waiting Approval
-- None
+- Push G — waiting for explicit approval before continuing
 
 ## Done
 - Push A — Foundation and CI/CD guardrails
@@ -43,6 +44,7 @@
 - Push C — UX baseline
 - Push D — Admin and QR
 - Push E — Hardening
+- Push F — Release automation
 - Push F — Release automation
 
 ## Wont-Do

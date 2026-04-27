@@ -15,9 +15,29 @@ export const AdminPage = () => {
   const configs = getAllConfigs().toSorted((a, b) => a.agencyName.localeCompare(b.agencyName))
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null)
   const [qrLocale, setQrLocale] = useState<SupportedLocale>(locale)
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const selectedConfig = configs.find((config) => config.id === selectedConfigId) ?? null
   const publicBase = (import.meta.env.VITE_PUBLIC_BASE_URL as string | undefined) ?? window.location.origin
   const qrUrl = selectedConfig ? buildQrUrl(selectedConfig.id, qrLocale, publicBase) : ''
+
+  const handleSelectConfig = (configId: string) => {
+    setSelectedConfigId(configId)
+    setCopyStatus('idle')
+  }
+
+  const handleCopyQrUrl = async () => {
+    if (!qrUrl || !navigator.clipboard?.writeText) {
+      setCopyStatus('error')
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(qrUrl)
+      setCopyStatus('success')
+    } catch {
+      setCopyStatus('error')
+    }
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
@@ -52,7 +72,7 @@ export const AdminPage = () => {
                       ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
                       : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-500'
                   }`}
-                  onClick={() => setSelectedConfigId(config.id)}
+                  onClick={() => handleSelectConfig(config.id)}
                   type="button"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -97,7 +117,10 @@ export const AdminPage = () => {
                         : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                     key={value}
-                    onClick={() => setQrLocale(value)}
+                    onClick={() => {
+                      setQrLocale(value)
+                      setCopyStatus('idle')
+                    }}
                     type="button"
                   >
                     {value.toUpperCase()}
@@ -127,7 +150,26 @@ export const AdminPage = () => {
                   >
                     {locale === 'it' ? 'Stampa QR' : 'Print QR'}
                   </Link>
+                  <button
+                    className="inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    onClick={handleCopyQrUrl}
+                    type="button"
+                  >
+                    {locale === 'it' ? 'Copia link' : 'Copy link'}
+                  </button>
                 </div>
+                {copyStatus === 'success' && (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                    {locale === 'it' ? 'Link copiato negli appunti.' : 'Link copied to clipboard.'}
+                  </p>
+                )}
+                {copyStatus === 'error' && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    {locale === 'it'
+                      ? 'Copia non disponibile su questo browser.'
+                      : 'Copy is not available on this browser.'}
+                  </p>
+                )}
               </div>
             </div>
           </section>
