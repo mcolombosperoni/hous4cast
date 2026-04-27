@@ -1,7 +1,9 @@
+import { exampleAgencyMilanoConfig } from './example-agency-milano'
 import { gabettiBustoArsizioConfig } from './gabetti-busto-arsizio'
 import type { AgencyConfig } from './types'
 
 const registry: Record<string, AgencyConfig> = {
+  [exampleAgencyMilanoConfig.id]: exampleAgencyMilanoConfig,
   [gabettiBustoArsizioConfig.id]: gabettiBustoArsizioConfig,
 }
 
