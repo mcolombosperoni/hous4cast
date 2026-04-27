@@ -2,7 +2,7 @@
 
 ## Current Increment
 - Name: Push E - Hardening
-- Status: `in-progress`
+- Status: `waiting-approval`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -29,10 +29,10 @@
 | T20 | Add QR generation for selected config | done | QR payload with `dl` locale hint, locale switcher in admin box, preview link with dl |
 | T21 | Add printable QR view | done | Route `/admin/qr/:configId?dl=`, print-friendly layout, Print button, fallback 404 |
 | T22 | Expand acceptance coverage for admin multi-config flow | done | Playwright: selection state, preview link with `dl`, print QR page opening, hash-query locale regression |
-| T23 | Add acceptance fallback coverage for invalid config routes | developed | Playwright: invalid estimate config and invalid print-QR config fallback |
+| T23 | Add acceptance fallback coverage for invalid config routes | done | Playwright: invalid estimate config and invalid print-QR config fallback |
 
 ## Waiting Approval
-- None
+- Push E — waiting for explicit approval before continuing
 
 ## Done
 - Push A — Foundation and CI/CD guardrails
