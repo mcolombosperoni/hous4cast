@@ -1,4 +1,6 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { AppPreferencesProvider } from '../app/providers/AppPreferencesProvider'
 import { AdminPage } from './AdminPage'
 
@@ -6,9 +8,11 @@ const renderAdminPage = (locale: 'it' | 'en') => {
   window.history.replaceState(null, '', `/?lang=${locale}#/admin`)
 
   return render(
-    <AppPreferencesProvider>
-      <AdminPage />
-    </AppPreferencesProvider>,
+    <MemoryRouter>
+      <AppPreferencesProvider>
+        <AdminPage />
+      </AppPreferencesProvider>
+    </MemoryRouter>,
   )
 }
 
@@ -44,15 +48,53 @@ describe('AdminPage', () => {
     expect(screen.getByText('Zones: 3 - Property types: 3')).toBeInTheDocument()
   })
 
+  it('starts with no config selected and no preview box visible', () => {
+    renderAdminPage('en')
+
+    expect(screen.queryByText('Selected configuration')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Open estimate preview' })).not.toBeInTheDocument()
+    const buttons = screen.getAllByRole('button')
+    buttons.forEach((btn) => expect(btn).toHaveAttribute('aria-pressed', 'false'))
+  })
+
   it('renders configs sorted by agency name', () => {
     renderAdminPage('en')
 
-    const agencyNames = screen
-      .getAllByRole('listitem')
-      .map((item) => item.querySelector('p')?.textContent)
-      .filter((value): value is string => Boolean(value))
+    const cardButtons = screen.getAllByRole('button')
+    const agencyNames = cardButtons.map((btn) => btn.querySelector('p')?.textContent)
 
-    expect(agencyNames).toEqual(['Example Agency Milano', 'Gabetti Busto Arsizio'])
+    expect(agencyNames[0]).toBe('Example Agency Milano')
+    expect(agencyNames[1]).toBe('Gabetti Busto Arsizio')
+  })
+
+  it('selects a config on click and shows preview link', async () => {
+    const user = userEvent.setup()
+    renderAdminPage('en')
+
+    await user.click(screen.getByRole('button', { name: /gabetti busto arsizio/i }))
+
+    expect(screen.getByText('Selected configuration')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open estimate preview' })).toHaveAttribute(
+      'href',
+      '/estimate/gabetti-busto-arsizio',
+    )
+    expect(screen.getByRole('button', { name: /gabetti busto arsizio/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /example agency milano/i })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('switches selection and updates preview link', async () => {
+    const user = userEvent.setup()
+    renderAdminPage('en')
+
+    await user.click(screen.getByRole('button', { name: /example agency milano/i }))
+    await user.click(screen.getByRole('button', { name: /gabetti busto arsizio/i }))
+
+    expect(screen.getByRole('link', { name: 'Open estimate preview' })).toHaveAttribute(
+      'href',
+      '/estimate/gabetti-busto-arsizio',
+    )
+    expect(screen.getByRole('button', { name: /gabetti busto arsizio/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /example agency milano/i })).toHaveAttribute('aria-pressed', 'false')
   })
 })
 

@@ -26,7 +26,7 @@
 | T17 | Implement locale resolver order (`lang`/`dl`/storage/browser/fallback) | done | Bootstrap aligned with ADR-0003 and covered by provider tests |
 | T18 | Complete UX baseline (language switch + dark mode polish) | done | Shell copy localized, topbar accessibility improved, locale/theme behavior covered by tests |
 | T19 | Implement admin config list (`/admin`) | done | Render registry entries with IT/EN copy, multi-config coverage, and metadata tests |
-| T20 | Add QR generation for selected config | todo | Build QR payload with default locale hint (`dl`) |
+| T20 | Add QR generation for selected config | in-progress | Config selection + preview moved to Admin; next step QR payload with `dl` |
 | T21 | Add printable QR view | todo | Print-friendly layout from selected config |
 
 ## Waiting Approval

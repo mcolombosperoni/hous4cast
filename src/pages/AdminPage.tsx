@@ -1,9 +1,13 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import { getAllConfigs } from '../configs/registry'
 
 export const AdminPage = () => {
   const { locale } = useAppPreferences()
   const configs = getAllConfigs().toSorted((a, b) => a.agencyName.localeCompare(b.agencyName))
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null)
+  const selectedConfig = configs.find((config) => config.id === selectedConfigId) ?? null
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
@@ -30,20 +34,53 @@ export const AdminPage = () => {
         ) : (
           <ul className="mt-3 space-y-3">
             {configs.map((config) => (
-              <li
-                className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40"
-                key={config.id}
-              >
-                <p className="font-medium text-slate-900 dark:text-slate-100">{config.agencyName}</p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">ID: {config.id}</p>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  {locale === 'it'
-                    ? `Zone: ${config.zones.length} - Tipologie: ${config.propertyTypes.length}`
-                    : `Zones: ${config.zones.length} - Property types: ${config.propertyTypes.length}`}
-                </p>
+              <li key={config.id}>
+                <button
+                  aria-pressed={selectedConfigId === config.id}
+                  className={`w-full rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                    selectedConfigId === config.id
+                      ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-500'
+                  }`}
+                  onClick={() => setSelectedConfigId(config.id)}
+                  type="button"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{config.agencyName}</p>
+                    {selectedConfigId === config.id && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        {locale === 'it' ? 'Selezionata' : 'Selected'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">ID: {config.id}</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    {locale === 'it'
+                      ? `Zone: ${config.zones.length} - Tipologie: ${config.propertyTypes.length}`
+                      : `Zones: ${config.zones.length} - Property types: ${config.propertyTypes.length}`}
+                  </p>
+                </button>
               </li>
             ))}
           </ul>
+        )}
+
+        {selectedConfig && (
+          <section className="mt-6 rounded-lg border border-blue-300 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
+              {locale === 'it' ? 'Configurazione selezionata' : 'Selected configuration'}
+            </p>
+            <p className="mt-1 font-medium text-slate-900 dark:text-slate-100">{selectedConfig.agencyName}</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">ID: {selectedConfig.id}</p>
+            <div className="mt-3">
+              <Link
+                className="inline-flex rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+                to={`/estimate/${selectedConfig.id}`}
+              >
+                {locale === 'it' ? 'Apri anteprima stima' : 'Open estimate preview'}
+              </Link>
+            </div>
+          </section>
         )}
       </section>
     </main>

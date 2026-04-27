@@ -15,19 +15,18 @@ export const HomePage = () => {
         </p>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2">
-        <Link
-          to="/estimate/gabetti-busto-arsizio"
-          className="rounded-xl border border-slate-300 bg-white p-4 text-slate-800 shadow-sm transition hover:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-        >
-          {locale === 'it' ? 'Apri pagina stima' : 'Open estimate page'}
-        </Link>
+      <section className="grid gap-4">
         <Link
           to="/admin"
           className="rounded-xl border border-slate-300 bg-white p-4 text-slate-800 shadow-sm transition hover:border-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
-          {locale === 'it' ? 'Apri pagina admin' : 'Open admin page'}
+          {locale === 'it' ? 'Apri admin e seleziona una configurazione' : 'Open admin and select a configuration'}
         </Link>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {locale === 'it'
+            ? 'Anteprima stima e generazione QR partono dalla pagina Admin, in base alla configurazione selezionata.'
+            : 'Estimate preview and QR generation start from Admin, based on the selected configuration.'}
+        </p>
       </section>
     </main>
   )
