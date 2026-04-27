@@ -1,8 +1,8 @@
 # Task Board
 
 ## Current Increment
-- Name: Push D - Admin and QR
-- Status: `waiting-approval`
+- Name: Push E - Hardening
+- Status: `todo`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -30,12 +30,13 @@
 | T21 | Add printable QR view | done | Route `/admin/qr/:configId?dl=`, print-friendly layout, Print button, fallback 404 |
 
 ## Waiting Approval
-- Push D — waiting for explicit approval before continuing
+- None
 
 ## Done
 - Push A — Foundation and CI/CD guardrails
 - Push B — First estimator slice
 - Push C — UX baseline
+- Push D — Admin and QR
 
 ## Wont-Do
 - None
