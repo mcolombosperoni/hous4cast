@@ -2,7 +2,7 @@
 
 ## Current Increment
 - Name: Push F - Release automation
-- Status: `waiting-approval`
+- Status: `done`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -35,7 +35,7 @@
 | T26 | Automate release command and enforce tag/version consistency | done | Add `release:*` scripts and CI check `release/vX.Y.Z` == `package.json` version |
 
 ## Waiting Approval
-- Push F — waiting for explicit approval before continuing
+- None
 
 ## Done
 - Push A — Foundation and CI/CD guardrails
@@ -43,6 +43,7 @@
 - Push C — UX baseline
 - Push D — Admin and QR
 - Push E — Hardening
+- Push F — Release automation
 
 ## Wont-Do
 - None
