@@ -2,7 +2,7 @@
 
 ## Current Increment
 - Name: Push E - Hardening
-- Status: `waiting-approval`
+- Status: `done`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -34,13 +34,14 @@
 | T25 | Add e2e persistence coverage for locale/theme preferences | done | Playwright: locale + theme persist across route changes and reload |
 
 ## Waiting Approval
-- Push E — waiting for explicit approval before continuing
+- None
 
 ## Done
 - Push A — Foundation and CI/CD guardrails
 - Push B — First estimator slice
 - Push C — UX baseline
 - Push D — Admin and QR
+- Push E — Hardening
 
 ## Wont-Do
 - None
