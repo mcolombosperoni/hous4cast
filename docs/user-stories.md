@@ -45,3 +45,19 @@ Acceptance criteria:
 - Admin page exposes a copy action for the selected config URL.
 - User receives localized feedback when copy succeeds or is unavailable.
 
+### US-07 - Fill out valuation form and get instant estimate
+As a potential seller, I want to fill out a configurable valuation form with my property details, so that I can instantly receive an estimated price range.
+
+Acceptance criteria:
+- The user accesses a form configured by the agent (essential fields: property type, area, condition, location).
+- After submission, an estimated price range is shown inline.
+- The experience is mobile-first and localized (EN/IT).
+- The user sees and must accept the privacy notice before submitting.
+
+### US-08 - Agent: configure the valuation form
+As a real estate agent, I want to configure the fields, options, and copy of the valuation form, so that I can offer a tailored experience for my clients and my brand.
+
+Acceptance criteria:
+- The agent can define (via config file) which fields, options, and copy are shown.
+- Branding, copy, and privacy notices are customizable.
+- The configuration supports EN/IT localization.

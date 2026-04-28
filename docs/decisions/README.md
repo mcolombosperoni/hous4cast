@@ -14,4 +14,4 @@
 - [0006 - Testing strategy: Vitest + Playwright](0006-testing-strategy-vitest-playwright.md) - accepted
 - [0007 - Dark mode and mobile-first](0007-dark-mode-mobile-first.md) - accepted
 - [0008 - Release only by approval tag](0008-release-by-approval-tag.md) - accepted (automated `release:*`, tag/version guardrail)
-
+- [0009 - Form engine with react-hook-form and Zod](0009-form-engine-react-hook-form-zod.md) - accepted

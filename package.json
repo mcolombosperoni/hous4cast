@@ -18,10 +18,13 @@
     "release:verify-tag": "node scripts/verify-release-tag.mjs"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.14.2"
+    "react-hook-form": "^7.74.0",
+    "react-router-dom": "^7.14.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

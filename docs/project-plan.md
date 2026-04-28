@@ -55,6 +55,13 @@
 - Copy-to-clipboard action for generated estimate link in Admin.
 - Localized success/error feedback and related unit/e2e coverage.
 
+### Epic H - Configurable Valuation Form
+- Mapping and digitalization of the Gabetti form fields.
+- Localized and customizable TypeScript config structure.
+- Configurable and localized React form UI.
+- Validation, user feedback, and privacy compliance.
+- End-to-end and e2e testing.
+
 ## Language Resolution Policy
 Order of precedence:
 1. `lang` query parameter
@@ -79,4 +86,3 @@ pnpm test --run
 pnpm test:e2e
 pnpm build
 ```
-
