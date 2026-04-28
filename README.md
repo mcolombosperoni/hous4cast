@@ -1,5 +1,12 @@
 # hous4cast
 
+> **Project documentation:** See [AGENTS.md](./AGENTS.md) for:
+> - Project plan
+> - Task board
+> - User stories
+> - Decision records (ADR)
+> - Testing & workflow rules
+
 Config-driven property estimation web app delivered through QR codes.
 
 ## Stack
