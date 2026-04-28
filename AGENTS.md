@@ -18,6 +18,7 @@ hous4cast is a config-driven web app that lets real estate agents generate brand
   4. `navigator.language` normalized
   5. fallback `en`
 - Theme (`light`/`dark`) is user-switchable and persisted in `localStorage.preferredTheme`.
+  - If `preferredTheme` is set to an invalid value (e.g., `'system'`), the app defaults to `'light'`. See `AppPreferencesProvider` and its tests for details.
 
 ## Testing Strategy
 - Unit/component tests: Vitest + Testing Library.
@@ -33,7 +34,11 @@ hous4cast is a config-driven web app that lets real estate agents generate brand
 - Task statuses: `todo`, `in-progress`, `developed`, `waiting-approval`, `done`, `wont-do`.
 - Push only at increment completion.
 - After push, stop and wait explicit approval before continuing.
-- Publish GitHub Pages only from tags matching `release/*`.
+- Releases are performed only from a clean working tree and on the `main` branch using:
+  - `pnpm release:patch`, `pnpm release:minor`, or `pnpm release:major`
+  - These commands bump the version, commit, tag as `release/vX.Y.Z`, and push both `main` and the tag.
+  - Tag-triggered workflow publishes GitHub Pages.
+  - Tag is verified to match the version via `pnpm release:verify-tag` (see `scripts/verify-release-tag.mjs`).
 
 ## Repository Conventions
 - Keep `.env` files out of git; maintain `.env.example`.
@@ -45,6 +50,7 @@ hous4cast is a config-driven web app that lets real estate agents generate brand
 ```bash
 pnpm install
 pnpm dev
+pnpm preview
 pnpm lint
 pnpm type-check
 pnpm test:run
