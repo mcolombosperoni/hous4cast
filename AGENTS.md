@@ -1,5 +1,15 @@
 # AGENTS.md - hous4cast
 
+## Project documentation map
+
+- **Project plan:** [docs/project-plan.md](docs/project-plan.md)
+- **Task board:** [docs/task-board.md](docs/task-board.md)
+- **User stories:** [docs/user-stories.md](docs/user-stories.md)
+- **Decision records (ADR):** [docs/decisions/README.md](docs/decisions/README.md)
+- **Testing & workflow rules:** see below (this file)
+
+---
+
 ## Project Overview
 hous4cast is a config-driven web app that lets real estate agents generate branded estimation pages and QR codes.
 
