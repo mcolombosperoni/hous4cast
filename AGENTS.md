@@ -20,6 +20,18 @@ hous4cast is a config-driven web app that lets real estate agents generate brand
 - Theme (`light`/`dark`) is user-switchable and persisted in `localStorage.preferredTheme`.
   - If `preferredTheme` is set to an invalid value (e.g., `'system'`), the app defaults to `'light'`. See `AppPreferencesProvider` and its tests for details.
 
+## Testing Approach (Agent Rules)
+- Always follow an outside-in (user-centric) approach for new features and changes:
+  - Start from end-to-end (acceptance) tests that describe the user journey and use cases, grouped by actor/story.
+  - Only after, add or update unit/component tests to cover the internal logic and edge cases.
+- All new or changed features must be covered by both e2e and unit/component tests as appropriate.
+- Tests must be committed in the same commit as the feature or fix they cover.
+- Comments and structure in tests must always be in English, except for UI content/labels.
+- E2E tests must describe real user scenarios, not just field-level validation.
+- Never leave code changes untested.
+- Never push code that is not covered by tests reflecting the current state and requirements.
+- If a requirement or rule is not clear, prefer the most user-centric and maintainable approach.
+
 ## Testing Strategy
 - Unit/component tests: Vitest + Testing Library.
 - Acceptance tests: Playwright on Chromium, Firefox, WebKit.
