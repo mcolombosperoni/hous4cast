@@ -10,6 +10,17 @@
 
 ---
 
+## Working Agreement
+
+All increments and user stories must be delivered according to the following rules:
+- Every feature, fix, or change must include all related code, unit/component tests, and acceptance (end-to-end) tests in the same commit or merge.
+- Acceptance tests (Playwright) must cover real user scenarios and acceptance criteria for each user story.
+- No code is considered "done" or demo/deployable unless all tests (unit, component, acceptance) are present and passing, and the increment delivers clear value to the client.
+- The increment is only presented for demo or deployed after full test coverage is achieved.
+- This working agreement is implicit for all planning, user stories, and tasks, and does not need to be repeated in each story.
+
+---
+
 ## Project Overview
 hous4cast is a config-driven web app that lets real estate agents generate branded estimation pages and QR codes.
 

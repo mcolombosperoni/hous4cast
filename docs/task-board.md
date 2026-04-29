@@ -1,8 +1,8 @@
 # Task Board
 
 ## Current Increment
-- Name: Epic G - Admin sharing UX
-- Status: `done`
+- Name: Epic H - Configurable form and branding
+- Status: `in-progress`
 
 ## Tasks
 | ID | Task | Status | Notes |
@@ -34,12 +34,15 @@
 | T25 | Add e2e persistence coverage for locale/theme preferences | done | Playwright: locale + theme persist across route changes and reload |
 | T26 | Automate release command and enforce tag/version consistency | done | Add `release:*` scripts and CI check `release/vX.Y.Z` == `package.json` version |
 | T27 | Add copy QR link action in admin | done | Copy-to-clipboard CTA with localized feedback and test coverage |
-| T28 | Analyze and map Gabetti form fields | todo | Markdown table, field details |
+| T28 | Analyze and map Gabetti form fields | done | Markdown table, field details |
 | T29 | Define config structure for form (EN/IT, branding, privacy) | todo | Ready for localization |
 | T30 | Implement configurable React form UI | todo | Mobile-first, dark mode |
 | T31 | Implement field validation and user feedback | todo | Errors, confirmations, privacy |
 | T32 | Add full localization support (EN/IT) | todo | Language switch, persistence |
 | T33 | Add e2e and incremental validation tests | todo | Playwright, acceptance |
+| T34 | Implement admin UI for palette, logo, image (accordion layout) | todo | Color pickers, upload, preview |
+| T35 | Persist agency branding config | todo | Save to config file or backend |
+| T36 | Acceptance and unit tests for admin branding UI | todo | Vitest + Playwright |
 
 ## Waiting Approval
 - None

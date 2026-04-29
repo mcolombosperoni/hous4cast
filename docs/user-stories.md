@@ -61,3 +61,40 @@ Acceptance criteria:
 - The agent can define (via config file) which fields, options, and copy are shown.
 - Branding, copy, and privacy notices are customizable.
 - The configuration supports EN/IT localization.
+
+---
+
+## Admin: configure agency palette, logo, and image
+
+### Description
+As an admin, I want to configure the agency color palette (primary, secondary, text, background), upload a cover image and a logo, through a modern, responsive interface optimized for mobile and desktop.
+
+### Micro user stories
+- As an admin, I want to select the agency primary color via color picker.
+- As an admin, I want to select the agency secondary color via color picker.
+- As an admin, I want to select the text color via color picker.
+- As an admin, I want to select the background color via color picker.
+- As an admin, I want to upload a cover image for the agency.
+- As an admin, I want to upload the agency logo.
+- As an admin, I want to see a real-time preview of the changes.
+- As an admin, I want the interface to be responsive and use an accordion layout.
+
+### UI Specifications
+- Layout: accordion with three expandable sections: "Color palette", "Logo", "Image".
+- Each section shows the relevant controls and a preview.
+- Mobile: full-width accordion, one section open at a time.
+- Desktop: accordion on the left, preview on the right.
+- Color palette: fields for primary, secondary, text, background.
+
+#### ASCII Wireframe
+```
++-------------------+-------------------+
+| > Color palette   |   [Preview]       |
+| > Logo            |                   |
+| > Image           |                   |
++-------------------+-------------------+
+```
+
+### Notes
+- No additional data required at this time.
+- The placement of image and logo on the estimate page will be defined later.
