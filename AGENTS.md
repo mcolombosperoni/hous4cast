@@ -19,6 +19,13 @@ All increments and user stories must be delivered according to the following rul
 - The increment is only presented for demo or deployed after full test coverage is achieved.
 - This working agreement is implicit for all planning, user stories, and tasks, and does not need to be repeated in each story.
 
+### Planning and Traceability
+- The **project plan** defines the epics (value increments for the client), each of which is represented by one or more user stories.
+- Each **user story** describes a vertical slice of value and is always linked to an epic in the plan.
+- The **task board** breaks down each user story into technical tasks, including both feature work and any technical or maintenance tasks not explicitly planned.
+- All three documents (plan, user stories, task board) must remain in sync and traceable: every task must reference its user story, and every user story must reference its epic.
+- If a new technical or maintenance task arises that was not in the original plan, it must be added to the task board and linked to the relevant user story or epic.
+
 ---
 
 ## Project Overview
