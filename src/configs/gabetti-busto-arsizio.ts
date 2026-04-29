@@ -81,5 +81,25 @@ export const gabettiBustoArsizioConfig: AgencyConfig = {
       },
     },
   ],
+  branding: {
+    palette: {
+      primary: '#C8102E',
+      secondary: '#F5A623',
+      text: '#222222',
+      background: '#FFFFFF',
+    },
+    logoUrl: '/public/icons.svg#gabetti-logo',
+    coverImageUrl: '/public/cover-gabetti.jpg',
+  },
+  privacy: {
+    text: {
+      it: 'Ho letto e accetto l’informativa privacy di Gabetti Busto Arsizio.',
+      en: 'I have read and accept the privacy policy of Gabetti Busto Arsizio.',
+    },
+    link: {
+      it: 'https://gabetti.it/privacy',
+      en: 'https://gabetti.it/en/privacy',
+    },
+  },
 }
 

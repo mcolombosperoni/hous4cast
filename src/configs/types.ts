@@ -52,6 +52,22 @@ export interface AgencyConfig {
   spreadFactor?: number;
   /** Form fields definition for dynamic form rendering */
   formFields?: FormField[];
+  /** Branding: color palette, logo, cover image */
+  branding?: {
+    palette: {
+      primary: string;
+      secondary: string;
+      text: string;
+      background: string;
+    };
+    logoUrl?: string;
+    coverImageUrl?: string;
+  };
+  /** Privacy: localized privacy policy text or link */
+  privacy?: {
+    text?: Record<SupportedLocale, string>;
+    link?: Record<SupportedLocale, string>;
+  };
 }
 
 export interface EstimateInput {
