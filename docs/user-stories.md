@@ -45,22 +45,23 @@ Acceptance criteria:
 - Admin page exposes a copy action for the selected config URL.
 - User receives localized feedback when copy succeeds or is unavailable.
 
-### US-07 - Fill out valuation form and get instant estimate
-As a potential seller, I want to fill out a configurable valuation form with my property details, so that I can instantly receive an estimated price range.
+### US-07 - Fill out valuation form and get instant estimate (Epic H)
+As a potential seller, I want to fill out a valuation form with my property details, so that I can instantly receive an estimated price range.
 
 Acceptance criteria:
-- The user accesses a form configured by the agent (essential fields: property type, area, condition, location).
+- The user accesses a form with a fixed structure (same fields for all agencies: property type, area, zone, privacy).
 - After submission, an estimated price range is shown inline.
 - The experience is mobile-first and localized (EN/IT).
 - The user sees and must accept the privacy notice before submitting.
 
-### US-08 - Agent: configure the valuation form
-As a real estate agent, I want to configure the fields, options, and copy of the valuation form, so that I can offer a tailored experience for my clients and my brand.
+### US-Admin - Configure agency palette, logo, and image (Epic H)
+As an admin, I want to configure the agency color palette (primary, secondary, text, background), upload a cover image and a logo, through a modern, responsive interface optimized for mobile and desktop.
 
 Acceptance criteria:
-- The agent can define (via config file) which fields, options, and copy are shown.
-- Branding, copy, and privacy notices are customizable.
-- The configuration supports EN/IT localization.
+- Admin UI allows selection of palette colors, logo, and image (accordion layout).
+- Real-time preview of changes.
+- Responsive layout (mobile/desktop).
+- Changes are persisted to config.
 
 ---
 

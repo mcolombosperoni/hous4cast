@@ -1,7 +1,7 @@
 # Project Plan
 
 ## Overview
-This document outlines the high-level plan for the development of the hous4cast platform, including major epics, milestones, and delivery workflow. It is kept in sync with the task board and user stories.
+This document outlines the high-level plan for the development of the hous4cast platform, including major epics, milestones, and delivery workflow. It is kept in sync with the task board and user stories. All three documents (plan, user stories, task board) must remain in sync and traceable: every task must reference its user story, and every user story must reference its epic.
 
 ## Epics & Milestones
 - Epic A: Foundation and CI/CD guardrails
@@ -14,6 +14,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic H: Configurable form and branding (palette, logo, image)
 
 ## Current Increment
+- Epic H: Configurable form and branding (palette, logo, image)
 - See task board for current increment and status.
 
 ## Delivery Workflow
@@ -30,4 +31,3 @@ This document outlines the high-level plan for the development of the hous4cast 
 ---
 
 _Last updated: 2026-04-29_
-
