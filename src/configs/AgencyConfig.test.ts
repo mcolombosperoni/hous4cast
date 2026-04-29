@@ -1,5 +1,4 @@
 import { gabettiBustoArsizioConfig } from './gabetti-busto-arsizio'
-import { AgencyConfig } from './types'
 
 describe('AgencyConfig branding and privacy', () => {
   it('should include branding palette, logo, and cover image', () => {
