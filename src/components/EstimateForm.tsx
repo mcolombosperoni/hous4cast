@@ -48,7 +48,14 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
     },
   })
 
-  const submit = (data: any) => {
+  type FormData = {
+    zoneId: string;
+    propertyType: string;
+    sqm: number | string;
+    privacy: boolean;
+  };
+
+  const submit = (data: FormData) => {
     onSubmit({
       zoneId: data.zoneId,
       propertyType: data.propertyType as PropertyType,
