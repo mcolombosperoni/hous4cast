@@ -13,6 +13,7 @@
 ## Working Agreement
 
 All increments and user stories must be delivered according to the following rules:
+- All code, comments, commit messages, and documentation must be written in **English**. Only UI content/labels and user-facing copy may be localized.
 - Every feature, fix, or change must include all related code, unit/component tests, and acceptance (end-to-end) tests in the same commit or merge.
 - Acceptance tests (Playwright) must cover real user scenarios and acceptance criteria for each user story.
 - No code is considered "done" or demo/deployable unless all tests (unit, component, acceptance) are present and passing, and the increment delivers clear value to the client.
