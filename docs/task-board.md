@@ -44,6 +44,8 @@
 | T35 | H | US-Admin | Persist agency branding config | todo | Save to config file or backend |
 | T36 | H | US-Admin | Acceptance and unit tests for admin branding UI | todo | Vitest + Playwright |
 | T37 | H | - | Add husky pre-commit hook for lint, type-check, tests | done | Technical task, ADR-0010 |
+| T38 | H | US-Admin-Image | Implement upload e preview di logo e immagine in admin UI | todo | Accordion sezioni Logo e Immagine, upload, anteprima, persistenza |
+| T39 | H | US-Admin-Image | Test unitari/e2e upload e preview immagini | todo | Vitest + Playwright |
 
 ## Waiting Approval
 - None

@@ -63,6 +63,16 @@ Acceptance criteria:
 - Responsive layout (mobile/desktop).
 - Changes are persisted to config.
 
+### US-Admin-Image - Upload e preview logo e immagine agenzia (Epic H)
+As an admin, I want to upload a cover image and a logo for the agency, and see a real-time preview, so that the agency branding is complete and visually consistent.
+
+Acceptance criteria:
+- L'admin può caricare un logo e una cover image per l'agenzia dalla UI admin (accordion sezioni "Logo" e "Immagine").
+- Dopo l'upload, viene mostrata un'anteprima in tempo reale.
+- Le immagini vengono salvate e sono persistenti per la configurazione selezionata.
+- L'UI è responsive e accessibile.
+- Sono presenti test di unità e/o e2e che coprono upload, preview e persistenza.
+
 ---
 
 ## Admin: configure agency palette, logo, and image
