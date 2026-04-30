@@ -19,19 +19,26 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
   const { locale } = useAppPreferences()
   const { sqmRange, zones, propertyTypes } = config
 
-  const schema = z.object({
-    zoneId: z.string().min(1, locale === 'it' ? 'Campo obbligatorio' : 'Required field'),
-    propertyType: z.string().min(1, locale === 'it' ? 'Campo obbligatorio' : 'Required field'),
-    sqm: z
-      .preprocess((val) => (val === '' ? undefined : Number(val)), z
-        .number({ message: locale === 'it' ? 'Valore richiesto' : 'Value required' })
-        .min(sqmRange.min, { message: locale === 'it' ? `Minimo ${sqmRange.min}` : `Minimum ${sqmRange.min}` })
-        .max(sqmRange.max, { message: locale === 'it' ? `Massimo ${sqmRange.max}` : `Maximum ${sqmRange.max}` })
-      ),
-    privacy: z.literal(true, {
-      message: locale === 'it' ? 'Devi accettare per continuare' : 'You must accept to continue',
-    }),
-  })
+   // Schema e valori di default statici (campi fissi)
+   const schema = z.object({
+     zoneId: z.string().min(1, locale === 'it' ? 'Campo obbligatorio' : 'Required field'),
+     propertyType: z.string().min(1, locale === 'it' ? 'Campo obbligatorio' : 'Required field'),
+     sqm: z
+       .preprocess((val) => (val === '' ? undefined : Number(val)), z
+         .number({ message: locale === 'it' ? 'Valore richiesto' : 'Value required' })
+         .min(sqmRange.min, { message: locale === 'it' ? `Minimo ${sqmRange.min}` : `Minimum ${sqmRange.min}` })
+         .max(sqmRange.max, { message: locale === 'it' ? `Massimo ${sqmRange.max}` : `Maximum ${sqmRange.max}` })
+       ),
+     privacy: z.boolean().refine((val) => val === true, {
+       message: locale === 'it' ? 'Devi accettare per continuare' : 'You must accept to continue',
+     }),
+   })
+   const defaultValues = {
+     zoneId: zones[0]?.zoneId ?? '',
+     propertyType: propertyTypes[0] ?? 'appartamento',
+     sqm: '',
+     privacy: false,
+   }
 
   const {
     handleSubmit,
@@ -39,13 +46,8 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    mode: 'onBlur',
-    defaultValues: {
-      zoneId: zones[0]?.zoneId ?? '',
-      propertyType: propertyTypes[0] ?? 'appartamento',
-      sqm: '',
-      privacy: undefined, // Fix: do not set to false, let it be undefined
-    },
+    mode: 'onSubmit',
+    defaultValues,
   })
 
   type FormData = {
@@ -68,7 +70,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
       ? {
           zone: 'Zona',
           type: 'Tipo immobile',
-          sqm: 'Superficie (m²)',
+          sqm: 'Superficie (m)',
           privacy: 'Ho letto e accetto l’informativa privacy',
           submit: 'Calcola stima',
         }
@@ -93,6 +95,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           render={({ field }) => (
             <select
               id="zoneId"
+              data-testid="zoneId"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               {...field}
             >
@@ -104,7 +107,9 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
             </select>
           )}
         />
-        {errors.zoneId && <p className="text-xs text-red-500 dark:text-red-400">{errors.zoneId.message as string}</p>}
+         {errors.zoneId && (
+           <p className="text-xs text-red-500 dark:text-red-400" data-testid="error-zoneId">{errors.zoneId.message as string}</p>
+         )}
       </div>
 
       {/* Property type */}
@@ -118,6 +123,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           render={({ field }) => (
             <select
               id="propertyType"
+              data-testid="propertyType"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               {...field}
             >
@@ -129,7 +135,9 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
             </select>
           )}
         />
-        {errors.propertyType && <p className="text-xs text-red-500 dark:text-red-400">{errors.propertyType.message as string}</p>}
+         {errors.propertyType && (
+           <p className="text-xs text-red-500 dark:text-red-400" data-testid="error-propertyType">{errors.propertyType.message as string}</p>
+         )}
       </div>
 
       {/* Surface */}
@@ -148,12 +156,15 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
               max={sqmRange.max}
               placeholder={`${sqmRange.min}–${sqmRange.max}`}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              value={field.value === undefined ? '' : String(field.value)}
+              value={typeof field.value === 'number' || typeof field.value === 'string' ? field.value : ''}
               onChange={field.onChange}
+              data-testid="sqm"
             />
           )}
         />
-        {errors.sqm && <p className="text-xs text-red-500 dark:text-red-400">{errors.sqm.message as string}</p>}
+         {errors.sqm && (
+           <p className="text-xs text-red-500 dark:text-red-400" data-testid="error-sqm">{errors.sqm.message as string}</p>
+         )}
       </div>
 
       {/* Privacy */}
@@ -162,19 +173,22 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           name="privacy"
           control={control}
           render={({ field }) => (
-            <input
-              id="privacy"
-              type="checkbox"
-              checked={field.value}
-              onChange={(e) => field.onChange(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-            />
+            <label className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2" htmlFor="privacy">
+              <input
+                id="privacy"
+                data-testid="privacy"
+                type="checkbox"
+                checked={field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              />
+              {labels.privacy}
+            </label>
           )}
         />
-        <label htmlFor="privacy" className="text-xs text-slate-500 dark:text-slate-400">
-          {labels.privacy}
-        </label>
-        {errors.privacy && <p className="text-xs text-red-500 dark:text-red-400 ml-2">{errors.privacy.message as string}</p>}
+         {errors.privacy && (
+           <p className="text-xs text-red-500 dark:text-red-400 ml-2" data-testid="error-privacy">{errors.privacy.message as string}</p>
+         )}
       </div>
 
       <button

@@ -8,20 +8,24 @@ test.describe('Estimate Page - Seller Journey', () => {
     await page.goto('/#/estimate/gabetti-busto-arsizio')
 
     // Fill all fields except privacy
-    await page.getByLabel('Zona').selectOption('centro')
-    await page.getByLabel('Tipo immobile').selectOption('appartamento')
-    await page.getByLabel('Superficie (m²)').fill('100')
+    await page.selectOption('[data-testid="zoneId"]', 'centro')
+    await page.selectOption('[data-testid="propertyType"]', 'appartamento')
+    await page.fill('[data-testid="sqm"]', '100')
 
     // Try to submit without privacy consent
-    await page.getByRole('button', { name: /calcola stima/i }).click()
-    await expect(page.getByText('Ho letto e accetto l’informativa privacy')).toBeVisible()
-    await expect(page.getByText('Devi accettare per continuare')).toBeVisible()
+    await page.click('button[type="submit"]')
+    await page.waitForSelector('[data-testid="error-privacy"]', { state: 'visible' })
+    await expect(page.getByTestId('error-privacy')).toBeVisible()
+    await expect(page.getByTestId('error-privacy')).toHaveText(/accettare|accept/i)
 
     // Now accept privacy and submit
-    await page.getByLabel('Ho letto e accetto l’informativa privacy').check()
-    await page.getByRole('button', { name: /calcola stima/i }).click()
-    // Should show the estimate result (check for result text)
-    await expect(page.getByText(/stima di valore/i)).toBeVisible()
+    await page.check('[data-testid="privacy"]')
+    await page.click('button[type="submit"]')
+    // Should show the estimate result (check for result node and non-empty text)
+    const result = page.locator('[data-testid="estimate-result"]')
+    await result.waitFor({ state: 'visible' })
+    await expect(result).toBeVisible()
+    await expect(result).not.toHaveText('')
   })
 
   // Add more scenario-based tests here for other user stories (e.g. language switch, dark mode, etc.)

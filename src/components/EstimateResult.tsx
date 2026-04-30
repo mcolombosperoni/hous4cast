@@ -52,7 +52,10 @@ export const EstimateResult = ({ result }: EstimateResultProps) => {
       <p className="mt-3 text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
         {labels.range}
       </p>
-      <p className="mt-1 text-base font-medium text-emerald-700 dark:text-emerald-300">
+      <p
+        className="mt-1 text-base font-medium text-emerald-700 dark:text-emerald-300"
+        data-testid="estimate-result"
+      >
         {formatCurrency(low, currency, locale)} – {formatCurrency(high, currency, locale)}
       </p>
 
@@ -63,4 +66,3 @@ export const EstimateResult = ({ result }: EstimateResultProps) => {
     </section>
   )
 }
-
