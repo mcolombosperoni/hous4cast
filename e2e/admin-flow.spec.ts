@@ -1,6 +1,28 @@
 import { expect, test } from '@playwright/test'
 
 test('admin flow supports config selection and preview link with dl', async ({ page }) => {
+  // Mock branding config for gabetti busto arsizio
+  await page.route('**/branding/gabetti-busto-arsizio', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        paletteLight: {
+          primary: '#1d4ed8',
+          secondary: '#f59e42',
+          text: '#222',
+          background: '#fff',
+        },
+        paletteDark: {
+          primary: '#60a5fa',
+          secondary: '#fbbf24',
+          text: '#f3f4f6',
+          background: '#18181b',
+        }
+      })
+    })
+  })
+
   await page.goto('/?lang=en#/admin')
 
   await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
@@ -21,6 +43,28 @@ test('admin flow supports config selection and preview link with dl', async ({ p
 })
 
 test('admin print qr link opens printable page for selected config', async ({ page, context }) => {
+  // Mock branding config for example agency milano
+  await page.route('**/branding/example-agency-milano', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        paletteLight: {
+          primary: '#1d4ed8',
+          secondary: '#f59e42',
+          text: '#222',
+          background: '#fff',
+        },
+        paletteDark: {
+          primary: '#60a5fa',
+          secondary: '#fbbf24',
+          text: '#f3f4f6',
+          background: '#18181b',
+        }
+      })
+    })
+  })
+
   await page.goto('/?lang=en#/admin')
 
   await page.getByRole('button', { name: /example agency milano/i }).click()
@@ -50,5 +94,3 @@ test('print qr page shows fallback and no qr when configId is invalid', async ({
   await expect(page.locator('svg')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Print' })).toHaveCount(0)
 })
-
-

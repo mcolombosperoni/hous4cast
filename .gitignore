@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# Firebase secrets
+.env
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -154,4 +157,3 @@ example.pdf
 # Test outputs
 playwright-report/
 test-results/
-

@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
 import { getAllConfigs } from '../configs/registry'
+import { AdminBrandingConfig } from './AdminBrandingConfig'
 
 const buildQrUrl = (configId: string, dl: SupportedLocale, baseUrl: string): string => {
   const params = new URLSearchParams({ dl })
@@ -66,7 +67,7 @@ export const AdminPage = () => {
             {configs.map((config) => (
               <li key={config.id}>
                 <button
-                  aria-pressed={selectedConfigId === config.id}
+                  aria-pressed={selectedConfigId !== null && selectedConfigId === config.id ? 'true' : 'false'}
                   className={`w-full rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                     selectedConfigId === config.id
                       ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
@@ -174,6 +175,12 @@ export const AdminPage = () => {
             </div>
           </section>
         )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold mb-2">Branding agenzia</h2>
+        {/* Passes the selected agency configId for Firestore palette persistence. Required for AdminBrandingConfig to load/save branding. */}
+        <AdminBrandingConfig configId={selectedConfig?.id ?? undefined} />
       </section>
     </main>
   )

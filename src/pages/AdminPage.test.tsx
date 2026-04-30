@@ -59,8 +59,10 @@ describe('AdminPage', () => {
 
     expect(screen.queryByText('Selected configuration')).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Open estimate preview' })).not.toBeInTheDocument()
-    const buttons = screen.getAllByRole('button')
-    buttons.forEach((btn) => expect(btn).toHaveAttribute('aria-pressed', 'false'))
+    // Prendo solo i bottoni delle configurazioni (figli diretti di ul > li)
+    const configList = screen.getByRole('list')
+    const configButtons = Array.from(configList.querySelectorAll('button'))
+    configButtons.forEach((btn) => expect(btn).toHaveAttribute('aria-pressed', 'false'))
   })
 
   it('renders configs sorted by agency name', () => {
@@ -151,4 +153,3 @@ describe('AdminPage', () => {
     expect(screen.getByText('Link copied to clipboard.')).toBeInTheDocument()
   })
 })
-
