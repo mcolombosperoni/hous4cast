@@ -117,36 +117,49 @@ Acceptance criteria:
 - A change saved in admin is immediately reflected in the estimate page (next load).
 - All fields have inline validation (e.g. multipliers must be positive numbers, sqmRange.min < max).
 
+### US-10 - Branded estimate page (Epic J)
+As a potential seller, I want to see the agency's colours, logo, and cover image on the estimate page, so that I recognise the agency identity when I scan the QR.
 
-### Description
-As an admin, I want to configure the agency color palette (primary, secondary, text, background), upload a cover image and a logo, through a modern, responsive interface optimized for mobile and desktop.
+Acceptance criteria:
+- The estimate page (`/estimate/:configId`) applies the agency's palette (primary, secondary, text, background) loaded from Firestore.
+- The agency logo is shown in the page header.
+- A cover image (if configured) is shown as a hero/banner above the form.
+- If no branding is configured in Firestore, the page falls back to neutral default styling.
+- The branding does not break dark mode or accessibility (contrast ratio).
 
-### Micro user stories
-- As an admin, I want to select the agency primary color via color picker.
-- As an admin, I want to select the agency secondary color via color picker.
-- As an admin, I want to select the text color via color picker.
-- As an admin, I want to select the background color via color picker.
-- As an admin, I want to upload a cover image for the agency.
-- As an admin, I want to upload the agency logo.
-- As an admin, I want to see a real-time preview of the changes.
-- As an admin, I want the interface to be responsive and use an accordion layout.
+### US-11 - Lead capture and agent notification (Epic K)
+As a potential seller, I want my contact details to be saved after I submit the estimate form, so that the agent can follow up with me.
+As an agency agent, I want to receive an email notification for each new lead, so that I can promptly contact interested sellers.
 
-### UI Specifications
-- Layout: accordion with three expandable sections: "Color palette", "Logo", "Image".
-- Each section shows the relevant controls and a preview.
-- Mobile: full-width accordion, one section open at a time.
-- Desktop: accordion on the left, preview on the right.
-- Color palette: fields for primary, secondary, text, background.
+Acceptance criteria:
+- After form submission the lead (name, email, phone, address, estimate result, configId, timestamp) is saved to Firestore collection `leads`.
+- The agent receives an email notification with the lead details.
+- Submission is non-blocking: the estimate result is shown even if the lead save or email fails.
+- The `name` field is added to the estimate form (required or optional, configurable per agency).
 
-#### ASCII Wireframe
-```
-+-------------------+-------------------+
-| > Color palette   |   [Preview]       |
-| > Logo            |                   |
-| > Image           |                   |
-+-------------------+-------------------+
-```
+### US-12 - Multi-agency support (Epic L)
+As a product owner, I want a second fully operational agency config deployed, so that I can demonstrate the multi-tenant model to new clients.
 
-### Notes
-- No additional data required at this time.
-- The placement of image and logo on the estimate page will be defined later.
+Acceptance criteria:
+- A second agency (e.g. `example-agency-milano`) is fully configured with its own zones, pricing model, branding, and privacy text.
+- All existing features (admin, QR generation, estimate page, branding editor, estimation config editor) work for both agencies without any code change.
+- E2e smoke tests cover the Milano agency flow end-to-end.
+
+### US-13 - Estimate PDF export (Epic M)
+As a potential seller, I want to download a branded PDF of my estimate, so that I have a document to review and share.
+
+Acceptance criteria:
+- After receiving the estimate result, a "Download PDF" button is visible.
+- The downloaded PDF contains: agency logo, estimate min/mid/max, input summary, disclaimer, and agency contact info.
+- The PDF uses the agency's branding palette.
+- The download works on mobile (iOS Safari, Android Chrome) and desktop.
+
+### US-14 - Admin leads dashboard (Epic N)
+As an agency admin, I want to view, browse, and filter all submitted leads in the admin panel, so that I can manage follow-up without accessing Firestore directly.
+
+Acceptance criteria:
+- A leads list is accessible from `/admin/leads` (or as an admin tab).
+- Leads are filterable by agency config and date range.
+- Each entry shows: date, name, email, phone, address, estimate range.
+- The admin can export the filtered list as CSV.
+- Only leads for the selected agency config are shown by default.
