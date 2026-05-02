@@ -35,10 +35,10 @@ Use **Cloudinary** for image storage:
    - Allowed formats: `png,jpg,jpeg,svg,webp`
    - Max file size: 2000000 (2MB)
 3. Copy `cloud_name` from dashboard top-left
-4. Add to `.env`:
+5. Add to `.env`:
    ```
-   VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
-   VITE_CLOUDINARY_UPLOAD_PRESET=hous4cast_branding
+   VITE_CLOUDINARY_CLOUD_NAME=dcxpdproj
+   VITE_CLOUDINARY_UPLOAD_PRESET=hous4cast
    ```
 5. Add same vars as GitHub Actions secrets for CI/CD deployment
 
@@ -53,4 +53,5 @@ Use **Cloudinary** for image storage:
 ---
 
 Refs: US-Admin, US-Admin-Image
+
 
