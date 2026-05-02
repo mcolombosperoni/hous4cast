@@ -1,11 +1,11 @@
 import type { AgencyConfig, EstimateInput, EstimateResult } from '../configs/types'
 
 export class EstimationEngineError extends Error {
-  readonly code: 'ZONE_NOT_FOUND' | 'TYPE_NOT_SUPPORTED' | 'SQM_OUT_OF_RANGE'
+  readonly code: 'ZONE_NOT_FOUND' | 'TYPE_NOT_SUPPORTED' | 'SQM_OUT_OF_RANGE' | 'SQM_BUCKET_REQUIRED'
 
   constructor(
     message: string,
-    code: 'ZONE_NOT_FOUND' | 'TYPE_NOT_SUPPORTED' | 'SQM_OUT_OF_RANGE',
+    code: 'ZONE_NOT_FOUND' | 'TYPE_NOT_SUPPORTED' | 'SQM_OUT_OF_RANGE' | 'SQM_BUCKET_REQUIRED',
   ) {
     super(message)
     this.name = 'EstimationEngineError'
@@ -40,6 +40,12 @@ export class EstimationEngine {
       )
     }
 
+    // ── Gabetti-style factor-based estimation ────────────────────────────────
+    if (this.config.sqmBucketPrices) {
+      return this._estimateWithFactors(input, zone.zoneMultiplier ?? 1)
+    }
+
+    // ── Legacy simple estimation: pricePerSqm × sqm ─────────────────────────
     const pricePerSqm = zone.pricePerSqm[input.propertyType]
     if (pricePerSqm === undefined) {
       throw new EstimationEngineError(
@@ -54,5 +60,43 @@ export class EstimationEngine {
 
     return { low, mid, high, currency: 'EUR' }
   }
-}
 
+  /**
+   * Gabetti-style multi-factor estimation.
+   *
+   * Formula:
+   *   base       = sqmBucketPrices[sqmBucket]
+   *   mid        = base × zoneMultiplier × conditionFactor × floorFactor × eraFactor + accessoriesBonus
+   *   min (low)  = mid × 0.9   (Gabetti uses -10% for minimum)
+   *   max (high) = mid × (1 + spreadFactor)
+   */
+  private _estimateWithFactors(input: EstimateInput, zoneMultiplier: number): EstimateResult {
+    const { sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses } = this.config
+
+    if (!input.sqmBucket) {
+      throw new EstimationEngineError(
+        'sqmBucket is required when the config uses sqmBucketPrices',
+        'SQM_BUCKET_REQUIRED',
+      )
+    }
+
+    const base = sqmBucketPrices![input.sqmBucket]
+    if (base === undefined) {
+      throw new EstimationEngineError(
+        `sqmBucket "${input.sqmBucket}" has no base price in config "${this.config.id}"`,
+        'SQM_BUCKET_REQUIRED',
+      )
+    }
+
+    const conditionFactor  = (input.condition   && conditionFactors?.[input.condition])   ?? 1
+    const floorFactor      = (input.floor       && floorFactors?.[input.floor])           ?? 1
+    const eraFactor        = (input.buildEra    && eraFactors?.[input.buildEra])          ?? 1
+    const accessoriesBonus = (input.accessories && accessoriesBonuses?.[input.accessories]) ?? 0
+
+    const mid  = Math.round(base * zoneMultiplier * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
+    const low  = Math.round(mid * 0.9)
+    const high = Math.round(mid * (1 + this.spread))
+
+    return { low, mid, high, currency: 'EUR' }
+  }
+}

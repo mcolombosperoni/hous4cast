@@ -43,7 +43,7 @@ describe('AdminPage', () => {
     expect(screen.getByText('Zone: 2 - Tipologie: 2')).toBeInTheDocument()
     expect(screen.getByText('Gabetti Busto Arsizio')).toBeInTheDocument()
     expect(screen.getByText('ID: gabetti-busto-arsizio')).toBeInTheDocument()
-    expect(screen.getByText('Zone: 3 - Tipologie: 3')).toBeInTheDocument()
+    expect(screen.getByText('Zone: 10 - Tipologie: 1')).toBeInTheDocument()
   })
 
   it('renders english copy and config metadata', () => {
@@ -56,7 +56,7 @@ describe('AdminPage', () => {
     expect(screen.getByText('Zones: 2 - Property types: 2')).toBeInTheDocument()
     expect(screen.getByText('Gabetti Busto Arsizio')).toBeInTheDocument()
     expect(screen.getByText('ID: gabetti-busto-arsizio')).toBeInTheDocument()
-    expect(screen.getByText('Zones: 3 - Property types: 3')).toBeInTheDocument()
+    expect(screen.getByText('Zones: 10 - Property types: 1')).toBeInTheDocument()
   })
 
   it('starts with no config selected and no preview box visible', () => {

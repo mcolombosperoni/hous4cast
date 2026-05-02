@@ -7,10 +7,9 @@ test.describe('Estimate Page - Seller Journey', () => {
   test('should require privacy consent and show estimate result', async ({ page }) => {
     await page.goto('/#/estimate/gabetti-busto-arsizio')
 
-    // Fill all fields except privacy
+    // Fill all fields except privacy (Gabetti config uses sqmBucket, not sqm/propertyType)
     await page.selectOption('[data-testid="zoneId"]', 'centro')
-    await page.selectOption('[data-testid="propertyType"]', 'appartamento')
-    await page.fill('[data-testid="sqm"]', '100')
+    await page.selectOption('[data-testid="sqmBucket"]', '71_110')
 
     // Try to submit without privacy consent
     await page.click('button[type="submit"]')
