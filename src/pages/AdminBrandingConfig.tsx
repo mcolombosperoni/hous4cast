@@ -205,8 +205,10 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
 
   return (
     <div className="flex flex-col md:flex-row gap-8 p-4">
-      {/* Accordion */}
-      <div className="w-full md:w-1/3">
+      {/* Left column: accordion + global save bar */}
+      <div className="w-full md:w-1/3 flex flex-col">
+        {/* Accordion */}
+        <div>
         <button className="w-full text-left py-2 font-bold border-b" onClick={() => setOpenSection('palette')}>
           {openSection === 'palette' ? '\u25bc' : '\u25ba'} Palette colori
         </button>
@@ -282,16 +284,6 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
             >
               Reset palette
             </button>
-            <button
-              type="button"
-              className="mt-4 px-4 py-2 rounded bg-blue-600 text-white font-semibold disabled:opacity-60"
-              onClick={handleSave}
-              disabled={saving || loading || !configId}
-            >
-              {saving ? 'Salvataggio...' : 'Salva'}
-            </button>
-            {saveStatus === 'success' && <span className="ml-2 text-emerald-600">Salvato!</span>}
-            {saveStatus === 'error' && <span className="ml-2 text-red-600">Errore salvataggio</span>}
             {loading && <span className="ml-2 text-slate-500">Caricamento...</span>}
           </div>
         )}
@@ -387,8 +379,35 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
             {coverError && <p className="text-xs text-red-500">{coverError}</p>}
           </div>
         )}
+        </div>
+        {/* Global save bar — always visible when an agency is selected */}
+        {configId && (
+          <div className="flex flex-col gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+            {(logoPendingFile ?? coverPendingFile) && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                ⚠ Hai immagini non ancora salvate. Clicca &quot;Salva tutto&quot; per confermare.
+              </p>
+            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="button"
+                className="px-6 py-2 rounded bg-blue-600 text-white font-semibold disabled:opacity-60 hover:bg-blue-700 transition"
+                onClick={handleSave}
+                disabled={saving || loading}
+              >
+                {saving ? 'Salvataggio...' : 'Salva tutto'}
+              </button>
+              {saveStatus === 'success' && (
+                <span className="text-sm text-emerald-600 dark:text-emerald-400">✓ Salvato!</span>
+              )}
+              {saveStatus === 'error' && (
+                <span className="text-sm text-red-600 dark:text-red-400">Errore salvataggio</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-      {/* Preview: sempre renderizzata, con stato diverso a seconda di configId/loading */}
+      {/* Preview panel */}
       <div
         className="w-full md:w-2/3 flex flex-col items-center justify-center bg-gray-50 rounded-lg p-8"
         style={{ background: configId && !loading ? previewPalette.background : undefined }}
