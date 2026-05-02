@@ -31,7 +31,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
          .min(sqmRange.min, { message: labels.min(sqmRange.min) })
          .max(sqmRange.max, { message: labels.max(sqmRange.max) })
        ),
-     privacy: z.boolean().refine((val) => val === true, {
+     privacy: z.boolean().refine((val) => val, {
        message: labels.privacyRequired,
      }),
    })
