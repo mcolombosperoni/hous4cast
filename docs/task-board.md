@@ -2,7 +2,7 @@
 
 ## Current Increment
 - Epic: Epic H - Configurable form and branding (palette, logo, image)
-- Status: `in-progress`
+- Status: `waiting-approval`
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -40,12 +40,12 @@
 | T31 | H | US-07 | Implement field validation and user feedback | todo | Errors, confirmations, privacy |
 | T32 | H | US-07 | Add full localization support (EN/IT) | todo | Language switch, persistence |
 | T33 | H | US-07 | Add e2e and incremental validation tests | todo | Playwright, acceptance |
-| T34 | H | US-Admin | Implement admin UI for palette, logo, image (accordion layout) | todo | Color pickers, upload, preview |
-| T35 | H | US-Admin | Persist agency branding config | todo | Save to config file or backend |
-| T36 | H | US-Admin | Acceptance and unit tests for admin branding UI | todo | Vitest + Playwright |
+| T34 | H | US-Admin | Implement admin UI for palette, logo, image (accordion layout) | done | Color pickers, upload, preview |
+| T35 | H | US-Admin | Persist agency branding config | done | Palette saved to Firestore; images to Firebase Storage |
+| T36 | H | US-Admin | Acceptance and unit tests for admin branding UI | done | Vitest + Playwright |
 | T37 | H | - | Add husky pre-commit hook for lint, type-check, tests | done | Technical task, ADR-0010 |
-| T38 | H | US-Admin-Image | Implement upload e preview di logo e immagine in admin UI | todo | Accordion sezioni Logo e Immagine, upload, anteprima, persistenza |
-| T39 | H | US-Admin-Image | Test unitari/e2e upload e preview immagini | todo | Vitest + Playwright |
+| T38 | H | US-Admin-Image | Implement upload e preview di logo e immagine in admin UI | done | Accordion Logo/Immagine, blob preview, upload on save, delete |
+| T39 | H | US-Admin-Image | Test unitari/e2e upload e preview immagini | done | Vitest (brandingApi) + Playwright (9 e2e tests) |
 
 ## Waiting Approval
 - None

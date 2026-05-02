@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
-import { getBrandingConfig, setBrandingConfig } from '../app/brandingApi'
+import { getBrandingConfig, setBrandingConfig, uploadBrandingImage, deleteBrandingImage } from '../app/brandingApi'
 
 const defaultBrandingLight = {
   primary: '#1d4ed8',
@@ -26,26 +26,60 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
+  // Image state: pendingFile for local preview, url for persisted remote URL
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null)
+  const [logoPendingFile, setLogoPendingFile] = useState<File | null>(null)
+  const [coverPendingFile, setCoverPendingFile] = useState<File | null>(null)
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [logoError, setLogoError] = useState<string | null>(null)
+  const [coverError, setCoverError] = useState<string | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
+
+  const logoPendingRef = useRef<File | null>(null)
+  const coverPendingRef = useRef<File | null>(null)
+
   useEffect(() => {
     if (!configId) return
+    let cancelled = false
     ;(async () => {
+      // Reset pending files and previews when agency changes
+      logoPendingRef.current = null
+      coverPendingRef.current = null
+      setLogoPendingFile(null)
+      setCoverPendingFile(null)
+      setLogoPreviewUrl(null)
+      setCoverPreviewUrl(null)
+      setLogoUrl(null)
+      setCoverImageUrl(null)
       setLoading(true)
       try {
         const data = await getBrandingConfig(configId)
+        if (cancelled) return
         if (data) {
           setPaletteLight(data.paletteLight)
           setPaletteDark(data.paletteDark)
+          setLogoUrl(data.logoUrl ?? null)
+          if (!logoPendingRef.current) setLogoPreviewUrl(data.logoUrl ?? null)
+          setCoverImageUrl(data.coverImageUrl ?? null)
+          if (!coverPendingRef.current) setCoverPreviewUrl(data.coverImageUrl ?? null)
         } else {
           setPaletteLight(defaultBrandingLight)
           setPaletteDark(defaultBrandingDark)
         }
       } catch {
+        if (cancelled) return
         setPaletteLight(defaultBrandingLight)
         setPaletteDark(defaultBrandingDark)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     })()
+    return () => { cancelled = true }
   }, [configId])
 
   const palette = editingMode === 'light' ? paletteLight : paletteDark
@@ -70,15 +104,102 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
     setSaving(true)
     setSaveStatus('idle')
     try {
+      // Upload pending image files to Storage first
+      let finalLogoUrl = logoUrl
+      let finalCoverUrl = coverImageUrl
+      if (logoPendingFile) {
+        setLogoUploading(true)
+        finalLogoUrl = await uploadBrandingImage(configId, 'logo', logoPendingFile)
+        setLogoUrl(finalLogoUrl)
+        setLogoPendingFile(null)
+        setLogoUploading(false)
+      }
+      if (coverPendingFile) {
+        setCoverUploading(true)
+        finalCoverUrl = await uploadBrandingImage(configId, 'coverImage', coverPendingFile)
+        setCoverImageUrl(finalCoverUrl)
+        setCoverPendingFile(null)
+        setCoverUploading(false)
+      }
       await setBrandingConfig(configId, {
         paletteLight,
         paletteDark,
+        logoUrl: finalLogoUrl ?? undefined,
+        coverImageUrl: finalCoverUrl ?? undefined,
       })
       setSaveStatus('success')
     } catch {
       setSaveStatus('error')
+      setLogoUploading(false)
+      setCoverUploading(false)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !configId) return
+    if (file.size > MAX_FILE_SIZE) {
+      setLogoError('File troppo grande (max 2MB)')
+      return
+    }
+    setLogoError(null)
+    if (logoPreviewUrl && logoPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(logoPreviewUrl)
+    }
+    const previewUrl = URL.createObjectURL(file)
+    setLogoPreviewUrl(previewUrl)
+    setLogoPendingFile(file)
+    logoPendingRef.current = file
+  }
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !configId) return
+    if (file.size > MAX_FILE_SIZE) {
+      setCoverError('File troppo grande (max 2MB)')
+      return
+    }
+    setCoverError(null)
+    if (coverPreviewUrl && coverPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(coverPreviewUrl)
+    }
+    const previewUrl = URL.createObjectURL(file)
+    setCoverPreviewUrl(previewUrl)
+    setCoverPendingFile(file)
+    coverPendingRef.current = file
+  }
+
+  const handleDeleteLogo = async () => {
+    if (!configId) return
+    if (logoPreviewUrl?.startsWith('blob:')) URL.revokeObjectURL(logoPreviewUrl)
+    setLogoPreviewUrl(null)
+    setLogoPendingFile(null)
+    logoPendingRef.current = null
+    setLogoUrl(null)
+    if (logoInputRef.current) logoInputRef.current.value = ''
+    if (logoUrl) {
+      try {
+        await deleteBrandingImage(configId, 'logo')
+      } catch { /* ignore */ }
+    }
+  }
+
+  const handleDeleteCover = async () => {
+    if (!configId) return
+    if (coverPreviewUrl?.startsWith('blob:')) URL.revokeObjectURL(coverPreviewUrl)
+    setCoverPreviewUrl(null)
+    setCoverPendingFile(null)
+    coverPendingRef.current = null
+    setCoverImageUrl(null)
+    if (coverInputRef.current) coverInputRef.current.value = ''
+    if (coverImageUrl) {
+      try {
+        await deleteBrandingImage(configId, 'coverImage')
+      } catch { /* ignore */ }
     }
   }
 
@@ -177,11 +298,95 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
         <button className="w-full text-left py-2 font-bold border-b" onClick={() => setOpenSection('logo')}>
           {openSection === 'logo' ? '\u25bc' : '\u25ba'} Logo
         </button>
-        {openSection === 'logo' && <div className="py-4 text-gray-500">(Upload logo: coming soon)</div>}
+        {openSection === 'logo' && (
+          <div className="flex flex-col gap-4 py-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Carica il logo dell&apos;agenzia (PNG, SVG, JPG — max 2MB).
+            </p>
+            {logoPreviewUrl && (
+              <div className="flex flex-col items-start gap-2">
+                <img
+                  src={logoPreviewUrl}
+                  alt="Logo anteprima"
+                  className="max-h-24 max-w-full rounded border border-slate-300 dark:border-slate-600 object-contain bg-white p-1"
+                  data-testid="logo-preview"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className={`cursor-pointer px-4 py-2 rounded font-semibold text-sm border ${configId ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed'}`}>
+                {logoUploading ? 'Caricamento...' : 'Carica logo'}
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                  className="hidden"
+                  disabled={!configId || logoUploading}
+                  onChange={handleLogoUpload}
+                  data-testid="logo-upload-input"
+                />
+              </label>
+              {logoPreviewUrl && (
+                <button
+                  type="button"
+                  className="px-3 py-2 rounded text-sm font-semibold border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                  onClick={handleDeleteLogo}
+                  disabled={logoUploading}
+                  data-testid="logo-delete-btn"
+                >
+                  Rimuovi
+                </button>
+              )}
+            </div>
+            {logoError && <p className="text-xs text-red-500">{logoError}</p>}
+          </div>
+        )}
         <button className="w-full text-left py-2 font-bold border-b" onClick={() => setOpenSection('image')}>
           {openSection === 'image' ? '\u25bc' : '\u25ba'} Immagine
         </button>
-        {openSection === 'image' && <div className="py-4 text-gray-500">(Upload immagine: coming soon)</div>}
+        {openSection === 'image' && (
+          <div className="flex flex-col gap-4 py-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Carica la cover image dell&apos;agenzia (PNG, JPG, WebP — max 2MB).
+            </p>
+            {coverPreviewUrl && (
+              <div className="flex flex-col items-start gap-2">
+                <img
+                  src={coverPreviewUrl}
+                  alt="Cover image anteprima"
+                  className="max-h-40 max-w-full rounded border border-slate-300 dark:border-slate-600 object-cover"
+                  data-testid="cover-preview"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className={`cursor-pointer px-4 py-2 rounded font-semibold text-sm border ${configId ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' : 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed'}`}>
+                {coverUploading ? 'Caricamento...' : 'Carica immagine'}
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  disabled={!configId || coverUploading}
+                  onChange={handleCoverUpload}
+                  data-testid="cover-upload-input"
+                />
+              </label>
+              {coverPreviewUrl && (
+                <button
+                  type="button"
+                  className="px-3 py-2 rounded text-sm font-semibold border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                  onClick={handleDeleteCover}
+                  disabled={coverUploading}
+                  data-testid="cover-delete-btn"
+                >
+                  Rimuovi
+                </button>
+              )}
+            </div>
+            {coverError && <p className="text-xs text-red-500">{coverError}</p>}
+          </div>
+        )}
       </div>
       {/* Preview: sempre renderizzata, con stato diverso a seconda di configId/loading */}
       <div
@@ -197,6 +402,22 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
         )}
         {configId && !loading && (
           <>
+            {logoPreviewUrl && (
+              <img
+                src={logoPreviewUrl}
+                alt="Logo"
+                className="max-h-16 max-w-full object-contain mb-4"
+                data-testid="preview-logo"
+              />
+            )}
+            {coverPreviewUrl && (
+              <img
+                src={coverPreviewUrl}
+                alt="Cover"
+                className="w-full max-w-md rounded-lg object-cover mb-4 max-h-32"
+                data-testid="preview-cover"
+              />
+            )}
             <div className="text-2xl font-bold mb-4" style={{ color: previewPalette.primary }}>
               Preview Agenzia
             </div>
@@ -233,3 +454,4 @@ export const AdminBrandingConfig: React.FC<{ configId?: string }> = ({ configId 
     </div>
   )
 }
+
