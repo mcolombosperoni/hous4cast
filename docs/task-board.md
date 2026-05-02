@@ -2,8 +2,11 @@
 
 ## Current Increment
 - Epic: Epic H - Configurable form and branding (palette, logo, image)
-- Status: `waiting-approval`
-- Next: US-08 complete — all T40–T46 done
+- Status: `done`
+- All tasks T01–T46 complete. Epic H closed.
+
+## Next
+- Epic I to be planned — see project plan for proposals.
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -37,10 +40,10 @@
 | T27 | G | US-06 | Add copy QR link action in admin | done | Copy-to-clipboard CTA with localized feedback and test coverage |
 | T28 | H | US-07 | Analyze and map Gabetti form fields | done | Markdown table, field details |
 | T29 | H | US-07 | Define config structure for form (EN/IT, branding, privacy) | done | Ready for localization |
-| T30 | H | US-07 | Implement React form UI (fixed fields for all agencies) | todo | Mobile-first, dark mode |
-| T31 | H | US-07 | Implement field validation and user feedback | todo | Errors, confirmations, privacy |
-| T32 | H | US-07 | Add full localization support (EN/IT) | todo | Language switch, persistence |
-| T33 | H | US-07 | Add e2e and incremental validation tests | todo | Playwright, acceptance |
+| T30 | H | US-07 | Implement React form UI (fixed fields for all agencies) | done | Covered by US-08 / T43 — form fully implemented |
+| T31 | H | US-07 | Implement field validation and user feedback | done | Covered by US-08 — Zod validation + privacy error |
+| T32 | H | US-07 | Add full localization support (EN/IT) | done | Covered by US-08 — full EN/IT labels and locale switch |
+| T33 | H | US-07 | Add e2e and incremental validation tests | done | Covered by US-08 / T46 — Playwright suite |
 | T34 | H | US-Admin | Implement admin UI for palette, logo, image (accordion layout) | done | Color pickers, upload, preview |
 | T35 | H | US-Admin | Persist agency branding config | done | Palette saved to Firestore; images to Firebase Storage |
 | T36 | H | US-Admin | Acceptance and unit tests for admin branding UI | done | Vitest + Playwright |
@@ -66,6 +69,7 @@
 - Epic E — Hardening
 - Epic F — Release automation
 - Epic G — Admin sharing UX
+- Epic H — Configurable form and branding (palette, logo, image)
 
 ## Wont-Do
 - None
