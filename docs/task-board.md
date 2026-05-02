@@ -2,7 +2,8 @@
 
 ## Current Increment
 - Epic: Epic H - Configurable form and branding (palette, logo, image)
-- Status: `waiting-approval`
+- Status: `in-progress`
+- Next: US-08 — Extended valuation form with all Gabetti fields (T40–T46)
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -46,6 +47,13 @@
 | T37 | H | - | Add husky pre-commit hook for lint, type-check, tests | done | Technical task, ADR-0010 |
 | T38 | H | US-Admin-Image | Implement upload e preview di logo e immagine in admin UI | done | Accordion Logo/Immagine, blob preview, upload on save, delete |
 | T39 | H | US-Admin-Image | Test unitari/e2e upload e preview immagini | done | Vitest (brandingApi) + Playwright (9 e2e tests) |
+| T40 | H | US-08 | Extend AgencyConfig types with new form fields (indirizzo, stato, accessori, piano, età, email, telefono) | todo | Types + config update |
+| T41 | H | US-08 | Update gabetti-busto-arsizio config with all field options and coefficients | todo | Migration from Tally logic |
+| T42 | H | US-08 | Extend EstimationEngine to support multiplicative/additive coefficients for state, floor, age, accessories | todo | Engine refactor |
+| T43 | H | US-08 | Add missing form fields to EstimateForm component | todo | indirizzo, stato, accessori, piano, età, email, telefono |
+| T44 | H | US-08 | Update EstimateResult to display new computed fields | todo | Show min/max with all factors |
+| T45 | H | US-08 | Unit tests for extended EstimationEngine | todo | Vitest |
+| T46 | H | US-08 | Acceptance tests for extended form (e2e) | todo | Playwright |
 
 ## Waiting Approval
 - None

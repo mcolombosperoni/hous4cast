@@ -73,6 +73,38 @@ Acceptance criteria:
 - L'UI è responsive e accessibile.
 - Sono presenti test di unità e/o e2e che coprono upload, preview e persistenza.
 
+### US-08 - Extended valuation form with all Gabetti fields (Epic H)
+As a potential seller, I want to fill a complete valuation form matching the Gabetti reference form, so that I receive a more accurate price estimate based on all relevant property factors.
+
+Acceptance criteria:
+- The form includes all fields from the Gabetti reference form (see field analysis below).
+- All fields are validated before submission.
+- The estimation engine uses all input factors to compute min/max price.
+- The result is displayed inline after submission.
+- The form is fully localized (IT/EN) and mobile-first.
+- The user must accept the privacy notice before submitting.
+
+#### Field analysis — Gabetti reference form (gabetti-busto-arsizio)
+
+| # | Field | Type | Options / Format | Required | Already present |
+|---|-------|------|-----------------|----------|----------------|
+| 1 | Metratura | Single choice | fino a 50 mq / 51–70 / 71–110 / 111–149 / 150+ | ✓ | Partially (numeric input, not buckets) |
+| 2 | Zona | Single choice | centro / sant'edoardo / frati tribunale / ponzella / cimitero / sacconago / borsano / beata giuliana / sant'anna / ospedale | ✓ | ✓ (select) |
+| 3 | Indirizzo e civico | Text input | free text | ✓ | ✗ |
+| 4 | Stato interno | Single choice | ottimo / buono / da ristrutturare | ✓ | ✗ |
+| 5 | Accessori | Single choice | cantina / 1 box auto / cantina e un box / cantina e due box / nulla | ✓ | ✗ |
+| 6 | Piano | Single choice | terra / primo / secondo / terzo / quarto / quinto / sopra il quinto | ✓ | ✗ |
+| 7 | Età costruzione | Single choice | 1900–1940 / 1941–1967 / 1968–1980 / 1981–1995 / 1995–2005 / 2006–2015 / 2016–oggi | ✓ | ✗ |
+| 8 | Email | Email input | valid email | ✓ | ✗ |
+| 9 | Telefono | Phone input | tel format | ✓ | ✗ |
+| 10 | Consenso privacy | Checkbox | must be checked | ✓ | ✓ (generic) |
+
+**Fields currently missing:** indirizzo, stato interno, accessori, piano, età costruzione, email, telefono.
+**Fields to adapt:** metratura (currently numeric input → add bucket option to config), privacy (already present, keep).
+
+#### Estimation engine impact
+The Gabetti calculation applies multiplicative coefficients per zone, state, floor, and age, plus additive bonuses for accessories. The `EstimationEngine` must be extended to support these factors via config, or a Gabetti-specific engine strategy must be added.
+
 ---
 
 ## Admin: configure agency palette, logo, and image
