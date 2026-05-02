@@ -12,20 +12,21 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic F: Release automation ✅
 - Epic G: Admin sharing UX ✅
 - Epic H: Configurable form and branding (palette, logo, image) ✅
-- Epic I: _(to be planned — proposals below)_
+- Epic I: Admin-editable estimation config _(in progress)_
 
-## Epic I — Candidate proposals
+## Epic I — Admin-editable Estimation Config
 
-The following are candidate directions for the next epic, to be chosen and prioritised with the client:
+Goal: agency admins can edit zones, coefficients, pricing, sqm range, spread factor, and privacy text from the admin UI without code deployments.
 
-1. **Branding applied to estimate page** — Apply the agency's palette, logo, and cover image to the estimate page and result view, so that the seller sees a fully branded experience when scanning the QR.
-2. **Lead capture and notification** — After form submission, save the seller's contact details (name, email, phone, address) to a backend (Firestore), and optionally notify the agent via email.
-3. **Multi-agency support** — Add a second agency config (e.g. example-agency-milano fully wired), so that the platform supports multiple tenants from a single deployment.
-4. **Estimate PDF export** — Allow the seller to download a branded PDF of the estimate result directly from the page.
-5. **Admin dashboard — leads view** — Show submitted leads in the admin panel, filterable by config/date.
+Key design decisions:
+- Firestore collection `estimationConfig`, one doc per `configId`, stores overridable fields only (excludes `id`, `agencyName`, `branding`, `formFields`).
+- Merge strategy: deep-merge Firestore overrides on top of static base config (Firestore wins).
+- LocalStorage fallback key: `hous4cast:estimationConfig:{configId}` written on every save.
+- Static configs remain as seeds — never patched, only shadowed at runtime.
+- See ADR-0013 for full schema and rationale.
 
 ## Current Increment
-- Epic H closed. Awaiting Epic I planning with client.
+- Epic I: T47–T56 — see task board.
 
 ## Delivery Workflow
 - All features are developed outside-in: acceptance tests first, then unit/component tests.

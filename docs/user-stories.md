@@ -105,9 +105,18 @@ Acceptance criteria:
 #### Estimation engine impact
 The Gabetti calculation applies multiplicative coefficients per zone, state, floor, and age, plus additive bonuses for accessories. The `EstimationEngine` must be extended to support these factors via config, or a Gabetti-specific engine strategy must be added.
 
----
+### US-09 - Admin-editable estimation config (Epic I)
+As an agency admin, I want to edit the full estimation config (zones, sqm buckets, coefficients, spread factor, sqm range, privacy text) from the admin UI, so that I can update pricing and copy without any code deployment.
 
-## Admin: configure agency palette, logo, and image
+Acceptance criteria:
+- Admin can edit all overridable fields (zones, propertyTypes, sqmRange, spreadFactor, sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, privacy IT/EN) via a dedicated UI section.
+- Saving persists the changes to Firestore (`estimationConfig/{configId}`).
+- On the estimate page, `getConfig()` returns a config that merges Firestore overrides on top of the static base (Firestore wins).
+- If Firestore is unavailable, the last saved override is served from `localStorage` key `hous4cast:estimationConfig:{configId}`.
+- If no override exists (Firestore + localStorage both empty), the static base config is used unchanged.
+- A change saved in admin is immediately reflected in the estimate page (next load).
+- All fields have inline validation (e.g. multipliers must be positive numbers, sqmRange.min < max).
+
 
 ### Description
 As an admin, I want to configure the agency color palette (primary, secondary, text, background), upload a cover image and a logo, through a modern, responsive interface optimized for mobile and desktop.

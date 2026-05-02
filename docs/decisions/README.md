@@ -18,3 +18,4 @@
 - [0010 - Pre-commit quality gate](0010-precommit-quality-gate.md) - accepted
 - [0011 - Admin branding: Firebase + color picker](0011-admin-branding-firebase-colorpicker.md) - accepted (image storage section superseded by 0012)
 - [0012 - Image storage via Cloudinary unsigned upload](0012-image-storage-cloudinary.md) - accepted
+- [0013 - Admin-editable estimation config: Firestore schema and merge strategy](0013-admin-editable-estimation-config-firestore.md) - accepted

@@ -1,12 +1,9 @@
 # Task Board
 
 ## Current Increment
-- Epic: Epic H - Configurable form and branding (palette, logo, image)
-- Status: `done`
-- All tasks T01–T46 complete. Epic H closed.
-
-## Next
-- Epic I to be planned — see project plan for proposals.
+- Epic: Epic I — Admin-editable estimation config
+- Status: `todo`
+- Next: T47 (ADR) → T48 (e2e outside-in) → T49–T56
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -57,6 +54,16 @@
 | T44 | H | US-08 | Update EstimateResult to display new computed fields | done | Show min/max with all factors |
 | T45 | H | US-08 | Unit tests for extended EstimationEngine | done | Vitest |
 | T46 | H | US-08 | Acceptance tests for extended form (e2e) | done | Playwright |
+| T47 | I | US-09 | ADR-0013: document Firestore schema and merge strategy for estimation config | todo | New ADR: collection `estimationConfig`, doc = configId, partial AgencyConfig (excl. id/agencyName/branding/formFields); deep-merge Firestore over static base; localStorage fallback key |
+| T48 | I | US-09 | E2E acceptance tests (outside-in): admin edits zone multiplier → save → estimate page reflects new value | todo | Playwright: open admin, edit a zone multiplier, save, navigate to estimate page, assert result differs. Cover localStorage fallback. |
+| T49 | I | US-09 | Implement `estimationConfigApi.ts` — Firestore read/write + localStorage fallback | todo | New `src/app/estimationConfigApi.ts`: `saveEstimationConfig(configId, override)` and `loadEstimationConfig(configId)`. New `EstimationConfigOverride` utility type in `types.ts`. |
+| T50 | I | US-09 | Add `getConfigWithOverrides(configId)` to registry — async, merges runtime overrides | todo | Async variant alongside sync `getConfig()`. `EstimatePage` switches to async. Sync `getConfig()` kept for tests and admin pre-load. |
+| T51 | I | US-09 | Unit tests for `estimationConfigApi` and `getConfigWithOverrides` | todo | Vitest: mock Firestore + localStorage. Test save→load, Firestore unavailable fallback, no override → static base, merge correctness. |
+| T52 | I | US-09 | Build `AdminEstimationConfig` editor UI component | todo | New `src/pages/AdminEstimationConfig.tsx`. Accordion sections: Zones (add/remove/edit rows), Property Types, Sqm Range, Spread Factor, Sqm Bucket Prices, Condition/Floor/Era Factors, Accessories Bonuses, Privacy IT/EN. Inline validation. |
+| T53 | I | US-09 | Wire `AdminEstimationConfig` into `AdminPage.tsx` | todo | New accordion section "Estimation Config" for the selected configId. |
+| T54 | I | US-09 | Component tests for `AdminEstimationConfig` | todo | Vitest + RTL: renders pre-loaded values, edits a field, calls `saveEstimationConfig` on save, shows validation errors. Mock API. |
+| T55 | I | US-09 | Update `EstimatePage` to use `getConfigWithOverrides()` | todo | Replace sync `getConfig()` with async variant. Add loading state (spinner). No engine/form changes needed. |
+| T56 | I | US-09 | Expand e2e coverage: offline/localStorage fallback and full admin→estimate journey | todo | Playwright: (1) save override → reload with Firestore offline → localStorage config used; (2) clear override → static base used; (3) full admin-save → estimate result reflects new values. |
 
 ## Waiting Approval
 - None
