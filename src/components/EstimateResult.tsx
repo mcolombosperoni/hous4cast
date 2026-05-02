@@ -1,4 +1,5 @@
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
+import { i18n } from '../app/i18n'
 import type { EstimateResult as EstimateResultType } from '../configs/types'
 
 interface EstimateResultProps {
@@ -14,22 +15,7 @@ export const EstimateResult = ({ result }: EstimateResultProps) => {
   const { locale } = useAppPreferences()
   const { low, mid, high, currency } = result
 
-  const labels =
-    locale === 'it'
-      ? {
-          title: 'Stima di valore',
-          range: 'Fascia di mercato',
-          central: 'Valore centrale stimato',
-          disclaimer:
-            'La stima è indicativa e basata sui valori medi di mercato della zona. Non costituisce perizia né valutazione ufficiale.',
-        }
-      : {
-          title: 'Value estimate',
-          range: 'Market range',
-          central: 'Central estimated value',
-          disclaimer:
-            'This estimate is indicative and based on average market values for the area. It does not constitute an appraisal or official valuation.',
-        }
+  const labels = i18n[locale].result
 
   return (
     <section

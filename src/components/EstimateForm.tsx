@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import type { AgencyConfig, EstimateInput, PropertyType } from '../configs/types'
+import { i18n } from '../app/i18n'
 
 const propertyTypeLabel: Record<PropertyType, Record<'it' | 'en', string>> = {
   appartamento: { it: 'Appartamento', en: 'Apartment' },
@@ -20,17 +21,18 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
   const { sqmRange, zones, propertyTypes } = config
 
    // Schema e valori di default statici (campi fissi)
+   const labels = i18n[locale].estimate
    const schema = z.object({
-     zoneId: z.string().min(1, locale === 'it' ? 'Campo obbligatorio' : 'Required field'),
-     propertyType: z.string().min(1, locale === 'it' ? 'Campo obbligatorio' : 'Required field'),
+     zoneId: z.string().min(1, labels.required),
+     propertyType: z.string().min(1, labels.required),
      sqm: z
        .preprocess((val) => (val === '' ? undefined : Number(val)), z
-         .number({ message: locale === 'it' ? 'Valore richiesto' : 'Value required' })
-         .min(sqmRange.min, { message: locale === 'it' ? `Minimo ${sqmRange.min}` : `Minimum ${sqmRange.min}` })
-         .max(sqmRange.max, { message: locale === 'it' ? `Massimo ${sqmRange.max}` : `Maximum ${sqmRange.max}` })
+         .number({ message: labels.valueRequired })
+         .min(sqmRange.min, { message: labels.min(sqmRange.min) })
+         .max(sqmRange.max, { message: labels.max(sqmRange.max) })
        ),
      privacy: z.boolean().refine((val) => val === true, {
-       message: locale === 'it' ? 'Devi accettare per continuare' : 'You must accept to continue',
+       message: labels.privacyRequired,
      }),
    })
    const defaultValues = {
@@ -41,9 +43,11 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
    }
 
   const {
-    handleSubmit,
-    control,
-    formState: { errors },
+      handleSubmit,
+      control,
+      formState: { errors },
+      setFocus,
+      trigger,
   } = useForm({
     resolver: zodResolver(schema),
     mode: 'onSubmit',
@@ -57,30 +61,23 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
     privacy: boolean;
   };
 
-  const submit = (data: FormData) => {
+  const submit = async (data: FormData) => {
+    // Trigger validation manually to get all errors
+    const valid = await trigger()
+    if (!valid) {
+      // Focus the first field with error
+      if (errors.zoneId) setFocus('zoneId')
+      else if (errors.propertyType) setFocus('propertyType')
+      else if (errors.sqm) setFocus('sqm')
+      else if (errors.privacy) setFocus('privacy')
+      return
+    }
     onSubmit({
       zoneId: data.zoneId,
       propertyType: data.propertyType as PropertyType,
       sqm: Number(data.sqm),
     })
   }
-
-  const labels =
-    locale === 'it'
-      ? {
-          zone: 'Zona',
-          type: 'Tipo immobile',
-          sqm: 'Superficie (m)',
-          privacy: 'Ho letto e accetto l’informativa privacy',
-          submit: 'Calcola stima',
-        }
-      : {
-          zone: 'Zone',
-          type: 'Property type',
-          sqm: 'Surface area (sqm)',
-          privacy: 'I have read and accept the privacy policy',
-          submit: 'Get estimate',
-        }
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit(submit)}>
