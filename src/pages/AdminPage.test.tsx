@@ -4,6 +4,10 @@ import { MemoryRouter } from 'react-router-dom'
 import { AppPreferencesProvider } from '../app/providers/AppPreferencesProvider'
 import { AdminPage } from './AdminPage'
 
+type FirestoreMockGlobal = typeof globalThis & {
+  __firestoreStore?: Map<string, unknown>
+}
+
 const renderAdminPage = (locale: 'it' | 'en') => {
   window.history.replaceState(null, '', `/?lang=${locale}#/admin`)
 
@@ -15,7 +19,6 @@ const renderAdminPage = (locale: 'it' | 'en') => {
     </MemoryRouter>,
   )
 }
-
 describe('AdminPage', () => {
   beforeEach(() => {
     window.localStorage.clear()
@@ -26,6 +29,8 @@ describe('AdminPage', () => {
         writeText: vi.fn().mockResolvedValue(undefined),
       },
     })
+    const store = (globalThis as FirestoreMockGlobal).__firestoreStore
+    if (store) store.clear()
   })
 
   it('renders italian copy and config metadata', () => {
@@ -59,7 +64,7 @@ describe('AdminPage', () => {
 
     expect(screen.queryByText('Selected configuration')).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Open estimate preview' })).not.toBeInTheDocument()
-    // Prendo solo i bottoni delle configurazioni (figli diretti di ul > li)
+    // Select only agency config buttons (direct descendants of ul > li)
     const configList = screen.getByRole('list')
     const configButtons = Array.from(configList.querySelectorAll('button'))
     configButtons.forEach((btn) => expect(btn).toHaveAttribute('aria-pressed', 'false'))

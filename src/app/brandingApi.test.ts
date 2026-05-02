@@ -15,19 +15,19 @@ vi.mock('firebase/firestore', () => {
 describe('brandingApi', () => {
   let firestoreMock: { __store: Map<string, unknown> }
   beforeEach(async () => {
-    // reset mock store
+    // Reset mock store
     firestoreMock = (await import('firebase/firestore')) as { __store: Map<string, unknown> }
     if (firestoreMock.__store) firestoreMock.__store.clear()
   })
 
-  it('setBrandingConfig salva i dati', async () => {
+  it('setBrandingConfig stores branding data', async () => {
     await setBrandingConfig('agency1', { paletteLight: { primary: '#fff', secondary: '#000', text: '#111', background: '#eee' }, paletteDark: { primary: '#222', secondary: '#333', text: '#444', background: '#555' } })
     const data = await getBrandingConfig('agency1')
     expect(data?.paletteLight.primary).toBe('#fff')
     expect(data?.paletteDark.background).toBe('#555')
   })
 
-  it('getBrandingConfig ritorna null se non esiste', async () => {
+  it('getBrandingConfig returns null when missing', async () => {
     const data = await getBrandingConfig('notfound')
     expect(data).toBeNull()
   })

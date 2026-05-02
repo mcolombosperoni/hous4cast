@@ -8,11 +8,11 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL: 'http://127.0.0.1:4173',
-    trace: 'on', // Always collect trace for debug
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    actionTimeout: 10000, // 10s per azione
-    navigationTimeout: 30000, // 30s per navigazione
+    actionTimeout: 10000,
+    navigationTimeout: 30000,
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
@@ -22,7 +22,8 @@ export default defineConfig({
   webServer: {
     command: 'pnpm preview --host 127.0.0.1 --port 4173',
     port: 4173,
-    reuseExistingServer: !process.env.CI,
+    // Keep behavior consistent between local and CI runs.
+    reuseExistingServer: false,
   },
 })
 

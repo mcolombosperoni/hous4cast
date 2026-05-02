@@ -1,7 +1,6 @@
-// src/app/firebase.ts
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage'
+import { getFirestore, type Firestore } from 'firebase/firestore'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,15 +12,26 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
-for (const [key, value] of Object.entries(firebaseConfig)) {
-  if (!value) {
-    console.error(`[firebase] Missing Firebase config variable: ${key}. Check your .env and rebuild the app.`)
-    throw new Error(`[firebase] Missing Firebase config variable: ${key}. Check your .env and rebuild the app.`)
-  }
+const missingKeys = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key)
+
+export const isFirebaseConfigured = missingKeys.length === 0
+
+let dbInstance: Firestore | null = null
+let storageInstance: FirebaseStorage | null = null
+
+if (isFirebaseConfigured) {
+  const app = initializeApp(firebaseConfig)
+  dbInstance = getFirestore(app)
+  storageInstance = getStorage(app)
+} else {
+  console.warn(
+    `[firebase] Firebase is not configured. Missing variables: ${missingKeys.join(', ')}. Falling back to local-only behavior.`,
+  )
 }
 
-const app = initializeApp(firebaseConfig)
-export const db = getFirestore(app)
-export const storage = getStorage(app)
+export const db = dbInstance
+export const storage = storageInstance
 
 
