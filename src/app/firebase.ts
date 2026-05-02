@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app'
 import { getFirestore, type Firestore } from 'firebase/firestore'
-import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,12 +18,10 @@ const missingKeys = Object.entries(firebaseConfig)
 export const isFirebaseConfigured = missingKeys.length === 0
 
 let dbInstance: Firestore | null = null
-let storageInstance: FirebaseStorage | null = null
 
 if (isFirebaseConfigured) {
   const app = initializeApp(firebaseConfig)
   dbInstance = getFirestore(app)
-  storageInstance = getStorage(app)
 } else {
   console.warn(
     `[firebase] Firebase is not configured. Missing variables: ${missingKeys.join(', ')}. Falling back to local-only behavior.`,
@@ -32,6 +29,4 @@ if (isFirebaseConfigured) {
 }
 
 export const db = dbInstance
-export const storage = storageInstance
-
 

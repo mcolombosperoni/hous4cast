@@ -15,3 +15,6 @@
 - [0007 - Dark mode and mobile-first](0007-dark-mode-mobile-first.md) - accepted
 - [0008 - Release only by approval tag](0008-release-by-approval-tag.md) - accepted (automated `release:*`, tag/version guardrail)
 - [0009 - Form engine with react-hook-form and Zod](0009-form-engine-react-hook-form-zod.md) - accepted
+- [0010 - Pre-commit quality gate](0010-precommit-quality-gate.md) - accepted
+- [0011 - Admin branding: Firebase + color picker](0011-admin-branding-firebase-colorpicker.md) - accepted (image storage section superseded by 0012)
+- [0012 - Image storage via Cloudinary unsigned upload](0012-image-storage-cloudinary.md) - accepted

@@ -15,9 +15,10 @@ This document outlines the high-level plan for the development of the hous4cast 
 
 ## Current Increment
 - Epic H: Configurable form and branding (palette, logo, image)
+  - Image storage: Cloudinary unsigned upload (ADR 0012) — Firebase Storage not available on Spark plan
 - See task board for current increment and status.
 
-## Delivery Workflow
+_Last updated: 2026-05-02_
 - All features are developed outside-in: acceptance tests first, then unit/component tests.
 - Each increment is delivered as a complete, tested slice.
 - Push only at increment completion, then wait for explicit approval before continuing.

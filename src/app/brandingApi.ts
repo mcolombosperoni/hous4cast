@@ -1,6 +1,6 @@
-import { db, storage } from '../app/firebase'
+import { db } from './firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { uploadToCloudinary, isCloudinaryConfigured } from './cloudinaryApi'
 
 
 export type BrandingPalette = {
@@ -22,15 +22,9 @@ export type BrandingImageType = 'logo' | 'coverImage'
 const localStorageKey = (configId: string) => `hous4cast:branding:${configId}`
 
 const readLocalBranding = (configId: string): BrandingConfig | null => {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
+  if (typeof window === 'undefined') return null
   const raw = window.localStorage.getItem(localStorageKey(configId))
-  if (!raw) {
-    return null
-  }
-
+  if (!raw) return null
   try {
     return JSON.parse(raw) as BrandingConfig
   } catch {
@@ -39,25 +33,16 @@ const readLocalBranding = (configId: string): BrandingConfig | null => {
 }
 
 const writeLocalBranding = (configId: string, config: BrandingConfig): void => {
-  if (typeof window === 'undefined') {
-    return
-  }
-
+  if (typeof window === 'undefined') return
   window.localStorage.setItem(localStorageKey(configId), JSON.stringify(config))
 }
 
 export async function getBrandingConfig(configId: string): Promise<BrandingConfig | null> {
   try {
-    if (!db) {
-      return readLocalBranding(configId)
-    }
-
+    if (!db) return readLocalBranding(configId)
     const ref = doc(db, 'branding', configId)
     const snap = await getDoc(ref)
-    if (!snap.exists()) {
-      return readLocalBranding(configId)
-    }
-
+    if (!snap.exists()) return readLocalBranding(configId)
     const data = snap.data() as BrandingConfig
     writeLocalBranding(configId, data)
     return data
@@ -69,12 +54,8 @@ export async function getBrandingConfig(configId: string): Promise<BrandingConfi
 
 export async function setBrandingConfig(configId: string, config: BrandingConfig): Promise<void> {
   writeLocalBranding(configId, config)
-
   try {
-    if (!db) {
-      return
-    }
-
+    if (!db) return
     const ref = doc(db, 'branding', configId)
     await setDoc(ref, config)
   } catch (err) {
@@ -86,43 +67,37 @@ const localImageKey = (configId: string, type: BrandingImageType) =>
   `hous4cast:branding:${configId}:${type}`
 
 /**
- * Uploads an image file to Firebase Storage and saves the download URL to Firestore.
- * Falls back to storing base64 in localStorage when Firebase is not configured.
- * Returns the URL (or base64 data URL) of the uploaded image.
+ * Uploads an image file to Cloudinary and saves the CDN URL to Firestore.
+ * Falls back to base64 in localStorage when Cloudinary is not configured.
+ * Returns the public URL of the uploaded image.
  */
 export async function uploadBrandingImage(
   configId: string,
   type: BrandingImageType,
   file: File,
 ): Promise<string> {
-  // Always build a local preview URL for immediate use
-  const toBase64 = (f: File): Promise<string> =>
-    new Promise((resolve, reject) => {
+  const field = type === 'logo' ? 'logoUrl' : 'coverImageUrl'
+
+  if (!isCloudinaryConfigured) {
+    // Fallback: store as base64 data URL in localStorage
+    const dataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = () => resolve(reader.result as string)
       reader.onerror = reject
-      reader.readAsDataURL(f)
+      reader.readAsDataURL(file)
     })
-
-  if (!storage || !db) {
-    // Fallback: store as base64 in localStorage
-    const dataUrl = await toBase64(file)
     window.localStorage.setItem(localImageKey(configId, type), dataUrl)
-    // Also update the branding doc in localStorage
     const existing = readLocalBranding(configId) ?? ({} as BrandingConfig)
-    const field = type === 'logo' ? 'logoUrl' : 'coverImageUrl'
     writeLocalBranding(configId, { ...existing, [field]: dataUrl } as BrandingConfig)
     return dataUrl
   }
 
-  // Upload to Firebase Storage
-  const storageRef = ref(storage, `branding/${configId}/${type}`)
-  await uploadBytes(storageRef, file)
-  const url = await getDownloadURL(storageRef)
+  // Upload to Cloudinary
+  const result = await uploadToCloudinary(file, `branding/${configId}`)
+  const url = result.secure_url
 
-  // Persist URL to Firestore (merge with existing doc)
-  const field = type === 'logo' ? 'logoUrl' : 'coverImageUrl'
-  const firestoreRef = doc(db, 'branding', configId)
+  // Persist URL to Firestore
+  const firestoreRef = doc(db!, 'branding', configId)
   const snap = await getDoc(firestoreRef)
   const existing = snap.exists() ? (snap.data() as BrandingConfig) : ({} as BrandingConfig)
   await setDoc(firestoreRef, { ...existing, [field]: url })
@@ -135,14 +110,16 @@ export async function uploadBrandingImage(
 }
 
 /**
- * Deletes a branding image from Firebase Storage and clears the URL from Firestore.
+ * Clears a branding image URL from Firestore and localStorage.
+ * Note: Cloudinary free tier does not support deletion via API — the asset
+ * remains on Cloudinary CDN but is no longer referenced by the app.
  */
 export async function deleteBrandingImage(
   configId: string,
   type: BrandingImageType,
 ): Promise<void> {
-  window.localStorage.removeItem(localImageKey(configId, type))
   const field = type === 'logo' ? 'logoUrl' : 'coverImageUrl'
+  window.localStorage.removeItem(localImageKey(configId, type))
   const existing = readLocalBranding(configId)
   if (existing) {
     const updated = { ...existing }
@@ -150,14 +127,7 @@ export async function deleteBrandingImage(
     writeLocalBranding(configId, updated as BrandingConfig)
   }
 
-  if (!storage || !db) return
-
-  try {
-    const storageRef = ref(storage, `branding/${configId}/${type}`)
-    await deleteObject(storageRef)
-  } catch {
-    // Ignore if file doesn't exist
-  }
+  if (!db) return
 
   try {
     const firestoreRef = doc(db, 'branding', configId)
@@ -171,6 +141,4 @@ export async function deleteBrandingImage(
     console.error('[brandingApi] deleteBrandingImage error:', err)
   }
 }
-
-
 
