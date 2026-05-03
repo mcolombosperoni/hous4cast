@@ -107,6 +107,26 @@ export interface AgencyConfig {
   };
 }
 
+/**
+ * Fields an admin can override at runtime via Firestore/localStorage.
+ * Excludes: id, agencyName (identity), branding (own Firestore path), formFields (structural).
+ */
+export type EstimationConfigOverride = Partial<
+  Pick<
+    AgencyConfig,
+    | 'zones'
+    | 'propertyTypes'
+    | 'sqmRange'
+    | 'spreadFactor'
+    | 'sqmBucketPrices'
+    | 'conditionFactors'
+    | 'floorFactors'
+    | 'eraFactors'
+    | 'accessoriesBonuses'
+    | 'privacy'
+  >
+>
+
 export interface EstimateInput {
   zoneId: string
   propertyType: PropertyType

@@ -5,6 +5,7 @@ import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
 import { getAllConfigs } from '../configs/registry'
 import { AdminBrandingConfig } from './AdminBrandingConfig'
+import { AdminEstimationConfig } from './AdminEstimationConfig'
 import { i18n } from '../app/i18n'
 
 const buildQrUrl = (configId: string, dl: SupportedLocale, baseUrl: string): string => {
@@ -18,6 +19,7 @@ export const AdminPage = () => {
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null)
   const [qrLocale, setQrLocale] = useState<SupportedLocale>(locale)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [estConfigOpen, setEstConfigOpen] = useState(false)
   const selectedConfig = configs.find((config) => config.id === selectedConfigId) ?? null
   const publicBase = (import.meta.env.VITE_PUBLIC_BASE_URL as string | undefined) ?? window.location.origin
   const qrUrl = selectedConfig ? buildQrUrl(selectedConfig.id, qrLocale, publicBase) : ''
@@ -172,9 +174,30 @@ export const AdminPage = () => {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-lg font-semibold mb-2">{labels.branding}</h2>
-        {/* Passes the selected agency configId for Firestore palette persistence. Required for AdminBrandingConfig to load/save branding. */}
+        <h2 className="mb-2 text-lg font-semibold">{labels.branding}</h2>
         <AdminBrandingConfig configId={selectedConfig?.id ?? undefined} />
+      </section>
+
+      {/* Estimation Config editor — visible only when an agency is selected */}
+      <section
+        className="mt-8 rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+        data-testid="estimation-config-section"
+        style={{ display: selectedConfig ? undefined : 'none' }}
+      >
+        <button
+          type="button"
+          className="flex w-full items-center justify-between text-left font-semibold text-slate-900 dark:text-slate-100"
+          onClick={() => setEstConfigOpen((o) => !o)}
+          data-testid="estimation-config-toggle"
+        >
+          <span>Estimation Config</span>
+          <span>{estConfigOpen ? '▲' : '▼'}</span>
+        </button>
+        {estConfigOpen && selectedConfig && (
+          <div className="mt-4">
+            <AdminEstimationConfig key={selectedConfig.id} configId={selectedConfig.id} />
+          </div>
+        )}
       </section>
     </main>
   )
