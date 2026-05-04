@@ -3,7 +3,6 @@ import { test, expect } from '@playwright/test'
 // Acceptance test for US-07: Fill out valuation form and get instant estimate
 test.describe('Valuation form (US-07)', () => {
   test('User can fill the form and see the estimate result', async ({ page }) => {
-    // Go to the estimate page for the Gabetti config
     await page.goto('/#/estimate/gabetti-busto-arsizio')
     await page.waitForSelector('form')
 
@@ -13,9 +12,15 @@ test.describe('Valuation form (US-07)', () => {
     await expect(page.getByTestId('sqmBucket')).toBeVisible()
     await expect(page.getByTestId('privacy')).toBeVisible()
 
-    // Fill the form with minimum required fields
+    // Fill all required fields
     await page.selectOption('[data-testid="zoneId"]', { index: 0 })
     await page.selectOption('[data-testid="sqmBucket"]', '71_110')
+    await page.selectOption('[data-testid="condition"]', 'ottimo')
+    await page.selectOption('[data-testid="accessories"]', 'nulla')
+    await page.selectOption('[data-testid="floor"]', 'primo')
+    await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
 
     // Submit
@@ -26,13 +31,16 @@ test.describe('Valuation form (US-07)', () => {
     await expect(page.locator('[data-testid="estimate-result"]')).toHaveText(/[\p{Sc}]?\s?\d+[.,]?\d*\s*[-–]\s*[\p{Sc}]?\s?\d+[.,]?\d*/u)
   })
 
-  test('Validation: privacy is required', async ({ page }) => {
+  test('Validation: all required fields show errors simultaneously on submit', async ({ page }) => {
     await page.goto('/#/estimate/gabetti-busto-arsizio')
+    await page.waitForSelector('[data-testid="estimate-page-loading"]', { state: 'detached', timeout: 8000 })
     await page.waitForSelector('form')
-    // Try to submit without accepting privacy
+    // Submit without filling anything
     await page.click('button[type="submit"]')
-    // Should show privacy validation error
+    // Privacy error and sqmBucket error must both be visible at the same time,
+    // proving that all validation errors appear simultaneously.
     await expect(page.getByTestId('error-privacy')).toBeVisible()
+    await expect(page.getByTestId('error-sqmBucket')).toBeVisible()
   })
 })
 
@@ -90,6 +98,8 @@ test.describe('Extended valuation form — Gabetti (US-08)', () => {
     await page.selectOption('[data-testid="accessories"]', 'nulla')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -104,6 +114,8 @@ test.describe('Extended valuation form — Gabetti (US-08)', () => {
     await page.selectOption('[data-testid="accessories"]', 'nulla')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -114,14 +126,19 @@ test.describe('Extended valuation form — Gabetti (US-08)', () => {
     expect(extractFirst(periferiaText)).toBeLessThan(extractFirst(centroText))
   })
 
-  test('Validation: sqmBucket and privacy are required in Gabetti form', async ({ page }) => {
+  test('Validation: all required fields show errors simultaneously on submit', async ({ page }) => {
     await page.goto('/#/estimate/gabetti-busto-arsizio')
+    await page.waitForSelector('[data-testid="estimate-page-loading"]', { state: 'detached', timeout: 8000 })
     await page.waitForSelector('form')
 
-    // Submit without selecting sqmBucket or accepting privacy
+    // Submit without filling anything
     await page.click('button[type="submit"]')
 
-    // Should show privacy validation error
+    // At least three distinct field errors must be visible simultaneously:
+    // sqmBucket, condition/email/phone (first unfilled required), and privacy.
+    await expect(page.getByTestId('error-privacy')).toBeVisible()
+    await expect(page.getByTestId('error-sqmBucket')).toBeVisible()
+    // Both errors rendered at the same time (not sequentially)
     await expect(page.getByTestId('error-privacy')).toBeVisible()
   })
 

@@ -21,11 +21,11 @@ const inputClass = 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-s
 const errorClass = 'text-xs text-red-500 dark:text-red-400'
 const labelClass = 'text-sm font-medium text-slate-700 dark:text-slate-300'
 
-const FormField = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
+const FormField = ({ label, error, errorTestId, children }: { label: string; error?: string; errorTestId?: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-1">
     <label className={labelClass}>{label}</label>
     {children}
-    {error && <p className={errorClass}>{error}</p>}
+    {error && <p className={errorClass} data-testid={errorTestId}>{error}</p>}
   </div>
 )
 
@@ -36,7 +36,9 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
 
   const labels = i18n[locale].estimate
 
-  // Build schema dynamically based on whether the config uses buckets
+  // Build schema dynamically based on whether the config uses buckets.
+  // All fields shown in the form are required so validation errors appear
+  // simultaneously on first submit attempt.
   const schema = z.object({
     zoneId: z.string().min(1, labels.required),
     propertyType: z.string().min(1, labels.required),
@@ -50,12 +52,12 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
         ),
     sqmBucket: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
     address: z.string().optional(),
-    condition: z.string().optional(),
-    accessories: z.string().optional(),
-    floor: z.string().optional(),
-    buildEra: z.string().optional(),
-    email: z.union([z.string().email(labels.emailInvalid), z.literal('')]).optional(),
-    phone: z.string().optional(),
+    condition: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
+    accessories: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
+    floor: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
+    buildEra: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
+    email: z.string().email(labels.emailInvalid).min(1, labels.required),
+    phone: z.string().min(1, labels.required),
     privacy: z.boolean().refine((val) => val, { message: labels.privacyRequired }),
   })
 
@@ -74,15 +76,16 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
     privacy: false,
   }
 
-  const { handleSubmit, control, formState: { errors }, trigger } = useForm({
+  const { handleSubmit, control, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
     mode: 'onSubmit',
+    // Re-validate all fields on change only after the first failed submit,
+    // so errors are cleared as soon as the user fixes them.
+    reValidateMode: 'onChange',
     defaultValues,
   })
 
-  const submit = async (data: typeof defaultValues) => {
-    const valid = await trigger()
-    if (!valid) return
+  const submit = (data: typeof defaultValues) => {
     onSubmit({
       zoneId: data.zoneId,
       propertyType: data.propertyType as PropertyType,
@@ -98,58 +101,76 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
     })
   }
 
+  // Scroll to the first visible field error after a failed submit attempt.
+  const onInvalid = () => {
+    requestAnimationFrame(() => {
+      const firstError = document.querySelector('[data-field-error]')
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    })
+  }
+
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit(submit)}>
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit(submit, onInvalid)}>
 
       {/* Zone */}
-      <FormField label={labels.zone} error={errors.zoneId?.message as string}>
-        <Controller name="zoneId" control={control} render={({ field }) => (
-          <select data-testid="zoneId" className={selectClass} {...field}>
-            {zones.map((z) => (
-              <option key={z.zoneId} value={z.zoneId}>{z.label[locale]}</option>
-            ))}
-          </select>
-        )} />
-      </FormField>
-
-      {/* Property type (only if multiple types) */}
-      {propertyTypes.length > 1 && (
-        <FormField label={labels.type} error={errors.propertyType?.message as string}>
-          <Controller name="propertyType" control={control} render={({ field }) => (
-            <select data-testid="propertyType" className={selectClass} {...field}>
-              {propertyTypes.map((pt) => (
-                <option key={pt} value={pt}>{propertyTypeLabel[pt][locale]}</option>
+      <div data-field-error={errors.zoneId ? 'true' : undefined}>
+        <FormField label={labels.zone} error={errors.zoneId?.message as string} errorTestId="error-zoneId">
+          <Controller name="zoneId" control={control} render={({ field }) => (
+            <select data-testid="zoneId" className={selectClass} {...field}>
+              {zones.map((z) => (
+                <option key={z.zoneId} value={z.zoneId}>{z.label[locale]}</option>
               ))}
             </select>
           )} />
         </FormField>
+      </div>
+
+      {/* Property type (only if multiple types) */}
+      {propertyTypes.length > 1 && (
+        <div data-field-error={errors.propertyType ? 'true' : undefined}>
+          <FormField label={labels.type} error={errors.propertyType?.message as string}>
+            <Controller name="propertyType" control={control} render={({ field }) => (
+              <select data-testid="propertyType" className={selectClass} {...field}>
+                {propertyTypes.map((pt) => (
+                  <option key={pt} value={pt}>{propertyTypeLabel[pt][locale]}</option>
+                ))}
+              </select>
+            )} />
+          </FormField>
+        </div>
       )}
 
       {/* Surface — bucket mode (Gabetti) or numeric input */}
       {usesBuckets ? (
-        <FormField label={labels.sqmBucket} error={errors.sqmBucket?.message as string}>
-          <Controller name="sqmBucket" control={control} render={({ field }) => (
-            <select data-testid="sqmBucket" className={selectClass} {...field}>
-              <option value="">—</option>
-              {(Object.entries(labels.sqmBucketOptions) as [SqmBucket, string][]).map(([val, lbl]) => (
-                <option key={val} value={val}>{lbl}</option>
-              ))}
-            </select>
-          )} />
-        </FormField>
+        <div data-field-error={errors.sqmBucket ? 'true' : undefined}>
+          <FormField label={labels.sqmBucket} error={errors.sqmBucket?.message as string} errorTestId="error-sqmBucket">
+            <Controller name="sqmBucket" control={control} render={({ field }) => (
+              <select data-testid="sqmBucket" className={selectClass} {...field}>
+                <option value="">—</option>
+                {(Object.entries(labels.sqmBucketOptions) as [SqmBucket, string][]).map(([val, lbl]) => (
+                  <option key={val} value={val}>{lbl}</option>
+                ))}
+              </select>
+            )} />
+          </FormField>
+        </div>
       ) : (
-        <FormField label={labels.sqm} error={errors.sqm?.message as string}>
-          <Controller name="sqm" control={control} render={({ field }) => (
-            <input
-              id="sqm" type="number" min={sqmRange.min} max={sqmRange.max}
-              placeholder={`${sqmRange.min}–${sqmRange.max}`}
-              className={inputClass}
-              value={typeof field.value === 'number' || typeof field.value === 'string' ? field.value : ''}
-              onChange={field.onChange}
-              data-testid="sqm"
-            />
-          )} />
-        </FormField>
+        <div data-field-error={errors.sqm ? 'true' : undefined}>
+          <FormField label={labels.sqm} error={errors.sqm?.message as string}>
+            <Controller name="sqm" control={control} render={({ field }) => (
+              <input
+                id="sqm" type="number" min={sqmRange.min} max={sqmRange.max}
+                placeholder={`${sqmRange.min}–${sqmRange.max}`}
+                className={inputClass}
+                value={typeof field.value === 'number' || typeof field.value === 'string' ? field.value : ''}
+                onChange={field.onChange}
+                data-testid="sqm"
+              />
+            )} />
+          </FormField>
+        </div>
       )}
 
       {/* Address */}
@@ -160,69 +181,81 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
       </FormField>
 
       {/* Condition */}
-      <FormField label={labels.condition} error={errors.condition?.message as string}>
-        <Controller name="condition" control={control} render={({ field }) => (
-          <select data-testid="condition" className={selectClass} {...field}>
-            <option value="">—</option>
-            {(Object.entries(labels.conditionOptions) as [PropertyCondition, string][]).map(([val, lbl]) => (
-              <option key={val} value={val}>{lbl}</option>
-            ))}
-          </select>
-        )} />
-      </FormField>
+      <div data-field-error={errors.condition ? 'true' : undefined}>
+        <FormField label={labels.condition} error={errors.condition?.message as string}>
+          <Controller name="condition" control={control} render={({ field }) => (
+            <select data-testid="condition" className={selectClass} {...field}>
+              <option value="">—</option>
+              {(Object.entries(labels.conditionOptions) as [PropertyCondition, string][]).map(([val, lbl]) => (
+                <option key={val} value={val}>{lbl}</option>
+              ))}
+            </select>
+          )} />
+        </FormField>
+      </div>
 
       {/* Accessories */}
-      <FormField label={labels.accessories} error={errors.accessories?.message as string}>
-        <Controller name="accessories" control={control} render={({ field }) => (
-          <select data-testid="accessories" className={selectClass} {...field}>
-            <option value="">—</option>
-            {(Object.entries(labels.accessoriesOptions) as [PropertyAccessories, string][]).map(([val, lbl]) => (
-              <option key={val} value={val}>{lbl}</option>
-            ))}
-          </select>
-        )} />
-      </FormField>
+      <div data-field-error={errors.accessories ? 'true' : undefined}>
+        <FormField label={labels.accessories} error={errors.accessories?.message as string}>
+          <Controller name="accessories" control={control} render={({ field }) => (
+            <select data-testid="accessories" className={selectClass} {...field}>
+              <option value="">—</option>
+              {(Object.entries(labels.accessoriesOptions) as [PropertyAccessories, string][]).map(([val, lbl]) => (
+                <option key={val} value={val}>{lbl}</option>
+              ))}
+            </select>
+          )} />
+        </FormField>
+      </div>
 
       {/* Floor */}
-      <FormField label={labels.floor} error={errors.floor?.message as string}>
-        <Controller name="floor" control={control} render={({ field }) => (
-          <select data-testid="floor" className={selectClass} {...field}>
-            <option value="">—</option>
-            {(Object.entries(labels.floorOptions) as [PropertyFloor, string][]).map(([val, lbl]) => (
-              <option key={val} value={val}>{lbl}</option>
-            ))}
-          </select>
-        )} />
-      </FormField>
+      <div data-field-error={errors.floor ? 'true' : undefined}>
+        <FormField label={labels.floor} error={errors.floor?.message as string}>
+          <Controller name="floor" control={control} render={({ field }) => (
+            <select data-testid="floor" className={selectClass} {...field}>
+              <option value="">—</option>
+              {(Object.entries(labels.floorOptions) as [PropertyFloor, string][]).map(([val, lbl]) => (
+                <option key={val} value={val}>{lbl}</option>
+              ))}
+            </select>
+          )} />
+        </FormField>
+      </div>
 
       {/* Build era */}
-      <FormField label={labels.buildEra} error={errors.buildEra?.message as string}>
-        <Controller name="buildEra" control={control} render={({ field }) => (
-          <select data-testid="buildEra" className={selectClass} {...field}>
-            <option value="">—</option>
-            {(Object.entries(labels.eraOptions) as [BuildEra, string][]).map(([val, lbl]) => (
-              <option key={val} value={val}>{lbl}</option>
-            ))}
-          </select>
-        )} />
-      </FormField>
+      <div data-field-error={errors.buildEra ? 'true' : undefined}>
+        <FormField label={labels.buildEra} error={errors.buildEra?.message as string}>
+          <Controller name="buildEra" control={control} render={({ field }) => (
+            <select data-testid="buildEra" className={selectClass} {...field}>
+              <option value="">—</option>
+              {(Object.entries(labels.eraOptions) as [BuildEra, string][]).map(([val, lbl]) => (
+                <option key={val} value={val}>{lbl}</option>
+              ))}
+            </select>
+          )} />
+        </FormField>
+      </div>
 
       {/* Email */}
-      <FormField label={labels.email} error={errors.email?.message as string}>
-        <Controller name="email" control={control} render={({ field }) => (
-          <input type="email" className={inputClass} data-testid="email" autoComplete="email" {...field} />
-        )} />
-      </FormField>
+      <div data-field-error={errors.email ? 'true' : undefined}>
+        <FormField label={labels.email} error={errors.email?.message as string}>
+          <Controller name="email" control={control} render={({ field }) => (
+            <input type="email" className={inputClass} data-testid="email" autoComplete="email" {...field} />
+          )} />
+        </FormField>
+      </div>
 
       {/* Phone */}
-      <FormField label={labels.phone} error={errors.phone?.message as string}>
-        <Controller name="phone" control={control} render={({ field }) => (
-          <input type="tel" className={inputClass} data-testid="phone" autoComplete="tel" {...field} />
-        )} />
-      </FormField>
+      <div data-field-error={errors.phone ? 'true' : undefined}>
+        <FormField label={labels.phone} error={errors.phone?.message as string}>
+          <Controller name="phone" control={control} render={({ field }) => (
+            <input type="tel" className={inputClass} data-testid="phone" autoComplete="tel" {...field} />
+          )} />
+        </FormField>
+      </div>
 
       {/* Privacy */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1" data-field-error={errors.privacy ? 'true' : undefined}>
         <Controller name="privacy" control={control} render={({ field }) => (
           <label className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2" htmlFor="privacy">
             <input
