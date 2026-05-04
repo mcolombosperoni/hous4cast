@@ -216,6 +216,112 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.goto('/#/admin')
     await expect(page.getByTestId('estimation-config-section')).not.toBeVisible()
   })
+
+  test('Admin edits condition factor → saves → value reflects in localStorage', async ({ page }) => {
+    await openEstimationConfig(page)
+    await page.fill('[data-testid="condition-factor-ottimo"]', '0.9')
+    await saveConfig(page)
+
+    const stored = await page.evaluate(() =>
+      window.localStorage.getItem('hous4cast:estimationConfig:gabetti-busto-arsizio')
+    )
+    const parsed = JSON.parse(stored!)
+    expect(parsed.conditionFactors?.ottimo).toBe(0.9)
+    // Other condition factors should remain correct
+    expect(parsed.conditionFactors?.buono).toBe(0.75)
+    expect(parsed.conditionFactors?.da_ristrutturare).toBe(0.5)
+  })
+
+  test('Admin edits accessories bonus → saves → estimate result changes', async ({ page }) => {
+    // Baseline estimate with default box_auto bonus (15000)
+    await page.goto('/#/estimate/gabetti-busto-arsizio')
+    await page.waitForSelector('[data-testid="estimate-page-loading"]', { state: 'detached', timeout: 8000 })
+    await page.waitForSelector('form')
+    await page.selectOption('[data-testid="zoneId"]', 'centro')
+    await page.selectOption('[data-testid="sqmBucket"]', '71_110')
+    await page.selectOption('[data-testid="condition"]', 'ottimo')
+    await page.selectOption('[data-testid="accessories"]', 'box_auto')
+    await page.selectOption('[data-testid="floor"]', 'primo')
+    await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.check('[data-testid="privacy"]')
+    await page.click('button[type="submit"]')
+    await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
+    const baselineText = await page.locator('[data-testid="estimate-result"]').innerText()
+
+    // Admin: set box_auto bonus to 0
+    await openEstimationConfig(page)
+    await page.fill('[data-testid="accessories-bonus-box_auto"]', '0')
+    await saveConfig(page)
+
+    const stored = await page.evaluate(() =>
+      window.localStorage.getItem('hous4cast:estimationConfig:gabetti-busto-arsizio')
+    )
+    const parsed = JSON.parse(stored!)
+    expect(parsed.accessoriesBonuses?.box_auto).toBe(0)
+
+    // Estimate with bonus=0 should be lower
+    await page.goto('/#/estimate/gabetti-busto-arsizio')
+    await page.waitForSelector('[data-testid="estimate-page-loading"]', { state: 'detached', timeout: 8000 })
+    await page.waitForSelector('form')
+    await page.selectOption('[data-testid="zoneId"]', 'centro')
+    await page.selectOption('[data-testid="sqmBucket"]', '71_110')
+    await page.selectOption('[data-testid="condition"]', 'ottimo')
+    await page.selectOption('[data-testid="accessories"]', 'box_auto')
+    await page.selectOption('[data-testid="floor"]', 'primo')
+    await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.check('[data-testid="privacy"]')
+    await page.click('button[type="submit"]')
+    await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
+    const modifiedText = await page.locator('[data-testid="estimate-result"]').innerText()
+
+    const extractFirst = (s: string) => parseInt(s.replace(/[^\d]/g, '').slice(0, 9))
+    expect(extractFirst(modifiedText)).toBeLessThan(extractFirst(baselineText))
+  })
+
+  test('Admin edits sqm bucket price → saves → estimate result changes', async ({ page }) => {
+    // Baseline estimate
+    await page.goto('/#/estimate/gabetti-busto-arsizio')
+    await page.waitForSelector('[data-testid="estimate-page-loading"]', { state: 'detached', timeout: 8000 })
+    await page.waitForSelector('form')
+    await page.selectOption('[data-testid="zoneId"]', 'centro')
+    await page.selectOption('[data-testid="sqmBucket"]', '71_110')
+    await page.selectOption('[data-testid="condition"]', 'ottimo')
+    await page.selectOption('[data-testid="accessories"]', 'nulla')
+    await page.selectOption('[data-testid="floor"]', 'primo')
+    await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.check('[data-testid="privacy"]')
+    await page.click('button[type="submit"]')
+    await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
+    const baselineText = await page.locator('[data-testid="estimate-result"]').innerText()
+
+    // Admin: halve the 71_110 bucket price
+    await openEstimationConfig(page)
+    await page.fill('[data-testid="sqm-bucket-71_110"]', '176000')
+    await saveConfig(page)
+
+    const stored = await page.evaluate(() =>
+      window.localStorage.getItem('hous4cast:estimationConfig:gabetti-busto-arsizio')
+    )
+    expect(JSON.parse(stored!).sqmBucketPrices?.['71_110']).toBe(176000)
+
+    // Estimate with halved price should be lower
+    await page.goto('/#/estimate/gabetti-busto-arsizio')
+    await page.waitForSelector('[data-testid="estimate-page-loading"]', { state: 'detached', timeout: 8000 })
+    await page.waitForSelector('form')
+    await page.selectOption('[data-testid="zoneId"]', 'centro')
+    await page.selectOption('[data-testid="sqmBucket"]', '71_110')
+    await page.selectOption('[data-testid="condition"]', 'ottimo')
+    await page.selectOption('[data-testid="accessories"]', 'nulla')
+    await page.selectOption('[data-testid="floor"]', 'primo')
+    await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.check('[data-testid="privacy"]')
+    await page.click('button[type="submit"]')
+    await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
+    const modifiedText = await page.locator('[data-testid="estimate-result"]').innerText()
+
+    const extractFirst = (s: string) => parseInt(s.replace(/[^\d]/g, '').slice(0, 9))
+    expect(extractFirst(modifiedText)).toBeLessThan(extractFirst(baselineText))
+  })
 })
 
 

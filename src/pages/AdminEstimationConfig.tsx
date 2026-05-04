@@ -25,6 +25,17 @@ interface FormState {
   privacyEn: string
 }
 
+/** Parse a string-valued Record back to numbers, skipping NaN entries */
+function parseFactorTable(table: Record<string, string> | undefined): Record<string, number> {
+  if (!table) return {}
+  const result: Record<string, number> = {}
+  for (const [k, v] of Object.entries(table)) {
+    const n = parseFloat(v)
+    if (!isNaN(n)) result[k] = n
+  }
+  return result
+}
+
 function buildFormState(base: AgencyConfig, override: EstimationConfigOverride | null): FormState {
   const spreadFactor = override?.spreadFactor !== undefined
     ? String(override.spreadFactor)
@@ -48,7 +59,39 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
   const privacyIt = override?.privacy?.text?.it ?? base.privacy?.text?.it ?? ''
   const privacyEn = override?.privacy?.text?.en ?? base.privacy?.text?.en ?? ''
 
-  return { spreadFactor, zones, privacyIt, privacyEn }
+  // Helper: merge a factor/bonus table from override over base, stringify values
+  const buildTable = (
+    baseTable: Record<string, number> | undefined,
+    overrideTable: Record<string, number> | undefined,
+  ): Record<string, string> => {
+    if (!baseTable) return {}
+    return Object.fromEntries(
+      Object.entries(baseTable).map(([k, v]) => [k, String(overrideTable?.[k] ?? v)])
+    )
+  }
+
+  const sqmBucketPrices = buildTable(
+    base.sqmBucketPrices as Record<string, number> | undefined,
+    override?.sqmBucketPrices as Record<string, number> | undefined,
+  )
+  const conditionFactors = buildTable(
+    base.conditionFactors as Record<string, number> | undefined,
+    override?.conditionFactors as Record<string, number> | undefined,
+  )
+  const floorFactors = buildTable(
+    base.floorFactors as Record<string, number> | undefined,
+    override?.floorFactors as Record<string, number> | undefined,
+  )
+  const eraFactors = buildTable(
+    base.eraFactors as Record<string, number> | undefined,
+    override?.eraFactors as Record<string, number> | undefined,
+  )
+  const accessoriesBonuses = buildTable(
+    base.accessoriesBonuses as Record<string, number> | undefined,
+    override?.accessoriesBonuses as Record<string, number> | undefined,
+  )
+
+  return { spreadFactor, zones, sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, privacyIt, privacyEn }
 }
 
 export const AdminEstimationConfig = ({ configId }: Props) => {
@@ -128,6 +171,19 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     dispatch({ type: 'SET_FORM', formState: { ...formState, privacyEn: value } })
   }
 
+  /** Generic handler for any factor/bonus table field */
+  const handleFactorChange = (
+    field: 'sqmBucketPrices' | 'conditionFactors' | 'floorFactors' | 'eraFactors' | 'accessoriesBonuses',
+    key: string,
+    value: string,
+  ) => {
+    if (!formState) return
+    dispatch({
+      type: 'SET_FORM',
+      formState: { ...formState, [field]: { ...formState[field], [key]: value } },
+    })
+  }
+
   const handleAddZone = () => {
     if (!formState) return
     const newRow: ZoneRow = {
@@ -168,11 +224,11 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     const override: EstimationConfigOverride = {
       spreadFactor: spreadValue,
       zones,
-      sqmBucketPrices: base.sqmBucketPrices,
-      conditionFactors: base.conditionFactors,
-      floorFactors: base.floorFactors,
-      eraFactors: base.eraFactors,
-      accessoriesBonuses: base.accessoriesBonuses,
+      sqmBucketPrices: parseFactorTable(formState.sqmBucketPrices),
+      conditionFactors: parseFactorTable(formState.conditionFactors),
+      floorFactors: parseFactorTable(formState.floorFactors),
+      eraFactors: parseFactorTable(formState.eraFactors),
+      accessoriesBonuses: parseFactorTable(formState.accessoriesBonuses),
       privacy: {
         text: {
           it: formState.privacyIt,
@@ -267,6 +323,41 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
               + Add Zone
             </button>
           </div>
+
+          {/* Factor table sections */}
+          {(
+            [
+              { field: 'sqmBucketPrices', label: 'Sqm Bucket Prices (€)', testPrefix: 'sqm-bucket' },
+              { field: 'conditionFactors', label: 'Condition Factors', testPrefix: 'condition-factor' },
+              { field: 'floorFactors', label: 'Floor Factors', testPrefix: 'floor-factor' },
+              { field: 'eraFactors', label: 'Era Factors', testPrefix: 'era-factor' },
+              { field: 'accessoriesBonuses', label: 'Accessories Bonuses (€)', testPrefix: 'accessories-bonus' },
+            ] as const
+          ).map(({ field, label, testPrefix }) => {
+            const table = formState[field]
+            if (!table || Object.keys(table).length === 0) return null
+            return (
+              <div key={field}>
+                <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</h3>
+                <div className="space-y-1">
+                  {Object.entries(table).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-3">
+                      <span className="w-36 text-xs text-slate-600 dark:text-slate-400">{key}</span>
+                      <input
+                        id={`${testPrefix}-${key}`}
+                        data-testid={`${testPrefix}-${key}`}
+                        type="number"
+                        step="any"
+                        className="w-32 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        value={value}
+                        onChange={(e) => handleFactorChange(field, key, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
 
           {/* Privacy text */}
           <div>

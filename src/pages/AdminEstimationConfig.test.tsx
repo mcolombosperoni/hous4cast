@@ -106,6 +106,88 @@ describe('AdminEstimationConfig component (T54)', () => {
     await user.click(screen.getByTestId('zone-add-btn'))
     expect(screen.getAllByTestId(/^zone-id-/).length).toBe(before + 1)
   })
+
+  it('renders condition factor inputs with base values', async () => {
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('condition-factor-ottimo')).toHaveValue(1)
+    expect(screen.getByTestId('condition-factor-buono')).toHaveValue(0.75)
+    expect(screen.getByTestId('condition-factor-da_ristrutturare')).toHaveValue(0.5)
+  })
+
+  it('renders floor factor inputs with base values', async () => {
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('floor-factor-primo')).toHaveValue(1)
+    expect(screen.getByTestId('floor-factor-terra')).toHaveValue(0.98)
+  })
+
+  it('renders era factor inputs with base values', async () => {
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('era-factor-2016_oggi')).toHaveValue(1)
+    expect(screen.getByTestId('era-factor-1900_1940')).toHaveValue(0.55)
+  })
+
+  it('renders accessories bonus inputs with base values', async () => {
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('accessories-bonus-nulla')).toHaveValue(0)
+    expect(screen.getByTestId('accessories-bonus-box_auto')).toHaveValue(15000)
+  })
+
+  it('renders sqm bucket price inputs with base values', async () => {
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('sqm-bucket-71_110')).toHaveValue(352000)
+    expect(screen.getByTestId('sqm-bucket-fino_50')).toHaveValue(160000)
+  })
+
+  it('edited condition factor is included in save payload', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
+    const input = screen.getByTestId('condition-factor-ottimo')
+    await user.clear(input)
+    await user.type(input, '0.9')
+    await user.click(screen.getByTestId('estimation-config-save'))
+    await waitFor(() =>
+      expect(api.saveEstimationConfig).toHaveBeenCalledWith(
+        'gabetti-busto-arsizio',
+        expect.objectContaining({
+          conditionFactors: expect.objectContaining({ ottimo: 0.9 }),
+        }),
+      )
+    )
+  })
+
+  it('edited accessories bonus is included in save payload', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
+    const input = screen.getByTestId('accessories-bonus-box_auto')
+    await user.clear(input)
+    await user.type(input, '20000')
+    await user.click(screen.getByTestId('estimation-config-save'))
+    await waitFor(() =>
+      expect(api.saveEstimationConfig).toHaveBeenCalledWith(
+        'gabetti-busto-arsizio',
+        expect.objectContaining({
+          accessoriesBonuses: expect.objectContaining({ box_auto: 20000 }),
+        }),
+      )
+    )
+  })
+
+  it('override values pre-populate factor inputs on load', async () => {
+    vi.mocked(api.loadEstimationConfig).mockResolvedValue({
+      conditionFactors: { ottimo: 0.8, buono: 0.6, da_ristrutturare: 0.4 },
+    })
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('condition-factor-ottimo')).toHaveValue(0.8)
+    expect(screen.getByTestId('condition-factor-buono')).toHaveValue(0.6)
+  })
 })
 
 
