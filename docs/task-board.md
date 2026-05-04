@@ -88,15 +88,25 @@
 - Epic G — Admin sharing UX
 - Epic H — Configurable form and branding (palette, logo, image)
 - Epic I — Admin-editable estimation config
+- Epic J — Branding applied to estimate page (waiting approval)
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
 |------|-----------|-------------|
-| J | US-10 | Branding applied to estimate page — palette, logo, cover image rendered on `/estimate/:configId` |
 | K | US-11 | Lead capture and agent notification — save leads to Firestore, email the agent |
 | L | US-12 | Multi-agency support — second agency config fully operational |
 | M | US-13 | Estimate PDF export — branded downloadable PDF from result page |
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
+| O | US-15 | Property type as a configurable estimation factor |
+
+## Epic O — Property type as a configurable estimation factor (US-15)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T67 | O | US-15 | Extend `AgencyConfig` types: add optional `propertyTypeFactors: Partial<Record<PropertyType, number>>` | todo | Backward compatible: absent = all factors default to 1.0. Add to `EstimationConfigOverride` as well. |
+| T68 | O | US-15 | Update `EstimationEngine._estimateWithFactors` to apply `propertyTypeFactors[propertyType] ?? 1` | todo | New multiplier in the Gabetti factor chain. Unit tests updated. |
+| T69 | O | US-15 | Add `propertyTypeFactors` section to `AdminEstimationConfig` editor | todo | Same key-value input pattern as `conditionFactors` etc. Also allow editing the `propertyTypes` list (add/remove). Save/load via `estimationConfigApi`. |
+| T70 | O | US-15 | E2E acceptance tests: admin edits property type factor → estimate changes | todo | Playwright: add a second property type with factor ≠ 1, verify estimate page shows the selector and result differs. |
+| T71 | O | US-15 | Unit/component tests for property type factor | todo | Vitest: engine applies factor correctly; admin editor renders and saves the new field; form hides selector when single type. |
 
 ## Wont-Do
 - None

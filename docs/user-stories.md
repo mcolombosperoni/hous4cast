@@ -163,3 +163,16 @@ Acceptance criteria:
 - Each entry shows: date, name, email, phone, address, estimate range.
 - The admin can export the filtered list as CSV.
 - Only leads for the selected agency config are shown by default.
+
+### US-15 - Property type as a configurable estimation factor (Epic O)
+As an agency admin, I want to define the list of available property types and assign a multiplicative coefficient to each, so that the estimate reflects the type of property without requiring a code deployment.
+As a potential seller, I want to select the property type only when more than one is available, so that the form is as simple as possible.
+
+Acceptance criteria:
+- `AgencyConfig` supports an optional `propertyTypeFactors` map (propertyType → multiplier). When absent or when the factor is `1.0`, the estimate is unchanged (backward compatible with existing configs).
+- The estimation engine applies `propertyTypeFactors[propertyType] ?? 1` as an additional multiplier in the Gabetti-style factor path.
+- The estimate form shows the property type selector only when `propertyTypes.length > 1` (current behaviour preserved).
+- The admin can edit `propertyTypeFactors` and the list of `propertyTypes` from the estimation config editor, using the same key-value UI pattern as other factor tables.
+- Changes saved in admin are reflected immediately on the next estimate page load (override via localStorage/Firestore, same mechanism as other factors).
+- Default config for new agencies: `propertyTypes: ['appartamento']`, `propertyTypeFactors: { appartamento: 1 }` — no user-visible change for Gabetti Busto Arsizio.
+

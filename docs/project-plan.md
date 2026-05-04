@@ -18,6 +18,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic L: Multi-agency support _(planned)_
 - Epic M: Estimate PDF export _(planned)_
 - Epic N: Admin leads dashboard _(planned)_
+- Epic O: Property type as a configurable estimation factor _(planned)_
 
 ## Epic I — Admin-editable Estimation Config
 
@@ -79,10 +80,21 @@ Key design decisions (to be confirmed):
 - Each row shows: date, name, email, phone, address, estimate range.
 - Export to CSV for the selected filter.
 
-## Current Increment
-- Epic J: T57–T66 — branded estimate page, see task board.
+## Epic O — Property type as a configurable estimation factor
+
+Goal: the property type field becomes a first-class estimation factor with its own multiplicative coefficient table (like `conditionFactors`, `floorFactors`, etc.), fully editable by the agency admin. When only one property type is configured, the field is hidden from the estimate form (no unnecessary choice for the seller). The default behaviour for existing configs (e.g. Gabetti with only `appartamento`) is unchanged — a default multiplier of `1.0` means no impact on the estimate.
+
+Key design decisions (to be confirmed):
+- New `propertyTypeFactors: FactorTable<PropertyType>` field added to `AgencyConfig` (optional; if absent the engine falls back to `1.0` for all types — backward compatible).
+- `EstimationEngine._estimateWithFactors` applies `propertyTypeFactors[propertyType] ?? 1` as an additional multiplier.
+- The legacy simple engine path (`pricePerSqm × sqm`) already uses `zone.pricePerSqm[propertyType]` so it is unaffected.
+- `AdminEstimationConfig` exposes a new section to edit `propertyTypeFactors` and the list of `propertyTypes`, with the same key-value pattern used for other factor tables.
+- `EstimateForm` hides the property type selector when `propertyTypes.length <= 1` (current behaviour, now also valid for Gabetti with single type).
+- `EstimationConfigOverride` already includes `propertyTypes` (partial override support exists); `propertyTypeFactors` must be added to the override type.
 
 _Last updated: 2026-05-04_
+
+## Delivery Workflow
 - All features are developed outside-in: acceptance tests first, then unit/component tests.
 - Each increment is delivered as a complete, tested slice.
 - Push only at increment completion, then wait for explicit approval before continuing.
