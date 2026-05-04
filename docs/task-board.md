@@ -1,9 +1,9 @@
 # Task Board
 
 ## Current Increment
-- Epic: Epic J — Branding applied to estimate page
+- Epic: J + hotfix form validation UX
 - Status: `waiting-approval`
-- All tasks T57–T66 delivered and tested.
+- All tasks T57–T67 delivered and tested.
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -74,6 +74,7 @@
 | T64 | J | US-10 | Integration: wire branding into `EstimatePage` | done | EstimatePage uses useBranding, wraps content in BrandingWrapper, renders BrandingHeader + CoverHero. |
 | T65 | J | US-10 | Unit tests: `applyBrandingVars` and `useBranding` | done | Vitest: CSS var set/remove, loading state, resolves to null on error. |
 | T66 | J | US-10 | Component tests: `BrandingWrapper`, `BrandingHeader`, `CoverHero` | done | Vitest + RTL: CSS vars applied, logo img, cover img, null fallback. |
+| T67 | - | - | Fix form validation UX: all errors shown simultaneously on submit, scroll to first error | done | All Gabetti fields now required; reValidateMode onChange; onInvalid scroll; data-field-error attribute; errorTestId on FormField. E2e + unit tests updated. |
 
 ## Waiting Approval
 - None
@@ -88,7 +89,7 @@
 - Epic G — Admin sharing UX
 - Epic H — Configurable form and branding (palette, logo, image)
 - Epic I — Admin-editable estimation config
-- Epic J — Branding applied to estimate page (waiting approval)
+- Epic J — Branding applied to estimate page (done)
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
