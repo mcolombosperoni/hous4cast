@@ -1,9 +1,9 @@
 # Task Board
 
 ## Current Increment
-- Epic: Epic I — Admin-editable estimation config
+- Epic: Epic J — Branding applied to estimate page
 - Status: `waiting-approval`
-- All tasks T47–T56 delivered and tested.
+- All tasks T57–T66 delivered and tested.
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -64,6 +64,16 @@
 | T54 | I | US-09 | Component tests for `AdminEstimationConfig` | done | Vitest + RTL: renders pre-loaded values, edits a field, calls `saveEstimationConfig` on save, shows validation errors. Mock API. |
 | T55 | I | US-09 | Update `EstimatePage` to use `getConfigWithOverrides()` | done | Replace sync `getConfig()` with async variant. Add loading state (spinner). No engine/form changes needed. |
 | T56 | I | US-09 | Expand e2e coverage: offline/localStorage fallback and full admin→estimate journey | done | Playwright: (1) save override → reload with Firestore offline → localStorage config used; (2) clear override → static base used; (3) full admin-save → estimate result reflects new values. |
+| T57 | J | US-10 | ADR-0014: CSS custom properties strategy for runtime theming | done | Document scoped CSS vars approach, fallback, dark mode palette selection. |
+| T58 | J | US-10 | E2E acceptance tests (outside-in): estimate page applies branding palette, logo, cover image | done | Playwright: seed localStorage with fixture branding, block Firestore, assert CSS vars, logo img, cover img, no-branding fallback, form still works. 18 tests, all browsers. |
+| T59 | J | US-10 | Hook: `useBranding(configId)` — async load from Firestore/localStorage | done | `src/app/hooks/useBranding.ts`: loads via `getBrandingConfig`, useReducer to avoid lint error, returns undefined/null/BrandingConfig. |
+| T60 | J | US-10 | Utility: `applyBrandingVars(el, palette)` | done | `src/app/brandingUtils.ts`: sets/removes CSS custom properties on DOM element. No React dependency. |
+| T61 | J | US-10 | Component: `BrandingWrapper` | done | `src/components/BrandingWrapper.tsx`: applies palette via `applyBrandingVars` on mount/branding change, listens to OS dark mode changes. |
+| T62 | J | US-10 | Component: `BrandingHeader` | done | `src/components/BrandingHeader.tsx`: shows agency logo img when configured, falls back to h1 text. |
+| T63 | J | US-10 | Component: `CoverHero` | done | `src/components/CoverHero.tsx`: full-width hero img above form, renders null when absent. |
+| T64 | J | US-10 | Integration: wire branding into `EstimatePage` | done | EstimatePage uses useBranding, wraps content in BrandingWrapper, renders BrandingHeader + CoverHero. |
+| T65 | J | US-10 | Unit tests: `applyBrandingVars` and `useBranding` | done | Vitest: CSS var set/remove, loading state, resolves to null on error. |
+| T66 | J | US-10 | Component tests: `BrandingWrapper`, `BrandingHeader`, `CoverHero` | done | Vitest + RTL: CSS vars applied, logo img, cover img, null fallback. |
 
 ## Waiting Approval
 - None
@@ -77,6 +87,7 @@
 - Epic F — Release automation
 - Epic G — Admin sharing UX
 - Epic H — Configurable form and branding (palette, logo, image)
+- Epic I — Admin-editable estimation config
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |

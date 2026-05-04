@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
+import { useBranding } from '../app/hooks/useBranding'
 import { EstimateForm } from '../components/EstimateForm'
 import { EstimateResult } from '../components/EstimateResult'
+import { BrandingWrapper } from '../components/BrandingWrapper'
+import { BrandingHeader } from '../components/BrandingHeader'
+import { CoverHero } from '../components/CoverHero'
 import { getConfigWithOverrides } from '../configs/registry'
 import type { AgencyConfig, EstimateInput, EstimateResult as EstimateResultType } from '../configs/types'
 import { EstimationEngine } from '../estimation/EstimationEngine'
@@ -13,6 +17,7 @@ export const EstimatePage = () => {
   const [result, setResult] = useState<EstimateResultType | null>(null)
   // undefined = loading, null = not found
   const [config, setConfig] = useState<AgencyConfig | null | undefined>(undefined)
+  const { branding } = useBranding(configId)
 
   useEffect(() => {
     if (!configId) return
@@ -35,7 +40,8 @@ export const EstimatePage = () => {
     )
   }
 
-  if (config === undefined) {
+  // Show loading while either config or branding is still resolving
+  if (config === undefined || branding === undefined) {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
         <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -68,20 +74,21 @@ export const EstimatePage = () => {
   const handleSubmit = (input: EstimateInput) => setResult(engine.estimate(input))
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
-      <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
-          {config.agencyName}
-        </h1>
-        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-          {locale === 'it'
-            ? 'Compila il modulo per ottenere una stima di valore del tuo immobile.'
-            : 'Fill in the form to get an estimated value for your property.'}
-        </p>
-        <EstimateForm config={config} onSubmit={handleSubmit} />
-        {result && <EstimateResult result={result} />}
-      </section>
-    </main>
+    <BrandingWrapper branding={branding}>
+      <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
+        <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <CoverHero coverImageUrl={branding?.coverImageUrl} agencyName={config.agencyName} />
+          <BrandingHeader agencyName={config.agencyName} logoUrl={branding?.logoUrl} />
+          <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
+            {locale === 'it'
+              ? 'Compila il modulo per ottenere una stima di valore del tuo immobile.'
+              : 'Fill in the form to get an estimated value for your property.'}
+          </p>
+          <EstimateForm config={config} onSubmit={handleSubmit} />
+          {result && <EstimateResult result={result} />}
+        </section>
+      </main>
+    </BrandingWrapper>
   )
 }
 
