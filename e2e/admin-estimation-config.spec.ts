@@ -23,6 +23,9 @@ async function saveConfig(page: Page) {
 
 test.describe.serial('Admin estimation config editor (US-09)', () => {
   test.beforeEach(async ({ page }) => {
+    // Block Firestore requests to prevent stale remote overrides from leaking into tests
+    await page.route(/firestore\.googleapis\.com/, (route) => route.abort())
+
     // Clear any previously saved overrides in localStorage
     await page.goto('/#/admin')
     await page.evaluate(() => {
@@ -103,6 +106,8 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="accessories"]', 'nulla')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -132,6 +137,8 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="accessories"]', 'nulla')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -243,6 +250,8 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="accessories"]', 'box_auto')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -269,6 +278,8 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="accessories"]', 'box_auto')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -289,6 +300,8 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="accessories"]', 'nulla')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -314,6 +327,8 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="accessories"]', 'nulla')
     await page.selectOption('[data-testid="floor"]', 'primo')
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
+    await page.fill('[data-testid="email"]', 'test@example.com')
+    await page.fill('[data-testid="phone"]', '333 1234567')
     await page.check('[data-testid="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
@@ -323,13 +338,4 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     expect(extractFirst(modifiedText)).toBeLessThan(extractFirst(baselineText))
   })
 })
-
-
-
-
-
-
-
-
-
 
