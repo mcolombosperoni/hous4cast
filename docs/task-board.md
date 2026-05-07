@@ -99,6 +99,7 @@
 | L | US-12 | Multi-agency support — second agency config fully operational |
 | M | US-13 | Estimate PDF export — branded downloadable PDF from result page |
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
+| P | US-16 | Fully admin-configurable estimation factor lists — open lists with label + coefficient for all factor fields |
 
 ## Epic O — Property type as a configurable estimation factor (US-15)
 | ID | Epic | User Story | Task | Status | Notes |

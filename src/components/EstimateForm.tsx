@@ -114,20 +114,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit(submit, onInvalid)}>
 
-      {/* Zone */}
-      <div data-field-error={errors.zoneId ? 'true' : undefined}>
-        <FormField label={labels.zone} error={errors.zoneId?.message as string} errorTestId="error-zoneId">
-          <Controller name="zoneId" control={control} render={({ field }) => (
-            <select data-testid="zoneId" className={selectClass} {...field}>
-              {zones.map((z) => (
-                <option key={z.zoneId} value={z.zoneId}>{z.label[locale]}</option>
-              ))}
-            </select>
-          )} />
-        </FormField>
-      </div>
-
-      {/* Property type (only if multiple types) */}
+      {/* Property type — first field, only if multiple types configured */}
       {propertyTypes.length > 1 && (
         <div data-field-error={errors.propertyType ? 'true' : undefined}>
           <FormField label={labels.type} error={errors.propertyType?.message as string}>
@@ -141,6 +128,19 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           </FormField>
         </div>
       )}
+
+      {/* Zone */}
+      <div data-field-error={errors.zoneId ? 'true' : undefined}>
+        <FormField label={labels.zone} error={errors.zoneId?.message as string} errorTestId="error-zoneId">
+          <Controller name="zoneId" control={control} render={({ field }) => (
+            <select data-testid="zoneId" className={selectClass} {...field}>
+              {zones.map((z) => (
+                <option key={z.zoneId} value={z.zoneId}>{z.label[locale]}</option>
+              ))}
+            </select>
+          )} />
+        </FormField>
+      </div>
 
       {/* Surface — bucket mode (Gabetti) or numeric input */}
       {usesBuckets ? (

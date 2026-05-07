@@ -19,6 +19,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic M: Estimate PDF export _(planned)_
 - Epic N: Admin leads dashboard _(planned)_
 - Epic O: Property type as a configurable estimation factor ✅
+- Epic P: Fully admin-configurable estimation factor lists _(planned)_
 
 ## Epic I — Admin-editable Estimation Config
 
@@ -94,7 +95,21 @@ Key design decisions (to be confirmed):
 
 _Last updated: 2026-05-04_
 
-## Delivery Workflow
+## Epic P — Fully admin-configurable estimation factor lists
+
+Goal: every estimation factor field (condition, floor, buildEra, accessories, propertyType) becomes a fully open list definable by the agency admin — both options and coefficients — without any code changes or redeployment.
+
+Key design decisions (to be confirmed in ADR):
+- Replace union-key FactorTable with an open `FactorEntry[]` list: `{ value: string; label: Record<SupportedLocale, string>; coefficient: number }`.
+- Accessories use the same structure with an `AccessoryEntry` variant where `coefficient` is an additive bonus in €.
+- Engine resolves coefficients by `.find()` lookup, defaulting to `1`/`0` when not found (backward compatible).
+- Admin editor: each factor section becomes an editable list (add/rename label/reorder/remove), same UX as zones.
+- Estimate form: options rendered dynamically from config entries, no hardcoded i18n option maps.
+- Static configs migrate to the new format; existing `i18n.ts` option maps become legacy seeds only.
+- `EstimationConfigOverride` is updated to include the new entry-based fields.
+
+_Last updated: 2026-05-07_
+
 - All features are developed outside-in: acceptance tests first, then unit/component tests.
 - Each increment is delivered as a complete, tested slice.
 - Push only at increment completion, then wait for explicit approval before continuing.

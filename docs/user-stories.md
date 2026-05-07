@@ -171,8 +171,29 @@ As a potential seller, I want to select the property type only when more than on
 Acceptance criteria:
 - `AgencyConfig` supports an optional `propertyTypeFactors` map (propertyType → multiplier). When absent or when the factor is `1.0`, the estimate is unchanged (backward compatible with existing configs).
 - The estimation engine applies `propertyTypeFactors[propertyType] ?? 1` as an additional multiplier in the Gabetti-style factor path.
-- The estimate form shows the property type selector only when `propertyTypes.length > 1` (current behaviour preserved).
+- The estimate form shows the property type selector as the **first field**, only when `propertyTypes.length > 1`.
 - The admin can edit `propertyTypeFactors` and the list of `propertyTypes` from the estimation config editor, using the same key-value UI pattern as other factor tables.
 - Changes saved in admin are reflected immediately on the next estimate page load (override via localStorage/Firestore, same mechanism as other factors).
 - Default config for new agencies: `propertyTypes: ['appartamento']`, `propertyTypeFactors: { appartamento: 1 }` — no user-visible change for Gabetti Busto Arsizio.
+
+### US-16 - Fully admin-configurable estimation factor lists (Epic P)
+As an agency admin, I want to define the full list of options (with labels in IT/EN) and coefficients for every estimation factor — stato interno, piano, età di costruzione, accessori — directly from the admin UI, without modifying any code or redeploying.
+As a potential seller, I want the form to show only the options that the agency has configured, with the labels the agency has chosen.
+
+Acceptance criteria:
+- Each estimation factor field (condition, floor, buildEra, accessories) is stored as an **open list** of entries, each with: `value` (string key), `label` (IT/EN), and `coefficient` (number — multiplicative for factors, additive for accessories).
+- The TypeScript union types (`PropertyCondition`, `PropertyFloor`, etc.) are replaced by open `string` keys at the config level; the engine resolves coefficients by lookup, defaulting to `1` (or `0` for bonuses) when a key is not found.
+- The admin can add, rename (label), reorder, and remove options for each factor list, using the same UI pattern as zones.
+- The estimate form renders each field's options dynamically from the config — no hardcoded option lists in the component.
+- Backward compatibility: existing Gabetti config migrates automatically; the static base config is updated to use the new open format.
+- The estimation engine computes the result identically to today for configs that reproduce the current Gabetti factors.
+- All acceptance, unit and component tests are updated or added to cover the new dynamic format.
+
+_Notes for implementation:_
+- `FactorEntry` replaces the current union-key tables: `{ value: string; label: Record<SupportedLocale, string>; coefficient: number }[]`.
+- `AccessoryEntry` is the same but `coefficient` is additive (bonus €).
+- Engine lookup: `config.conditionEntries?.find(e => e.value === input.condition)?.coefficient ?? 1`.
+- Admin editor: each factor section becomes a list with add/edit/remove rows (same pattern as zones).
+- Form labels for options come from `entry.label[locale]` instead of hardcoded i18n maps.
+- The existing `i18n.ts` option maps become the **seed** for the static Gabetti config migration; they are no longer the source of truth at runtime.
 
