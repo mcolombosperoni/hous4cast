@@ -342,6 +342,69 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
             )}
           </div>
 
+          {/* Property types and factors — mirrors form field order (first field when multiple types) */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Property Types & Factors</h3>
+            <div className="space-y-2">
+              {formState.propertyTypes.map((pt) => (
+                <div key={pt} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
+                  <span className="w-28 text-sm text-slate-700 dark:text-slate-300" data-testid={'property-type-id-' + pt}>{pt}</span>
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-slate-500" htmlFor={'property-type-factor-' + pt}>Factor</label>
+                    <input
+                      id={'property-type-factor-' + pt}
+                      data-testid={'property-type-factor-' + pt}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={formState.propertyTypeFactors[pt] ?? '1'}
+                      onChange={(e) => handleFactorChange('propertyTypeFactors', pt, e.target.value)}
+                    />
+                  </div>
+                  {formState.propertyTypes.length > 1 && (
+                    <button
+                      type="button"
+                      data-testid={'property-type-remove-' + pt}
+                      className="ml-auto text-xs text-red-500 hover:text-red-700"
+                      onClick={() => handleRemovePropertyType(pt)}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).length > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <select
+                  data-testid="property-type-add-select"
+                  className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  value={addPropertyTypeValue}
+                  onChange={(e) => setAddPropertyTypeValue(e.target.value)}
+                >
+                  <option value="" disabled>Add type…</option>
+                  {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).map((pt) => (
+                    <option key={pt} value={pt}>{pt}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  data-testid="property-type-add-btn"
+                  className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
+                  onClick={() => {
+                    if (addPropertyTypeValue) {
+                      handleAddPropertyType(addPropertyTypeValue)
+                      setAddPropertyTypeValue('')
+                    }
+                  }}
+                >
+                  + Add
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Zones */}
           <div>
             <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Zones</h3>
@@ -466,70 +529,6 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
               </div>
             )
           })}
-
-          {/* Property types and factors */}
-          <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Property Types & Factors</h3>
-            <div className="space-y-2">
-              {formState.propertyTypes.map((pt) => (
-                <div key={pt} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
-                  <span className="w-28 text-sm text-slate-700 dark:text-slate-300" data-testid={`property-type-id-${pt}`}>{pt}</span>
-                  <div className="flex items-center gap-1">
-                    <label className="text-xs text-slate-500" htmlFor={`property-type-factor-${pt}`}>Factor</label>
-                    <input
-                      id={`property-type-factor-${pt}`}
-                      data-testid={`property-type-factor-${pt}`}
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                      value={formState.propertyTypeFactors[pt] ?? '1'}
-                      onChange={(e) => handleFactorChange('propertyTypeFactors', pt, e.target.value)}
-                    />
-                  </div>
-                  {formState.propertyTypes.length > 1 && (
-                    <button
-                      type="button"
-                      data-testid={`property-type-remove-${pt}`}
-                      className="ml-auto text-xs text-red-500 hover:text-red-700"
-                      onClick={() => handleRemovePropertyType(pt)}
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            {/* Add new property type */}
-            {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).length > 0 && (
-              <div className="mt-2 flex items-center gap-2">
-                <select
-                  data-testid="property-type-add-select"
-                  className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  value={addPropertyTypeValue}
-                  onChange={(e) => setAddPropertyTypeValue(e.target.value)}
-                >
-                  <option value="" disabled>Add type…</option>
-                  {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).map((pt) => (
-                    <option key={pt} value={pt}>{pt}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  data-testid="property-type-add-btn"
-                  className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
-                  onClick={() => {
-                    if (addPropertyTypeValue) {
-                      handleAddPropertyType(addPropertyTypeValue)
-                      setAddPropertyTypeValue('')
-                    }
-                  }}
-                >
-                  + Add
-                </button>
-              </div>
-            )}
-          </div>
 
           {/* Privacy text */}
           <div>
