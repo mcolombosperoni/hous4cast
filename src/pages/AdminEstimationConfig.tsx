@@ -18,6 +18,8 @@ interface ZoneRow {
   labelIt: string
   labelEn: string
   zoneMultiplier: string
+  /** True for zones added in the current session — zoneId is editable */
+  isNew?: boolean
 }
 
 interface FormState {
@@ -118,33 +120,33 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
   return { spreadFactor, zones, sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, privacyIt, privacyEn }
 }
 
+interface EditorState {
+  loading: boolean
+  formState: FormState | null
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
+  spreadError: string | null
+}
+
+type EditorAction =
+  | { type: 'INIT' }
+  | { type: 'LOADED'; formState: FormState }
+  | { type: 'SET_FORM'; formState: FormState }
+  | { type: 'SPREAD_ERROR'; message: string }
+  | { type: 'CLEAR_SPREAD_ERROR' }
+  | { type: 'SAVE_STATUS'; status: 'idle' | 'saving' | 'saved' | 'error' }
+
+function editorReducer(state: EditorState, action: EditorAction): EditorState {
+  switch (action.type) {
+    case 'INIT': return { loading: true, formState: null, saveStatus: 'idle', spreadError: null }
+    case 'LOADED': return { ...state, loading: false, formState: action.formState }
+    case 'SET_FORM': return { ...state, formState: action.formState }
+    case 'SPREAD_ERROR': return { ...state, spreadError: action.message }
+    case 'CLEAR_SPREAD_ERROR': return { ...state, spreadError: null }
+    case 'SAVE_STATUS': return { ...state, saveStatus: action.status }
+  }
+}
+
 export const AdminEstimationConfig = ({ configId }: Props) => {
-  interface EditorState {
-    loading: boolean
-    formState: FormState | null
-    saveStatus: 'idle' | 'saving' | 'saved' | 'error'
-    spreadError: string | null
-  }
-
-  type EditorAction =
-    | { type: 'INIT' }
-    | { type: 'LOADED'; formState: FormState }
-    | { type: 'SET_FORM'; formState: FormState }
-    | { type: 'SPREAD_ERROR'; message: string }
-    | { type: 'CLEAR_SPREAD_ERROR' }
-    | { type: 'SAVE_STATUS'; status: 'idle' | 'saving' | 'saved' | 'error' }
-
-  function editorReducer(state: EditorState, action: EditorAction): EditorState {
-    switch (action.type) {
-      case 'INIT': return { loading: true, formState: null, saveStatus: 'idle', spreadError: null }
-      case 'LOADED': return { ...state, loading: false, formState: action.formState }
-      case 'SET_FORM': return { ...state, formState: action.formState }
-      case 'SPREAD_ERROR': return { ...state, spreadError: action.message }
-      case 'CLEAR_SPREAD_ERROR': return { ...state, spreadError: null }
-      case 'SAVE_STATUS': return { ...state, saveStatus: action.status }
-    }
-  }
-
   const [state, dispatch] = useReducer(editorReducer, {
     loading: true,
     formState: null,
@@ -178,12 +180,6 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     if (!formState) return
     dispatch({ type: 'SET_FORM', formState: { ...formState, spreadFactor: value } })
     dispatch({ type: 'CLEAR_SPREAD_ERROR' })
-  }
-
-  const handleZoneMultiplierChange = (index: number, value: string) => {
-    if (!formState) return
-    const zones = formState.zones.map((z, i) => i === index ? { ...z, zoneMultiplier: value } : z)
-    dispatch({ type: 'SET_FORM', formState: { ...formState, zones } })
   }
 
   const handlePrivacyItChange = (value: string) => {
@@ -231,13 +227,20 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypes, propertyTypeFactors } })
   }
 
+  const handleZoneFieldChange = (index: number, field: keyof ZoneRow, value: string) => {
+    if (!formState) return
+    const zones = formState.zones.map((z, i) => i === index ? { ...z, [field]: value } : z)
+    dispatch({ type: 'SET_FORM', formState: { ...formState, zones } })
+  }
+
   const handleAddZone = () => {
     if (!formState) return
     const newRow: ZoneRow = {
-      zoneId: `zone_${Date.now()}`,
+      zoneId: '',
       labelIt: '',
       labelEn: '',
       zoneMultiplier: '1',
+      isNew: true,
     }
     dispatch({ type: 'SET_FORM', formState: { ...formState, zones: [...formState.zones, newRow] } })
   }
@@ -256,13 +259,16 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
 
     const base = baseConfigRef.current
 
-    // Build zones with all data from form — ensure zoneMultiplier is always a valid number
+    // Build zones — for new zones, derive zoneId from labelIt if left blank
     const zones: ZoneRate[] = formState.zones.map((row, i) => {
       const baseZone = base.zones[i]
       const multiplierValue = parseFloat(row.zoneMultiplier)
+      const zoneId = row.isNew && !row.zoneId.trim()
+        ? row.labelIt.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') || `zone_${i}`
+        : row.zoneId
       return {
-        zoneId: row.zoneId,
-        label: { it: row.labelIt, en: row.labelEn },
+        zoneId,
+        label: { it: row.labelIt, en: row.labelEn || row.labelIt },
         pricePerSqm: baseZone?.pricePerSqm ?? {},
         zoneMultiplier: isNaN(multiplierValue) ? (baseZone?.zoneMultiplier ?? 1) : multiplierValue,
       }
@@ -339,29 +345,82 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
           {/* Zones */}
           <div>
             <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Zones</h3>
-            <div className="space-y-2">
-              {formState.zones.map((zone, i) => (
-                <div key={zone.zoneId} className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-                  <span className="w-32 text-sm text-slate-700 dark:text-slate-300" data-testid={`zone-id-${zone.zoneId}`}>
-                    {zone.labelIt || zone.zoneId}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <label className="text-xs text-slate-500" htmlFor={`zone-multiplier-${zone.zoneId}`}>
-                      Multiplier
-                    </label>
-                    <input
-                      id={`zone-multiplier-${zone.zoneId}`}
-                      data-testid={`zone-multiplier-${zone.zoneId}`}
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                      value={zone.zoneMultiplier}
-                      onChange={(e) => handleZoneMultiplierChange(i, e.target.value)}
-                    />
+            <div className="space-y-3">
+              {formState.zones.map((zone, i) => {
+                const zoneKey = zone.isNew ? 'new-' + i : zone.zoneId
+                const multiplierTestId = zone.isNew ? 'zone-multiplier-new-' + i : 'zone-multiplier-' + zone.zoneId
+                const labelItTestId = zone.isNew ? 'zone-label-it-new-' + i : 'zone-label-it-' + zone.zoneId
+                const labelEnTestId = zone.isNew ? 'zone-label-en-new-' + i : 'zone-label-en-' + zone.zoneId
+                const multiplierHtmlId = 'zone-multiplier-' + (zone.isNew ? String(i) : zone.zoneId)
+                return (
+                  <div key={zoneKey} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 space-y-2">
+                    {/* Header row: zone id (read-only) or editable id for new zones */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {zone.isNew ? (
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                          <label className="text-xs text-slate-500 shrink-0" htmlFor={'zone-id-input-' + i}>ID</label>
+                          <input
+                            id={'zone-id-input-' + i}
+                            data-testid={'zone-id-input-' + i}
+                            type="text"
+                            placeholder="es. semicentro"
+                            className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-sm font-mono dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                            value={zone.zoneId}
+                            onChange={(e) => handleZoneFieldChange(i, 'zoneId', e.target.value)}
+                          />
+                        </div>
+                      ) : (
+                        <span
+                          className="text-xs font-mono text-slate-400 dark:text-slate-500"
+                          data-testid={'zone-id-' + zone.zoneId}
+                        >
+                          {zone.zoneId}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-1 ml-auto">
+                        <label className="text-xs text-slate-500" htmlFor={multiplierHtmlId}>Multiplier</label>
+                        <input
+                          id={multiplierHtmlId}
+                          data-testid={multiplierTestId}
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                          value={zone.zoneMultiplier}
+                          onChange={(e) => handleZoneFieldChange(i, 'zoneMultiplier', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    {/* Label row: IT + EN */}
+                    <div className="flex flex-wrap gap-2">
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <label className="text-xs text-slate-500 shrink-0" htmlFor={'zone-label-it-' + i}>IT</label>
+                        <input
+                          id={'zone-label-it-' + i}
+                          data-testid={labelItTestId}
+                          type="text"
+                          placeholder="Nome zona (IT)"
+                          className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                          value={zone.labelIt}
+                          onChange={(e) => handleZoneFieldChange(i, 'labelIt', e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 flex-1 min-w-0">
+                        <label className="text-xs text-slate-500 shrink-0" htmlFor={'zone-label-en-' + i}>EN</label>
+                        <input
+                          id={'zone-label-en-' + i}
+                          data-testid={labelEnTestId}
+                          type="text"
+                          placeholder="Zone name (EN)"
+                          className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                          value={zone.labelEn}
+                          onChange={(e) => handleZoneFieldChange(i, 'labelEn', e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
             <button
               type="button"
