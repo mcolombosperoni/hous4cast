@@ -7,6 +7,10 @@ const legacyConfig = {
   ...gabettiBustoArsizioConfig,
   id: 'legacy-test',
   sqmBucketPrices: undefined,
+  conditionEntries: undefined,
+  floorEntries: undefined,
+  eraEntries: undefined,
+  accessoryEntries: undefined,
   zones: [
     { zoneId: 'centro',    label: { it: 'Centro',  en: 'Centre' },   pricePerSqm: { appartamento: 2800 } },
     { zoneId: 'semicentro',label: { it: 'Semi',    en: 'Semi' },     pricePerSqm: { appartamento: 2000, villa: 2400 } },
@@ -159,22 +163,16 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
 // ── Property type factor tests ─────────────────────────────────────────────
 describe('EstimationEngine — propertyTypeFactors', () => {
   it('applies propertyTypeFactor when defined (0.5 halves the result)', () => {
-    const configWithFactor = {
-      ...gabettiBustoArsizioConfig,
-      propertyTypeFactors: { appartamento: 0.5 },
-    }
-    const eng = new EstimationEngine(configWithFactor)
+    const eng = new EstimationEngine({ ...gabettiBustoArsizioConfig, propertyTypeFactors: { appartamento: 0.5 } })
     const result = eng.estimate({
       zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
     })
-    // base 352000 × zone 1.0 × propertyType 0.5 × all others 1.0 = 176000
     expect(result.mid).toBe(176_000)
   })
 
   it('defaults to factor 1 when propertyTypeFactors is absent (backward compatible)', () => {
-    const configWithoutFactor = { ...gabettiBustoArsizioConfig, propertyTypeFactors: undefined }
-    const eng = new EstimationEngine(configWithoutFactor)
+    const eng = new EstimationEngine({ ...gabettiBustoArsizioConfig, propertyTypeFactors: undefined })
     const result = eng.estimate({
       zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
@@ -183,32 +181,96 @@ describe('EstimationEngine — propertyTypeFactors', () => {
   })
 
   it('defaults to factor 1 when property type is not in propertyTypeFactors map', () => {
-    const configPartialFactor = {
+    const eng = new EstimationEngine({
       ...gabettiBustoArsizioConfig,
       propertyTypes: ['appartamento', 'villa'] as const,
-      propertyTypeFactors: { appartamento: 1 }, // villa missing → defaults to 1
-    }
-    const eng = new EstimationEngine(configPartialFactor)
-    const result = eng.estimate({
+      propertyTypeFactors: { appartamento: 1 },
+    })
+    expect(eng.estimate({
       zoneId: 'centro', propertyType: 'villa', sqm: 90,
       sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
-    })
-    expect(result.mid).toBe(352_000)
+    }).mid).toBe(352_000)
   })
 
-  it('propertyTypeFactor combines with all other factors', () => {
-    const configWithFactor = {
-      ...gabettiBustoArsizioConfig,
-      propertyTypeFactors: { appartamento: 0.8 },
-    }
-    const eng = new EstimationEngine(configWithFactor)
-    // 352000 × 0.91 × 0.8 × 0.75 × 1.02 × 0.70 + 18000
+  it('propertyTypeFactor combines with all FactorEntries', () => {
+    const eng = new EstimationEngine({ ...gabettiBustoArsizioConfig, propertyTypeFactors: { appartamento: 0.8 } })
     const expected = Math.round(352_000 * 0.91 * 0.8 * 0.75 * 1.02 * 0.70 + 18_000)
+    expect(eng.estimate({
+      zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
+    }).mid).toBe(expected)
+  })
+})
+
+// ── Open-list FactorEntry engine tests (Epic P) ────────────────────────────
+describe('EstimationEngine — FactorEntry open-list lookup', () => {
+  const eng = new EstimationEngine(gabettiBustoArsizioConfig)
+
+  it('resolves conditionFactor from conditionEntries (buono = 0.75)', () => {
+    expect(eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
+      sqmBucket: 'fino_50', condition: 'buono', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
+    }).mid).toBe(Math.round(160_000 * 0.75))
+  })
+
+  it('resolves floorFactor from floorEntries (secondo = 1.02)', () => {
+    expect(eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
+      sqmBucket: 'fino_50', condition: 'ottimo', floor: 'secondo', buildEra: '2016_oggi', accessories: 'nulla',
+    }).mid).toBe(Math.round(160_000 * 1.02))
+  })
+
+  it('resolves eraFactor from eraEntries (1968_1980 = 0.65)', () => {
+    expect(eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
+      sqmBucket: 'fino_50', condition: 'ottimo', floor: 'primo', buildEra: '1968_1980', accessories: 'nulla',
+    }).mid).toBe(Math.round(160_000 * 0.65))
+  })
+
+  it('resolves accessoryBonus from accessoryEntries (box_auto = +15000)', () => {
+    expect(eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
+      sqmBucket: 'fino_50', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'box_auto',
+    }).mid).toBe(160_000 + 15_000)
+  })
+
+  it('defaults conditionFactor to 1 when entry value not found', () => {
+    expect(eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: '71_110', condition: 'unknown_condition', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
+    }).mid).toBe(352_000)
+  })
+
+  it('defaults accessoryBonus to 0 when entry value not found', () => {
+    expect(eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'unknown_acc',
+    }).mid).toBe(352_000)
+  })
+
+  it('defaults all factors to 1/0 when *Entries arrays are absent (backward compat)', () => {
+    const engNoEntries = new EstimationEngine({
+      ...gabettiBustoArsizioConfig,
+      conditionEntries: undefined,
+      floorEntries: undefined,
+      eraEntries: undefined,
+      accessoryEntries: undefined,
+    })
+    expect(engNoEntries.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'box_auto',
+    }).mid).toBe(352_000)
+  })
+
+  it('combines all FactorEntries: ponzella / 71–110 / buono / secondo / 1981–1995 / cantina_box', () => {
+    const expected = Math.round(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
     const result = eng.estimate({
       zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
     })
     expect(result.mid).toBe(expected)
+    expect(result.low).toBe(Math.round(expected * 0.9))
+    expect(result.high).toBe(Math.round(expected * 1.05))
   })
 })
 

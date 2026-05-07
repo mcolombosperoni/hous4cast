@@ -19,3 +19,5 @@
 - [0011 - Admin branding: Firebase + color picker](0011-admin-branding-firebase-colorpicker.md) - accepted (image storage section superseded by 0012)
 - [0012 - Image storage via Cloudinary unsigned upload](0012-image-storage-cloudinary.md) - accepted
 - [0013 - Admin-editable estimation config: Firestore schema and merge strategy](0013-admin-editable-estimation-config-firestore.md) - accepted
+- [0014 - Branding via CSS custom properties](0014-branding-css-custom-properties.md) - accepted
+- [0015 - Open-list FactorEntry model replaces union-keyed factor tables](0015-open-factor-lists.md) - accepted

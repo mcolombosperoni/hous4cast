@@ -1,21 +1,19 @@
 import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
 
+/** @deprecated Use string — kept for EstimateInput typing convenience */
 export type PropertyType = 'appartamento' | 'villa' | 'ufficio'
 
 /** Surface area buckets (used by single-choice sqm field) */
 export type SqmBucket = 'fino_50' | '51_70' | '71_110' | '111_149' | '150_plus'
 
-/** Internal condition of the property */
-export type PropertyCondition = 'ottimo' | 'buono' | 'da_ristrutturare'
-
-/** Accessories / parking */
-export type PropertyAccessories = 'cantina' | 'box_auto' | 'cantina_box' | 'cantina_due_box' | 'nulla'
-
-/** Floor of the property */
-export type PropertyFloor = 'terra' | 'primo' | 'secondo' | 'terzo' | 'quarto' | 'quinto' | 'sopra_quinto'
-
-/** Construction era */
-export type BuildEra = '1900_1940' | '1941_1967' | '1968_1980' | '1981_1995' | '1995_2005' | '2006_2015' | '2016_oggi'
+/** @deprecated Use string — kept for EstimateInput typing convenience */
+export type PropertyCondition = string
+/** @deprecated Use string — kept for EstimateInput typing convenience */
+export type PropertyAccessories = string
+/** @deprecated Use string — kept for EstimateInput typing convenience */
+export type PropertyFloor = string
+/** @deprecated Use string — kept for EstimateInput typing convenience */
+export type BuildEra = string
 
 export interface ZoneRate {
   zoneId: string
@@ -34,6 +32,26 @@ export type FactorTable<T extends string> = Partial<Record<T, number>>
 
 /** Additive bonus table keyed by enum value */
 export type BonusTable<T extends string> = Partial<Record<T, number>>
+
+/**
+ * Open-list entry for a multiplicative estimation factor.
+ * Replaces the fixed FactorTable approach — admin can add/rename/remove entries.
+ */
+export interface FactorEntry {
+  value: string
+  label: Record<SupportedLocale, string>
+  coefficient: number
+}
+
+/**
+ * Open-list entry for an additive accessories bonus.
+ * `bonus` is in € and is added to the estimated price.
+ */
+export interface AccessoryEntry {
+  value: string
+  label: Record<SupportedLocale, string>
+  bonus: number
+}
 
 export type FormFieldType =
   | 'text'
@@ -79,13 +97,17 @@ export interface AgencyConfig {
   /**
    * Gabetti-style estimation factors.
    * When present, the engine uses these instead of simple pricePerSqm × sqm.
-   * Calculation: baseBySqmBucket × zoneMultiplier × conditionFactor × floorFactor × erаFactor + accessoriesBonus
+   * Formula: baseBySqmBucket × zoneMultiplier × propertyTypeFactor
+   *          × conditionFactor × floorFactor × eraFactor + accessoriesBonus
    */
   sqmBucketPrices?: SqmBucketPrices;
-  conditionFactors?: FactorTable<PropertyCondition>;
-  floorFactors?: FactorTable<PropertyFloor>;
-  eraFactors?: FactorTable<BuildEra>;
-  accessoriesBonuses?: BonusTable<PropertyAccessories>;
+
+  /** Open-list factor entries (Epic P). Engine looks up coefficient by entry.value. */
+  conditionEntries?: FactorEntry[];
+  floorEntries?: FactorEntry[];
+  eraEntries?: FactorEntry[];
+  accessoryEntries?: AccessoryEntry[];
+
   /** Multiplicative factor per property type (default 1 when absent) */
   propertyTypeFactors?: FactorTable<PropertyType>;
 
@@ -121,13 +143,19 @@ export type EstimationConfigOverride = Partial<
     | 'sqmRange'
     | 'spreadFactor'
     | 'sqmBucketPrices'
-    | 'conditionFactors'
-    | 'floorFactors'
-    | 'eraFactors'
-    | 'accessoriesBonuses'
+    | 'conditionEntries'
+    | 'floorEntries'
+    | 'eraEntries'
+    | 'accessoryEntries'
     | 'propertyTypeFactors'
     | 'privacy'
-  >
+  > & {
+    /** Legacy flat factor tables — kept for backward compatibility with saved overrides */
+    conditionFactors: Record<string, number>
+    floorFactors: Record<string, number>
+    eraFactors: Record<string, number>
+    accessoriesBonuses: Record<string, number>
+  }
 >
 
 export interface EstimateInput {
@@ -137,10 +165,10 @@ export interface EstimateInput {
   /** Extended Gabetti fields */
   sqmBucket?: SqmBucket
   address?: string
-  condition?: PropertyCondition
-  accessories?: PropertyAccessories
-  floor?: PropertyFloor
-  buildEra?: BuildEra
+  condition?: string
+  accessories?: string
+  floor?: string
+  buildEra?: string
   email?: string
   phone?: string
 }

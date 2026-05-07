@@ -9,7 +9,7 @@ async function openEstimationConfig(page: Page) {
   await page.goto('/#/admin')
   await page.click('button:has-text("Gabetti Busto Arsizio")')
   await expect(page.getByTestId('estimation-config-section')).toBeVisible()
-  await page.click('[data-testid="estimation-config-toggle"]')
+  await page.click('[data-testid="admin-estimation-config-toggle"]')
   await page.waitForSelector('[data-testid="estimation-config-loaded"]', { timeout: 8000 })
 }
 

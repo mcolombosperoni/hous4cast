@@ -1,9 +1,9 @@
 # Task Board
 
 ## Current Increment
-- Epic: O — Property type as a configurable estimation factor
-- Status: `waiting-approval`
-- All tasks T68–T72 delivered and tested.
+- Epic: P — Fully admin-configurable estimation factor lists
+- Status: `in-progress`
+- Tasks T73–T100 (9 commits planned).
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -99,7 +99,38 @@
 | L | US-12 | Multi-agency support — second agency config fully operational |
 | M | US-13 | Estimate PDF export — branded downloadable PDF from result page |
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
-| P | US-16 | Fully admin-configurable estimation factor lists — open lists with label + coefficient for all factor fields |
+
+## Epic P — Fully admin-configurable estimation factor lists (US-16)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T73 | P | US-16 | ADR-0015: document open-list FactorEntry model, migration strategy, backward compat | todo | Write `docs/decisions/0015-open-factor-lists.md` |
+| T74 | P | US-16 | Add `FactorEntry` / `AccessoryEntry` types; extend `AgencyConfig` and `EstimationConfigOverride` with `*Entries` fields; change union-typed fields in `EstimateInput` to `string` | todo | Commit 1. Old `*Factors` fields removed from config; `EstimateInput` condition/floor/era/accessories become `string`. |
+| T75 | P | US-16 | Migrate `gabetti-busto-arsizio.ts` to new `*Entries` format with full IT/EN labels and coefficients | todo | Commit 1. Labels seeded from `i18n.ts` hardcoded values. |
+| T76 | P | US-16 | Update `EstimationEngine._estimateWithFactors` to lookup coefficients from `*Entries` arrays | todo | Commit 2. `find(e => e.value === input.x)?.coefficient ?? 1/0`. Backward compat: no entries → default. |
+| T77 | P | US-16 | Unit tests for engine with open-list lookup | todo | Commit 2. Update `EstimationEngine.test.ts`: same results as before, missing key → default, AccessoryEntry additive. |
+| T78 | P | US-16 | E2E: admin adds a new conditionEntry → appears in estimate form | todo | Commit 3 (red). `e2e/admin-factor-lists.spec.ts` |
+| T79 | P | US-16 | E2E: admin renames a factor label → updated label shown in form | todo | Commit 3 (red). |
+| T80 | P | US-16 | E2E: admin removes a factor entry → option absent in form | todo | Commit 3 (red). |
+| T81 | P | US-16 | E2E: admin reorders entries → order reflected in form select | todo | Commit 3 (red). |
+| T82 | P | US-16 | E2E: form labels come from config entries, not hardcoded i18n | todo | Commit 3 (red). |
+| T83 | P | US-16 | `EstimateForm`: render `condition` field options from `config.conditionEntries` | todo | Commit 4. |
+| T84 | P | US-16 | `EstimateForm`: render `accessories` field options from `config.accessoryEntries` | todo | Commit 4. |
+| T85 | P | US-16 | `EstimateForm`: render `floor` field options from `config.floorEntries` | todo | Commit 4. |
+| T86 | P | US-16 | `EstimateForm`: render `buildEra` field options from `config.eraEntries` | todo | Commit 4. |
+| T87 | P | US-16 | Remove hardcoded option maps from `i18n.ts`; update all usages | todo | Commit 4. |
+| T88 | P | US-16 | Component tests for `EstimateForm` with dynamic entries | todo | Commit 4. |
+| T89 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `conditionEntries` | todo | Commit 5. add/edit label IT-EN/coefficient/remove. No nested template literals in JSX. |
+| T90 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `accessoryEntries` | todo | Commit 5. |
+| T91 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `floorEntries` | todo | Commit 6. |
+| T92 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `eraEntries` | todo | Commit 6. |
+| T93 | P | US-16 | Admin editor: ↑↓ reorder buttons for all entry lists | todo | Commit 7. |
+| T94 | P | US-16 | Update `buildFormState` and `handleSave` for all `*Entries` fields | todo | Commit 7. |
+| T95 | P | US-16 | Component tests for admin entry list editors | todo | Commit 7. |
+| T96 | P | US-16 | Update `estimationConfigApi` save/load for `*Entries` arrays | todo | Commit 8. Firestore setDoc full-replace strategy confirmed. |
+| T97 | P | US-16 | Update `getConfigWithOverrides` merge strategy for `*Entries` (full-replace) | todo | Commit 8. |
+| T98 | P | US-16 | Unit tests for `estimationConfigApi` and `getConfigWithOverrides` with entries | todo | Commit 8. |
+| T99 | P | US-16 | Backward compat check: config without `*Entries` → engine defaults to 1/0 | todo | Commit 9. |
+| T100 | P | US-16 | Update docs: task-board, project-plan, user-stories for Epic P done | todo | Commit 9. |
 
 ## Epic O — Property type as a configurable estimation factor (US-15)
 | ID | Epic | User Story | Task | Status | Notes |

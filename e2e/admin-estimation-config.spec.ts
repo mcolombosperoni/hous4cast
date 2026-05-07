@@ -9,7 +9,7 @@ async function openEstimationConfig(page: Page) {
   await page.goto('/#/admin')
   await page.click('button:has-text("Gabetti Busto Arsizio")')
   await expect(page.getByTestId('estimation-config-section')).toBeVisible()
-  await page.click('[data-testid="estimation-config-toggle"]')
+  await page.click('[data-testid="admin-estimation-config-toggle"]')
   // Wait for async load to complete
   await page.waitForSelector('[data-testid="estimation-config-loaded"]', { timeout: 8000 })
 }
@@ -42,7 +42,7 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.click('button:has-text("Gabetti Busto Arsizio")')
     await expect(page.getByTestId('estimation-config-section')).toBeVisible()
     // Toggle opens the editor
-    await page.click('[data-testid="estimation-config-toggle"]')
+    await page.click('[data-testid="admin-estimation-config-toggle"]')
     await page.waitForSelector('[data-testid="estimation-config-loaded"]', { timeout: 8000 })
     await expect(page.getByTestId('spread-factor-input')).toBeVisible()
   })

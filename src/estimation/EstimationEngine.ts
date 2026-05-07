@@ -66,12 +66,17 @@ export class EstimationEngine {
    *
    * Formula:
    *   base       = sqmBucketPrices[sqmBucket]
-   *   mid        = base × zoneMultiplier × propertyTypeFactor × conditionFactor × floorFactor × eraFactor + accessoriesBonus
-   *   min (low)  = mid × 0.9   (Gabetti uses -10% for minimum)
+   *   mid        = base × zoneMultiplier × propertyTypeFactor
+   *                     × conditionFactor × floorFactor × eraFactor
+   *                     + accessoriesBonus
+   *   min (low)  = mid × 0.9
    *   max (high) = mid × (1 + spreadFactor)
+   *
+   * Factors are resolved from open-list *Entries arrays (Epic P).
+   * Falls back to 1 / 0 when entries or a matching value are absent.
    */
   private _estimateWithFactors(input: EstimateInput, zoneMultiplier: number): EstimateResult {
-    const { sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypeFactors } = this.config
+    const { sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, propertyTypeFactors } = this.config
 
     if (!input.sqmBucket) {
       throw new EstimationEngineError(
@@ -83,16 +88,16 @@ export class EstimationEngine {
     const base = sqmBucketPrices![input.sqmBucket]
     if (base === undefined) {
       throw new EstimationEngineError(
-        `sqmBucket "${input.sqmBucket}" has no base price in config "${this.config.id}"`,
+        'sqmBucket "' + input.sqmBucket + '" has no base price in config "' + this.config.id + '"',
         'SQM_BUCKET_REQUIRED',
       )
     }
 
     const propertyTypeFactor = propertyTypeFactors?.[input.propertyType] ?? 1
-    const conditionFactor  = (input.condition   && conditionFactors?.[input.condition])   ?? 1
-    const floorFactor      = (input.floor       && floorFactors?.[input.floor])           ?? 1
-    const eraFactor        = (input.buildEra    && eraFactors?.[input.buildEra])          ?? 1
-    const accessoriesBonus = (input.accessories && accessoriesBonuses?.[input.accessories]) ?? 0
+    const conditionFactor  = (input.condition  && conditionEntries?.find((e) => e.value === input.condition)?.coefficient)  ?? 1
+    const floorFactor      = (input.floor      && floorEntries?.find((e) => e.value === input.floor)?.coefficient)          ?? 1
+    const eraFactor        = (input.buildEra   && eraEntries?.find((e) => e.value === input.buildEra)?.coefficient)         ?? 1
+    const accessoriesBonus = (input.accessories && accessoryEntries?.find((e) => e.value === input.accessories)?.bonus)     ?? 0
 
     const mid  = Math.round(base * zoneMultiplier * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
     const low  = Math.round(mid * 0.9)

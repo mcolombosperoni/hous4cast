@@ -68,6 +68,7 @@ export const AdminPage = () => {
               <li key={config.id}>
                 <button
                   aria-pressed={selectedConfigId !== null && selectedConfigId === config.id ? 'true' : 'false'}
+                  data-testid={`config-card-${config.id}`}
                   className={`w-full rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                     selectedConfigId === config.id
                       ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
@@ -188,7 +189,7 @@ export const AdminPage = () => {
           type="button"
           className="flex w-full items-center justify-between text-left font-semibold text-slate-900 dark:text-slate-100"
           onClick={() => setEstConfigOpen((o) => !o)}
-          data-testid="estimation-config-toggle"
+          data-testid="admin-estimation-config-toggle"
         >
           <span>Estimation Config</span>
           <span>{estConfigOpen ? '▲' : '▼'}</span>

@@ -15,9 +15,9 @@ export default defineConfig({
     navigationTimeout: 30000,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], locale: 'it-IT' } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'], locale: 'it-IT' } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'], locale: 'it-IT' } },
   ],
   webServer: {
     command: 'pnpm preview --host 127.0.0.1 --port 4173',

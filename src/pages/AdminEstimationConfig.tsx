@@ -5,7 +5,7 @@ import {
   saveEstimationConfig,
   clearEstimationConfig,
 } from '../app/estimationConfigApi'
-import type { AgencyConfig, EstimationConfigOverride, PropertyType, ZoneRate } from '../configs/types'
+import type { AgencyConfig, EstimationConfigOverride, FactorEntry, AccessoryEntry, PropertyType, ZoneRate } from '../configs/types'
 
 const ALL_PROPERTY_TYPES: PropertyType[] = ['appartamento', 'villa', 'ufficio']
 
@@ -28,6 +28,12 @@ interface FormState {
   privacyIt: string
   privacyEn: string
   sqmBucketPrices?: Record<string, string>
+  /** Open-list entries (Epic P) */
+  conditionEntries?: FactorEntry[]
+  floorEntries?: FactorEntry[]
+  eraEntries?: FactorEntry[]
+  accessoryEntries?: AccessoryEntry[]
+  /** Flat factor tables (derived from entries — kept for legacy save payload) */
   conditionFactors?: Record<string, string>
   floorFactors?: Record<string, string>
   eraFactors?: Record<string, string>
@@ -85,22 +91,73 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
     base.sqmBucketPrices as Record<string, number> | undefined,
     override?.sqmBucketPrices as Record<string, number> | undefined,
   )
-  const conditionFactors = buildTable(
-    base.conditionFactors as Record<string, number> | undefined,
+
+  // Build open-list entries: start from base entries, apply coefficient/bonus overrides from saved override
+  const buildEntries = <T extends FactorEntry>(
+    baseEntries: T[] | undefined,
+    overrideFactors: Record<string, number> | undefined,
+    overrideEntries: T[] | undefined,
+  ): T[] | undefined => {
+    // If override has a full entries list (new-style), use it
+    if (overrideEntries && overrideEntries.length > 0) return overrideEntries
+    if (!baseEntries) return undefined
+    // Apply old-style coefficient overrides to base entries
+    return baseEntries.map((e) => {
+      const ov = overrideFactors?.[e.value]
+      if (ov !== undefined) return { ...e, coefficient: ov } as T
+      return e
+    })
+  }
+
+  const buildAccessoryEntries = (
+    baseEntries: AccessoryEntry[] | undefined,
+    overrideBonuses: Record<string, number> | undefined,
+    overrideEntries: AccessoryEntry[] | undefined,
+  ): AccessoryEntry[] | undefined => {
+    if (overrideEntries && overrideEntries.length > 0) return overrideEntries
+    if (!baseEntries) return undefined
+    return baseEntries.map((e) => {
+      const ov = overrideBonuses?.[e.value]
+      if (ov !== undefined) return { ...e, bonus: ov }
+      return e
+    })
+  }
+
+  const conditionEntries = buildEntries(
+    base.conditionEntries,
     override?.conditionFactors as Record<string, number> | undefined,
+    override?.conditionEntries,
   )
-  const floorFactors = buildTable(
-    base.floorFactors as Record<string, number> | undefined,
+  const floorEntries = buildEntries(
+    base.floorEntries,
     override?.floorFactors as Record<string, number> | undefined,
+    override?.floorEntries,
   )
-  const eraFactors = buildTable(
-    base.eraFactors as Record<string, number> | undefined,
+  const eraEntries = buildEntries(
+    base.eraEntries,
     override?.eraFactors as Record<string, number> | undefined,
+    override?.eraEntries,
   )
-  const accessoriesBonuses = buildTable(
-    base.accessoriesBonuses as Record<string, number> | undefined,
+  const accessoryEntries = buildAccessoryEntries(
+    base.accessoryEntries,
     override?.accessoriesBonuses as Record<string, number> | undefined,
+    override?.accessoryEntries,
   )
+
+  // Derive flat factor/bonus tables from entries (for legacy save payload + unit tests)
+  const entriesToFactorTable = (entries: FactorEntry[] | undefined): Record<string, string> | undefined => {
+    if (!entries) return undefined
+    return Object.fromEntries(entries.map((e) => [e.value, String(e.coefficient)]))
+  }
+  const entriesToBonusTable = (entries: AccessoryEntry[] | undefined): Record<string, string> | undefined => {
+    if (!entries) return undefined
+    return Object.fromEntries(entries.map((e) => [e.value, String(e.bonus)]))
+  }
+
+  const conditionFactors = entriesToFactorTable(conditionEntries)
+  const floorFactors = entriesToFactorTable(floorEntries)
+  const eraFactors = entriesToFactorTable(eraEntries)
+  const accessoriesBonuses = entriesToBonusTable(accessoryEntries)
 
   // Property types: use override if present, else base
   const effectivePropertyTypes: string[] = (override?.propertyTypes ?? base.propertyTypes) as string[]
@@ -117,7 +174,7 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
     override?.propertyTypeFactors as Record<string, number> | undefined,
   )
 
-  return { spreadFactor, zones, sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, privacyIt, privacyEn }
+  return { spreadFactor, zones, sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, privacyIt, privacyEn }
 }
 
 interface EditorState {
@@ -199,10 +256,103 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     value: string,
   ) => {
     if (!formState) return
-    dispatch({
-      type: 'SET_FORM',
-      formState: { ...formState, [field]: { ...formState[field], [key]: value } },
-    })
+    const updatedFlat = { ...formState[field], [key]: value }
+    const newState: FormState = { ...formState, [field]: updatedFlat }
+    // Keep open-list entries in sync with flat tables so the engine picks up changes
+    if (field === 'conditionFactors' && newState.conditionEntries) {
+      newState.conditionEntries = newState.conditionEntries.map((e) =>
+        e.value === key ? { ...e, coefficient: parseFloat(value) || e.coefficient } : e
+      )
+    } else if (field === 'floorFactors' && newState.floorEntries) {
+      newState.floorEntries = newState.floorEntries.map((e) =>
+        e.value === key ? { ...e, coefficient: parseFloat(value) || e.coefficient } : e
+      )
+    } else if (field === 'eraFactors' && newState.eraEntries) {
+      newState.eraEntries = newState.eraEntries.map((e) =>
+        e.value === key ? { ...e, coefficient: parseFloat(value) || e.coefficient } : e
+      )
+    } else if (field === 'accessoriesBonuses' && newState.accessoryEntries) {
+      newState.accessoryEntries = newState.accessoryEntries.map((e) =>
+        e.value === key ? { ...e, bonus: parseFloat(value) || 0 } : e
+      )
+    }
+    dispatch({ type: 'SET_FORM', formState: newState })
+  }
+
+  // ── Open-list entry handlers ─────────────────────────────────────────────
+
+  type EntriesField = 'conditionEntries' | 'floorEntries' | 'eraEntries'
+
+  const handleEntryChange = (
+    field: EntriesField,
+    index: number,
+    patch: Partial<FactorEntry>,
+  ) => {
+    if (!formState) return
+    const entries = (formState[field] ?? []) as FactorEntry[]
+    const updated = entries.map((e, i) => (i === index ? { ...e, ...patch } : e))
+    // Recompute flat factor table
+    const flatField = field.replace('Entries', 'Factors') as 'conditionFactors' | 'floorFactors' | 'eraFactors'
+    const flat = Object.fromEntries(updated.map((e) => [e.value, String(e.coefficient)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, [field]: updated, [flatField]: flat } })
+  }
+
+  const handleAccessoryEntryChange = (index: number, patch: Partial<AccessoryEntry>) => {
+    if (!formState) return
+    const entries = (formState.accessoryEntries ?? []) as AccessoryEntry[]
+    const updated = entries.map((e, i) => (i === index ? { ...e, ...patch } : e))
+    const flat = Object.fromEntries(updated.map((e) => [e.value, String(e.bonus)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, accessoryEntries: updated, accessoriesBonuses: flat } })
+  }
+
+  const handleEntryRemove = (field: EntriesField, index: number) => {
+    if (!formState) return
+    const entries = (formState[field] ?? []) as FactorEntry[]
+    const updated = entries.filter((_, i) => i !== index)
+    const flatField = field.replace('Entries', 'Factors') as 'conditionFactors' | 'floorFactors' | 'eraFactors'
+    const flat = Object.fromEntries(updated.map((e) => [e.value, String(e.coefficient)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, [field]: updated, [flatField]: flat } })
+  }
+
+  const handleEntryMoveUp = (field: EntriesField, index: number) => {
+    if (!formState || index === 0) return
+    const entries = [...((formState[field] ?? []) as FactorEntry[])]
+    ;[entries[index - 1], entries[index]] = [entries[index], entries[index - 1]]
+    const flatField = field.replace('Entries', 'Factors') as 'conditionFactors' | 'floorFactors' | 'eraFactors'
+    const flat = Object.fromEntries(entries.map((e) => [e.value, String(e.coefficient)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, [field]: entries, [flatField]: flat } })
+  }
+
+  const handleEntryAdd = (field: EntriesField) => {
+    if (!formState) return
+    const entries = [...((formState[field] ?? []) as FactorEntry[])]
+    entries.push({ value: '', label: { it: '', en: '' }, coefficient: 1 })
+    const flatField = field.replace('Entries', 'Factors') as 'conditionFactors' | 'floorFactors' | 'eraFactors'
+    const flat = Object.fromEntries(entries.map((e) => [e.value, String(e.coefficient)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, [field]: entries, [flatField]: flat } })
+  }
+
+  const handleAccessoryEntryAdd = () => {
+    if (!formState) return
+    const entries = [...(formState.accessoryEntries ?? [])]
+    entries.push({ value: '', label: { it: '', en: '' }, bonus: 0 })
+    const flat = Object.fromEntries(entries.map((e) => [e.value, String(e.bonus)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, accessoryEntries: entries, accessoriesBonuses: flat } })
+  }
+
+  const handleAccessoryEntryRemove = (index: number) => {
+    if (!formState) return
+    const entries = (formState.accessoryEntries ?? []).filter((_, i) => i !== index)
+    const flat = Object.fromEntries(entries.map((e) => [e.value, String(e.bonus)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, accessoryEntries: entries, accessoriesBonuses: flat } })
+  }
+
+  const handleAccessoryEntryMoveUp = (index: number) => {
+    if (!formState || index === 0) return
+    const entries = [...(formState.accessoryEntries ?? [])]
+    ;[entries[index - 1], entries[index]] = [entries[index], entries[index - 1]]
+    const flat = Object.fromEntries(entries.map((e) => [e.value, String(e.bonus)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, accessoryEntries: entries, accessoriesBonuses: flat } })
   }
 
   /** Add a new property type to the list and initialize its factor to 1 */
@@ -280,6 +430,10 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
       propertyTypes: formState.propertyTypes as PropertyType[],
       propertyTypeFactors: parseFactorTable(formState.propertyTypeFactors),
       sqmBucketPrices: parseFactorTable(formState.sqmBucketPrices),
+      conditionEntries: formState.conditionEntries,
+      floorEntries: formState.floorEntries,
+      eraEntries: formState.eraEntries,
+      accessoryEntries: formState.accessoryEntries,
       conditionFactors: parseFactorTable(formState.conditionFactors),
       floorFactors: parseFactorTable(formState.floorFactors),
       eraFactors: parseFactorTable(formState.eraFactors),
@@ -495,7 +649,7 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
             </button>
           </div>
 
-          {/* Factor table sections */}
+          {/* Factor table sections — legacy flat inputs (still used by unit tests T54) */}
           {(
             [
               { field: 'sqmBucketPrices', label: 'Sqm Bucket Prices (€)', testPrefix: 'sqm-bucket' },
@@ -529,6 +683,162 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
               </div>
             )
           })}
+
+          {/* Open-list entries editor (Epic P / US-16) */}
+          {(
+            [
+              { field: 'conditionEntries' as EntriesField, listTestId: 'condition-entries-list', addTestId: 'condition-entries-add-btn', label: 'Condition Entries' },
+              { field: 'floorEntries' as EntriesField, listTestId: 'floor-entries-list', addTestId: 'floor-entries-add-btn', label: 'Floor Entries' },
+              { field: 'eraEntries' as EntriesField, listTestId: 'era-entries-list', addTestId: 'era-entries-add-btn', label: 'Era Entries' },
+            ]
+          ).map(({ field, listTestId, addTestId, label }) => {
+            const entries = (formState[field] ?? []) as FactorEntry[]
+            if (entries.length === 0 && !formState[field]) return null
+            return (
+              <div key={field}>
+                <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</h3>
+                <div className="space-y-2" data-testid={listTestId}>
+                  {entries.map((entry, i) => {
+                    // Each row is wrapped with the specific testid (factor-entry-row-{value}) when it has a value,
+                    // OR just factor-entry-row when empty. The inner div always has factor-entry-row so that
+                    // getByTestId('factor-entry-row').last() and getByTestId('factor-entry-row-ottimo') both work.
+                    const innerContent = (
+                      <div
+                        data-testid="factor-entry-row"
+                        className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-700"
+                      >
+                        <input
+                          data-testid="factor-entry-value"
+                          type="text"
+                          placeholder="value"
+                          className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs font-mono dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                          value={entry.value}
+                          onChange={(e) => handleEntryChange(field, i, { value: e.target.value })}
+                        />
+                        <input
+                          data-testid="factor-entry-label-it"
+                          type="text"
+                          placeholder="Label IT"
+                          className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                          value={entry.label.it}
+                          onChange={(e) => handleEntryChange(field, i, { label: { ...entry.label, it: e.target.value } })}
+                        />
+                        <input
+                          data-testid="factor-entry-label-en"
+                          type="text"
+                          placeholder="Label EN"
+                          className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                          value={entry.label.en}
+                          onChange={(e) => handleEntryChange(field, i, { label: { ...entry.label, en: e.target.value } })}
+                        />
+                        <input
+                          data-testid="factor-entry-coefficient"
+                          type="number"
+                          step="0.01"
+                          placeholder="coeff"
+                          className="w-20 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                          value={entry.coefficient}
+                          onChange={(e) => handleEntryChange(field, i, { coefficient: parseFloat(e.target.value) })}
+                        />
+                        <button
+                          type="button"
+                          data-testid="factor-entry-move-up"
+                          disabled={i === 0}
+                          className="text-xs text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                          onClick={() => handleEntryMoveUp(field, i)}
+                        >↑</button>
+                        <button
+                          type="button"
+                          data-testid="factor-entry-remove-btn"
+                          className="text-xs text-red-500 hover:text-red-700"
+                          onClick={() => handleEntryRemove(field, i)}
+                        >✕</button>
+                      </div>
+                    )
+                    // When entry has a value, wrap with specific testid; otherwise the inner div itself is the row
+                    return entry.value
+                      ? <div key={entry.value} data-testid={`factor-entry-row-${entry.value}`}>{innerContent}</div>
+                      : <div key={`new-${i}`}>{innerContent}</div>
+                  })}
+                </div>
+                <button
+                  type="button"
+                  data-testid={addTestId}
+                  className="mt-2 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
+                  onClick={() => handleEntryAdd(field)}
+                >+ Add</button>
+              </div>
+            )
+          })}
+
+          {/* Accessory entries open-list editor */}
+          {formState.accessoryEntries !== undefined && (
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Accessory Entries</h3>
+              <div className="space-y-2" data-testid="accessory-entries-list">
+                {(formState.accessoryEntries ?? []).map((entry, i) => (
+                  <div
+                    key={entry.value || `new-${i}`}
+                    data-testid={entry.value ? `accessory-entry-row-${entry.value}` : 'accessory-entry-row'}
+                    className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-700"
+                  >
+                    <input
+                      data-testid="accessory-entry-value"
+                      type="text"
+                      placeholder="value"
+                      className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs font-mono dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.value}
+                      onChange={(e) => handleAccessoryEntryChange(i, { value: e.target.value })}
+                    />
+                    <input
+                      data-testid="accessory-entry-label-it"
+                      type="text"
+                      placeholder="Label IT"
+                      className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.label.it}
+                      onChange={(e) => handleAccessoryEntryChange(i, { label: { ...entry.label, it: e.target.value } })}
+                    />
+                    <input
+                      data-testid="accessory-entry-label-en"
+                      type="text"
+                      placeholder="Label EN"
+                      className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.label.en}
+                      onChange={(e) => handleAccessoryEntryChange(i, { label: { ...entry.label, en: e.target.value } })}
+                    />
+                    <input
+                      data-testid="accessory-entry-bonus"
+                      type="number"
+                      step="1"
+                      placeholder="bonus €"
+                      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.bonus}
+                      onChange={(e) => handleAccessoryEntryChange(i, { bonus: parseFloat(e.target.value) })}
+                    />
+                    <button
+                      type="button"
+                      data-testid="accessory-entry-move-up"
+                      disabled={i === 0}
+                      className="text-xs text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                      onClick={() => handleAccessoryEntryMoveUp(i)}
+                    >↑</button>
+                    <button
+                      type="button"
+                      data-testid="accessory-entry-remove-btn"
+                      className="text-xs text-red-500 hover:text-red-700"
+                      onClick={() => handleAccessoryEntryRemove(i)}
+                    >✕</button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                data-testid="accessory-entries-add-btn"
+                className="mt-2 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
+                onClick={handleAccessoryEntryAdd}
+              >+ Add</button>
+            </div>
+          )}
 
           {/* Privacy text */}
           <div>
@@ -583,7 +893,7 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
         </button>
         {saveStatus === 'saved' && (
           <p className="text-sm text-emerald-600 dark:text-emerald-400" data-testid="estimation-config-save-status">
-            Saved ✓
+            <span data-testid="estimation-config-saved-msg">Saved ✓</span>
           </p>
         )}
         {saveStatus === 'error' && (

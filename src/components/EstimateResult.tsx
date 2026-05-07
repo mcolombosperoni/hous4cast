@@ -6,8 +6,8 @@ interface EstimateResultProps {
   result: EstimateResultType
 }
 
-const formatCurrency = (value: number, currency: string, locale: string) =>
-  new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 }).format(
+const formatCurrency = (value: number, currency: string) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(
     value,
   )
 
@@ -31,7 +31,7 @@ export const EstimateResult = ({ result }: EstimateResultProps) => {
         {labels.central}
       </p>
       <p className="mt-1 text-3xl font-bold text-emerald-800 dark:text-emerald-200">
-        {formatCurrency(mid, currency, locale)}
+        {formatCurrency(mid, currency)}
       </p>
 
       {/* Range */}
@@ -42,7 +42,7 @@ export const EstimateResult = ({ result }: EstimateResultProps) => {
         className="mt-1 text-base font-medium text-emerald-700 dark:text-emerald-300"
         data-testid="estimate-result"
       >
-        {formatCurrency(low, currency, locale)} – {formatCurrency(high, currency, locale)}
+        {formatCurrency(low, currency)} – {formatCurrency(high, currency)}
       </p>
 
       {/* Disclaimer */}
