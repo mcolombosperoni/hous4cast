@@ -13,7 +13,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic G: Admin sharing UX ✅
 - Epic H: Configurable form and branding (palette, logo, image) ✅
 - Epic I: Admin-editable estimation config ✅
-- Epic J: Branding applied to estimate page _(in progress)_
+- Epic J: Branding applied to estimate page ✅
 - Epic K: Lead capture and agent notification _(planned)_
 - Epic L: Multi-agency support _(planned)_
 - Epic M: Estimate PDF export _(planned)_
@@ -110,6 +110,7 @@ Key design decisions (to be confirmed in ADR):
 
 _Last updated: 2026-05-07_
 
+## Delivery Workflow
 - All features are developed outside-in: acceptance tests first, then unit/component tests.
 - Each increment is delivered as a complete, tested slice.
 - Push only at increment completion, then wait for explicit approval before continuing.
