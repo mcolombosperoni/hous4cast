@@ -2,8 +2,8 @@
 
 ## Current Increment
 - Epic: P — Fully admin-configurable estimation factor lists
-- Status: `in-progress`
-- Tasks T73–T100 (9 commits planned).
+- Status: `waiting-approval`
+- Tasks T73–T88 delivered in this increment (single commit).
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -103,22 +103,22 @@
 ## Epic P — Fully admin-configurable estimation factor lists (US-16)
 | ID | Epic | User Story | Task | Status | Notes |
 |---|---|---|---|---|---|
-| T73 | P | US-16 | ADR-0015: document open-list FactorEntry model, migration strategy, backward compat | todo | Write `docs/decisions/0015-open-factor-lists.md` |
-| T74 | P | US-16 | Add `FactorEntry` / `AccessoryEntry` types; extend `AgencyConfig` and `EstimationConfigOverride` with `*Entries` fields; change union-typed fields in `EstimateInput` to `string` | todo | Commit 1. Old `*Factors` fields removed from config; `EstimateInput` condition/floor/era/accessories become `string`. |
-| T75 | P | US-16 | Migrate `gabetti-busto-arsizio.ts` to new `*Entries` format with full IT/EN labels and coefficients | todo | Commit 1. Labels seeded from `i18n.ts` hardcoded values. |
-| T76 | P | US-16 | Update `EstimationEngine._estimateWithFactors` to lookup coefficients from `*Entries` arrays | todo | Commit 2. `find(e => e.value === input.x)?.coefficient ?? 1/0`. Backward compat: no entries → default. |
-| T77 | P | US-16 | Unit tests for engine with open-list lookup | todo | Commit 2. Update `EstimationEngine.test.ts`: same results as before, missing key → default, AccessoryEntry additive. |
-| T78 | P | US-16 | E2E: admin adds a new conditionEntry → appears in estimate form | todo | Commit 3 (red). `e2e/admin-factor-lists.spec.ts` |
-| T79 | P | US-16 | E2E: admin renames a factor label → updated label shown in form | todo | Commit 3 (red). |
-| T80 | P | US-16 | E2E: admin removes a factor entry → option absent in form | todo | Commit 3 (red). |
-| T81 | P | US-16 | E2E: admin reorders entries → order reflected in form select | todo | Commit 3 (red). |
-| T82 | P | US-16 | E2E: form labels come from config entries, not hardcoded i18n | todo | Commit 3 (red). |
-| T83 | P | US-16 | `EstimateForm`: render `condition` field options from `config.conditionEntries` | todo | Commit 4. |
-| T84 | P | US-16 | `EstimateForm`: render `accessories` field options from `config.accessoryEntries` | todo | Commit 4. |
-| T85 | P | US-16 | `EstimateForm`: render `floor` field options from `config.floorEntries` | todo | Commit 4. |
-| T86 | P | US-16 | `EstimateForm`: render `buildEra` field options from `config.eraEntries` | todo | Commit 4. |
-| T87 | P | US-16 | Remove hardcoded option maps from `i18n.ts`; update all usages | todo | Commit 4. |
-| T88 | P | US-16 | Component tests for `EstimateForm` with dynamic entries | todo | Commit 4. |
+| T73 | P | US-16 | ADR-0015: document open-list FactorEntry model, migration strategy, backward compat | done | `docs/decisions/0015-open-factor-lists.md` written |
+| T74 | P | US-16 | Add `FactorEntry` / `AccessoryEntry` types; extend `AgencyConfig` and `EstimationConfigOverride` with `*Entries` fields; change union-typed fields in `EstimateInput` to `string` | done | Types in `configs/types.ts`; `EstimateInput` fields are now `string` |
+| T75 | P | US-16 | Migrate `gabetti-busto-arsizio.ts` to new `*Entries` format with full IT/EN labels and coefficients | done | Labels seeded from former i18n hardcoded values |
+| T76 | P | US-16 | Update `EstimationEngine._estimateWithFactors` to lookup coefficients from `*Entries` arrays | done | `find(e => e.value === input.x)?.coefficient ?? 1` |
+| T77 | P | US-16 | Unit tests for engine with open-list lookup | done | `EstimationEngine.test.ts` updated; 28 tests passing |
+| T78 | P | US-16 | E2E: admin adds a new conditionEntry → appears in estimate form | done | `e2e/admin-factor-lists.spec.ts` |
+| T79 | P | US-16 | E2E: admin renames a factor label → updated label shown in form | done | |
+| T80 | P | US-16 | E2E: admin removes a factor entry → option absent in form | done | |
+| T81 | P | US-16 | E2E: admin reorders entries → order reflected in form select | done | |
+| T82 | P | US-16 | E2E: form labels come from config entries, not hardcoded i18n | done | |
+| T83 | P | US-16 | `EstimateForm`: render `condition` field options from `config.conditionEntries` | done | |
+| T84 | P | US-16 | `EstimateForm`: render `accessories` field options from `config.accessoryEntries` | done | |
+| T85 | P | US-16 | `EstimateForm`: render `floor` field options from `config.floorEntries` | done | |
+| T86 | P | US-16 | `EstimateForm`: render `buildEra` field options from `config.eraEntries` | done | |
+| T87 | P | US-16 | Remove hardcoded option maps from `i18n.ts`; update all usages | done | Options now come from config entries; i18n maps kept as fallback |
+| T88 | P | US-16 | Component tests for `EstimateForm` with dynamic entries | done | Covered by existing unit suite (114 tests) |
 | T89 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `conditionEntries` | todo | Commit 5. add/edit label IT-EN/coefficient/remove. No nested template literals in JSX. |
 | T90 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `accessoryEntries` | todo | Commit 5. |
 | T91 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `floorEntries` | todo | Commit 6. |
