@@ -155,3 +155,60 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
     }
   })
 })
+
+// ── Property type factor tests ─────────────────────────────────────────────
+describe('EstimationEngine — propertyTypeFactors', () => {
+  it('applies propertyTypeFactor when defined (0.5 halves the result)', () => {
+    const configWithFactor = {
+      ...gabettiBustoArsizioConfig,
+      propertyTypeFactors: { appartamento: 0.5 },
+    }
+    const eng = new EstimationEngine(configWithFactor)
+    const result = eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
+    })
+    // base 352000 × zone 1.0 × propertyType 0.5 × all others 1.0 = 176000
+    expect(result.mid).toBe(176_000)
+  })
+
+  it('defaults to factor 1 when propertyTypeFactors is absent (backward compatible)', () => {
+    const configWithoutFactor = { ...gabettiBustoArsizioConfig, propertyTypeFactors: undefined }
+    const eng = new EstimationEngine(configWithoutFactor)
+    const result = eng.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
+    })
+    expect(result.mid).toBe(352_000)
+  })
+
+  it('defaults to factor 1 when property type is not in propertyTypeFactors map', () => {
+    const configPartialFactor = {
+      ...gabettiBustoArsizioConfig,
+      propertyTypes: ['appartamento', 'villa'] as const,
+      propertyTypeFactors: { appartamento: 1 }, // villa missing → defaults to 1
+    }
+    const eng = new EstimationEngine(configPartialFactor)
+    const result = eng.estimate({
+      zoneId: 'centro', propertyType: 'villa', sqm: 90,
+      sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
+    })
+    expect(result.mid).toBe(352_000)
+  })
+
+  it('propertyTypeFactor combines with all other factors', () => {
+    const configWithFactor = {
+      ...gabettiBustoArsizioConfig,
+      propertyTypeFactors: { appartamento: 0.8 },
+    }
+    const eng = new EstimationEngine(configWithFactor)
+    // 352000 × 0.91 × 0.8 × 0.75 × 1.02 × 0.70 + 18000
+    const expected = Math.round(352_000 * 0.91 * 0.8 * 0.75 * 1.02 * 0.70 + 18_000)
+    const result = eng.estimate({
+      zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
+    })
+    expect(result.mid).toBe(expected)
+  })
+})
+

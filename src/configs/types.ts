@@ -86,6 +86,8 @@ export interface AgencyConfig {
   floorFactors?: FactorTable<PropertyFloor>;
   eraFactors?: FactorTable<BuildEra>;
   accessoriesBonuses?: BonusTable<PropertyAccessories>;
+  /** Multiplicative factor per property type (default 1 when absent) */
+  propertyTypeFactors?: FactorTable<PropertyType>;
 
   /** Form fields definition for dynamic form rendering */
   formFields?: FormField[];
@@ -123,6 +125,7 @@ export type EstimationConfigOverride = Partial<
     | 'floorFactors'
     | 'eraFactors'
     | 'accessoriesBonuses'
+    | 'propertyTypeFactors'
     | 'privacy'
   >
 >

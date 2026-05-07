@@ -1,9 +1,9 @@
 # Task Board
 
 ## Current Increment
-- Epic: J + hotfix form validation UX
+- Epic: O — Property type as a configurable estimation factor
 - Status: `waiting-approval`
-- All tasks T57–T67 delivered and tested.
+- All tasks T68–T72 delivered and tested.
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -90,6 +90,7 @@
 - Epic H — Configurable form and branding (palette, logo, image)
 - Epic I — Admin-editable estimation config
 - Epic J — Branding applied to estimate page (done)
+- Epic O — Property type as a configurable estimation factor (done)
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
@@ -98,16 +99,15 @@
 | L | US-12 | Multi-agency support — second agency config fully operational |
 | M | US-13 | Estimate PDF export — branded downloadable PDF from result page |
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
-| O | US-15 | Property type as a configurable estimation factor |
 
 ## Epic O — Property type as a configurable estimation factor (US-15)
 | ID | Epic | User Story | Task | Status | Notes |
 |---|---|---|---|---|---|
-| T67 | O | US-15 | Extend `AgencyConfig` types: add optional `propertyTypeFactors: Partial<Record<PropertyType, number>>` | todo | Backward compatible: absent = all factors default to 1.0. Add to `EstimationConfigOverride` as well. |
-| T68 | O | US-15 | Update `EstimationEngine._estimateWithFactors` to apply `propertyTypeFactors[propertyType] ?? 1` | todo | New multiplier in the Gabetti factor chain. Unit tests updated. |
-| T69 | O | US-15 | Add `propertyTypeFactors` section to `AdminEstimationConfig` editor | todo | Same key-value input pattern as `conditionFactors` etc. Also allow editing the `propertyTypes` list (add/remove). Save/load via `estimationConfigApi`. |
-| T70 | O | US-15 | E2E acceptance tests: admin edits property type factor → estimate changes | todo | Playwright: add a second property type with factor ≠ 1, verify estimate page shows the selector and result differs. |
-| T71 | O | US-15 | Unit/component tests for property type factor | todo | Vitest: engine applies factor correctly; admin editor renders and saves the new field; form hides selector when single type. |
+| T68 | O | US-15 | Extend `AgencyConfig` types: add optional `propertyTypeFactors: FactorTable<PropertyType>`; add to `EstimationConfigOverride` | done | Backward compatible: absent = all factors default to 1.0. |
+| T69 | O | US-15 | Update `EstimationEngine._estimateWithFactors` to apply `propertyTypeFactors[propertyType] ?? 1` | done | New multiplier in the Gabetti factor chain. Unit tests updated. |
+| T70 | O | US-15 | Add `propertyTypeFactors` and `propertyTypes` editing to `AdminEstimationConfig` editor | done | Key-value input pattern as `conditionFactors`; add/remove types; save/load via `estimationConfigApi`. |
+| T71 | O | US-15 | E2E acceptance tests: admin edits property type factor → estimate changes; add type → selector visible | done | Playwright: 4 scenarios × 3 browsers = 12 tests. |
+| T72 | O | US-15 | Unit/component tests for property type factor | done | Vitest: engine backward compat, factor applies correctly, admin editor renders/saves new fields, add/remove type. |
 
 ## Wont-Do
 - None

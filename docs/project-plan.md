@@ -18,7 +18,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic L: Multi-agency support _(planned)_
 - Epic M: Estimate PDF export _(planned)_
 - Epic N: Admin leads dashboard _(planned)_
-- Epic O: Property type as a configurable estimation factor _(planned)_
+- Epic O: Property type as a configurable estimation factor ✅
 
 ## Epic I — Admin-editable Estimation Config
 

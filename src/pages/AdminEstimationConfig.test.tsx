@@ -188,6 +188,88 @@ describe('AdminEstimationConfig component (T54)', () => {
     expect(screen.getByTestId('condition-factor-ottimo')).toHaveValue(0.8)
     expect(screen.getByTestId('condition-factor-buono')).toHaveValue(0.6)
   })
+
+  it('renders propertyTypeFactors inputs with base values', async () => {
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('property-type-factor-appartamento')).toHaveValue(1)
+  })
+
+  it('edited propertyTypeFactor is included in save payload', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
+    const input = screen.getByTestId('property-type-factor-appartamento')
+    await user.clear(input)
+    await user.type(input, '0.7')
+    await user.click(screen.getByTestId('estimation-config-save'))
+    await waitFor(() =>
+      expect(api.saveEstimationConfig).toHaveBeenCalledWith(
+        'gabetti-busto-arsizio',
+        expect.objectContaining({
+          propertyTypeFactors: expect.objectContaining({ appartamento: 0.7 }),
+        }),
+      )
+    )
+  })
+
+  it('can add a second property type via add select and button', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    await user.selectOptions(screen.getByTestId('property-type-add-select'), 'villa')
+    await user.click(screen.getByTestId('property-type-add-btn'))
+    expect(screen.getByTestId('property-type-id-villa')).toBeInTheDocument()
+    expect(screen.getByTestId('property-type-factor-villa')).toHaveValue(1)
+  })
+
+  it('save payload includes new propertyTypes and propertyTypeFactors after adding type', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
+    await user.selectOptions(screen.getByTestId('property-type-add-select'), 'villa')
+    await user.click(screen.getByTestId('property-type-add-btn'))
+    // Set villa factor
+    const factorInput = screen.getByTestId('property-type-factor-villa')
+    await user.clear(factorInput)
+    await user.type(factorInput, '0.5')
+    await user.click(screen.getByTestId('estimation-config-save'))
+    await waitFor(() =>
+      expect(api.saveEstimationConfig).toHaveBeenCalledWith(
+        'gabetti-busto-arsizio',
+        expect.objectContaining({
+          propertyTypes: expect.arrayContaining(['appartamento', 'villa']),
+          propertyTypeFactors: expect.objectContaining({ villa: 0.5 }),
+        }),
+      )
+    )
+  })
+
+  it('can remove an added property type (button hidden when only one type)', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    // Remove button hidden when only one type
+    expect(screen.queryByTestId('property-type-remove-appartamento')).not.toBeInTheDocument()
+    // Add villa
+    await user.selectOptions(screen.getByTestId('property-type-add-select'), 'villa')
+    await user.click(screen.getByTestId('property-type-add-btn'))
+    expect(screen.getByTestId('property-type-remove-villa')).toBeInTheDocument()
+    // Remove villa
+    await user.click(screen.getByTestId('property-type-remove-villa'))
+    expect(screen.queryByTestId('property-type-id-villa')).not.toBeInTheDocument()
+  })
+
+  it('override propertyTypeFactors pre-populate inputs on load', async () => {
+    vi.mocked(api.loadEstimationConfig).mockResolvedValue({
+      propertyTypes: ['appartamento', 'villa'],
+      propertyTypeFactors: { appartamento: 0.9, villa: 0.5 },
+    })
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
+    expect(screen.getByTestId('property-type-factor-appartamento')).toHaveValue(0.9)
+    expect(screen.getByTestId('property-type-factor-villa')).toHaveValue(0.5)
+  })
 })
 
 

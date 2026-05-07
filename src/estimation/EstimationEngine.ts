@@ -66,12 +66,12 @@ export class EstimationEngine {
    *
    * Formula:
    *   base       = sqmBucketPrices[sqmBucket]
-   *   mid        = base × zoneMultiplier × conditionFactor × floorFactor × eraFactor + accessoriesBonus
+   *   mid        = base × zoneMultiplier × propertyTypeFactor × conditionFactor × floorFactor × eraFactor + accessoriesBonus
    *   min (low)  = mid × 0.9   (Gabetti uses -10% for minimum)
    *   max (high) = mid × (1 + spreadFactor)
    */
   private _estimateWithFactors(input: EstimateInput, zoneMultiplier: number): EstimateResult {
-    const { sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses } = this.config
+    const { sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypeFactors } = this.config
 
     if (!input.sqmBucket) {
       throw new EstimationEngineError(
@@ -88,12 +88,13 @@ export class EstimationEngine {
       )
     }
 
+    const propertyTypeFactor = propertyTypeFactors?.[input.propertyType] ?? 1
     const conditionFactor  = (input.condition   && conditionFactors?.[input.condition])   ?? 1
     const floorFactor      = (input.floor       && floorFactors?.[input.floor])           ?? 1
     const eraFactor        = (input.buildEra    && eraFactors?.[input.buildEra])          ?? 1
     const accessoriesBonus = (input.accessories && accessoriesBonuses?.[input.accessories]) ?? 0
 
-    const mid  = Math.round(base * zoneMultiplier * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
+    const mid  = Math.round(base * zoneMultiplier * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
     const low  = Math.round(mid * 0.9)
     const high = Math.round(mid * (1 + this.spread))
 

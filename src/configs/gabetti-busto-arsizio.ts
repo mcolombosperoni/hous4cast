@@ -87,6 +87,11 @@ export const gabettiBustoArsizioConfig: AgencyConfig = {
     cantina_due_box:33000,
   },
 
+  // ── Property type factors (default 1.0 — backward compatible) ────────────
+  propertyTypeFactors: {
+    appartamento: 1,
+  },
+
   branding: {
     palette: {
       primary: '#C8102E',

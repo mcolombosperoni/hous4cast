@@ -1,11 +1,13 @@
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import { getConfig } from '../configs/registry'
 import {
   loadEstimationConfig,
   saveEstimationConfig,
   clearEstimationConfig,
 } from '../app/estimationConfigApi'
-import type { AgencyConfig, EstimationConfigOverride, ZoneRate } from '../configs/types'
+import type { AgencyConfig, EstimationConfigOverride, PropertyType, ZoneRate } from '../configs/types'
+
+const ALL_PROPERTY_TYPES: PropertyType[] = ['appartamento', 'villa', 'ufficio']
 
 interface Props {
   configId: string
@@ -23,6 +25,13 @@ interface FormState {
   zones: ZoneRow[]
   privacyIt: string
   privacyEn: string
+  sqmBucketPrices?: Record<string, string>
+  conditionFactors?: Record<string, string>
+  floorFactors?: Record<string, string>
+  eraFactors?: Record<string, string>
+  accessoriesBonuses?: Record<string, string>
+  propertyTypes: string[]
+  propertyTypeFactors: Record<string, string>
 }
 
 /** Parse a string-valued Record back to numbers, skipping NaN entries */
@@ -91,7 +100,22 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
     override?.accessoriesBonuses as Record<string, number> | undefined,
   )
 
-  return { spreadFactor, zones, sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, privacyIt, privacyEn }
+  // Property types: use override if present, else base
+  const effectivePropertyTypes: string[] = (override?.propertyTypes ?? base.propertyTypes) as string[]
+
+  // PropertyTypeFactors: merge override over base; include all effective types (default 1)
+  const basePropertyTypeFactors: Record<string, number> = Object.fromEntries(
+    effectivePropertyTypes.map((pt) => [
+      pt,
+      (base.propertyTypeFactors as Record<string, number> | undefined)?.[pt] ?? 1,
+    ])
+  )
+  const propertyTypeFactors = buildTable(
+    basePropertyTypeFactors,
+    override?.propertyTypeFactors as Record<string, number> | undefined,
+  )
+
+  return { spreadFactor, zones, sqmBucketPrices, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, privacyIt, privacyEn }
 }
 
 export const AdminEstimationConfig = ({ configId }: Props) => {
@@ -129,6 +153,7 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
   })
   const { loading, formState, saveStatus, spreadError } = state
   const baseConfigRef = useRef<AgencyConfig | null>(null)
+  const [addPropertyTypeValue, setAddPropertyTypeValue] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -173,7 +198,7 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
 
   /** Generic handler for any factor/bonus table field */
   const handleFactorChange = (
-    field: 'sqmBucketPrices' | 'conditionFactors' | 'floorFactors' | 'eraFactors' | 'accessoriesBonuses',
+    field: 'sqmBucketPrices' | 'conditionFactors' | 'floorFactors' | 'eraFactors' | 'accessoriesBonuses' | 'propertyTypeFactors',
     key: string,
     value: string,
   ) => {
@@ -182,6 +207,28 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
       type: 'SET_FORM',
       formState: { ...formState, [field]: { ...formState[field], [key]: value } },
     })
+  }
+
+  /** Add a new property type to the list and initialize its factor to 1 */
+  const handleAddPropertyType = (pt: string) => {
+    if (!formState || !pt || formState.propertyTypes.includes(pt)) return
+    dispatch({
+      type: 'SET_FORM',
+      formState: {
+        ...formState,
+        propertyTypes: [...formState.propertyTypes, pt],
+        propertyTypeFactors: { ...formState.propertyTypeFactors, [pt]: '1' },
+      },
+    })
+  }
+
+  /** Remove a property type from the list (keep at least one) */
+  const handleRemovePropertyType = (pt: string) => {
+    if (!formState || formState.propertyTypes.length <= 1) return
+    const propertyTypes = formState.propertyTypes.filter((t) => t !== pt)
+    const propertyTypeFactors = { ...formState.propertyTypeFactors }
+    delete propertyTypeFactors[pt]
+    dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypes, propertyTypeFactors } })
   }
 
   const handleAddZone = () => {
@@ -224,6 +271,8 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     const override: EstimationConfigOverride = {
       spreadFactor: spreadValue,
       zones,
+      propertyTypes: formState.propertyTypes as PropertyType[],
+      propertyTypeFactors: parseFactorTable(formState.propertyTypeFactors),
       sqmBucketPrices: parseFactorTable(formState.sqmBucketPrices),
       conditionFactors: parseFactorTable(formState.conditionFactors),
       floorFactors: parseFactorTable(formState.floorFactors),
@@ -358,6 +407,70 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
               </div>
             )
           })}
+
+          {/* Property types and factors */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Property Types & Factors</h3>
+            <div className="space-y-2">
+              {formState.propertyTypes.map((pt) => (
+                <div key={pt} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
+                  <span className="w-28 text-sm text-slate-700 dark:text-slate-300" data-testid={`property-type-id-${pt}`}>{pt}</span>
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-slate-500" htmlFor={`property-type-factor-${pt}`}>Factor</label>
+                    <input
+                      id={`property-type-factor-${pt}`}
+                      data-testid={`property-type-factor-${pt}`}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={formState.propertyTypeFactors[pt] ?? '1'}
+                      onChange={(e) => handleFactorChange('propertyTypeFactors', pt, e.target.value)}
+                    />
+                  </div>
+                  {formState.propertyTypes.length > 1 && (
+                    <button
+                      type="button"
+                      data-testid={`property-type-remove-${pt}`}
+                      className="ml-auto text-xs text-red-500 hover:text-red-700"
+                      onClick={() => handleRemovePropertyType(pt)}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* Add new property type */}
+            {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).length > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <select
+                  data-testid="property-type-add-select"
+                  className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  value={addPropertyTypeValue}
+                  onChange={(e) => setAddPropertyTypeValue(e.target.value)}
+                >
+                  <option value="" disabled>Add type…</option>
+                  {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).map((pt) => (
+                    <option key={pt} value={pt}>{pt}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  data-testid="property-type-add-btn"
+                  className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
+                  onClick={() => {
+                    if (addPropertyTypeValue) {
+                      handleAddPropertyType(addPropertyTypeValue)
+                      setAddPropertyTypeValue('')
+                    }
+                  }}
+                >
+                  + Add
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Privacy text */}
           <div>
