@@ -20,8 +20,83 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic N: Admin leads dashboard _(planned)_
 - Epic O: Property type as a configurable estimation factor ✅
 - Epic P: Fully admin-configurable estimation factor lists ✅
-- Epic Q: Admin-configurable Sqm Bucket Prices and legacy factor tables as open lists _(in progress)_
-- Epic R: Zone and property type reorder/remove in admin _(in progress)_
+- Epic Q: Admin-configurable Sqm Bucket Prices and legacy factor tables as open lists ✅
+- Epic R: Zone and property type reorder/remove in admin ✅
+- Epic S: Dynamic agency creation in admin ✅
+
+## Epic A — Foundation and CI/CD guardrails
+
+Goal: establish the project skeleton with Vite + React + TypeScript strict, Tailwind CSS, hash routing for GitHub Pages compatibility, ESLint, Vitest, Playwright, and a pre-commit quality gate (lint + type-check + unit tests).
+
+Key design decisions:
+- Stack chosen: Vite, React, TypeScript strict, Tailwind. See ADR-0001.
+- Deployment target: GitHub Pages via tag-triggered workflow. See ADR-0002.
+- Hash routing (`HashRouter`) for static hosting compatibility.
+- Pre-commit hook runs `pnpm lint && pnpm type-check && pnpm test:run`. See ADR-0010.
+
+## Epic B — First estimator slice
+
+Goal: end-to-end value delivery — a seller can navigate to `/estimate/:configId`, fill a minimal form (zone, sqm), and receive an instant estimated price range.
+
+Key design decisions:
+- Config-driven content model: agency-specific params defined in typed config files. See ADR-0004.
+- `EstimationEngine` computes `min/mid/max` from `pricePerSqm × sqm × spreadFactor`. See ADR-0005.
+- Result rendered inline after submit (no page navigation). See ADR-0005.
+
+## Epic C — UX baseline
+
+Goal: mobile-first responsive layout, dark/light mode toggle persisted in `localStorage`, locale switcher (IT/EN) with resolution order from query param → localStorage → navigator.language.
+
+Key design decisions:
+- Mobile-first with Tailwind CSS utility classes. See ADR-0007.
+- `AppPreferencesProvider` manages `theme` and `locale` state with localStorage persistence.
+- Locale resolution order defined in ADR-0003.
+- Invalid `preferredTheme` values (e.g. `'system'`) default to `'light'`.
+
+## Epic D — Admin and QR
+
+Goal: an internal admin page (`/admin`) lets the agent select a configured agency, preview the estimate form, and generate a QR code linking to the branded estimate page.
+
+Key design decisions:
+- Admin route at `/#/admin`; QR print route at `/#/admin/qr/:configId`.
+- QR generated client-side via `qrcode.react`.
+- QR URL encodes `dl` param for deep-link locale resolution.
+
+## Epic E — Hardening
+
+Goal: increase test coverage, fix edge cases in the estimation engine (NaN, missing zones), improve error states (loading, config not found), and ensure all public-facing pages handle missing data gracefully.
+
+Key design decisions:
+- Unit tests for `EstimationEngine` covering edge cases (missing zone, zero sqm, unknown property type).
+- `NotFoundPage` for unknown `configId` routes.
+- Loading state shown during async config fetch.
+
+## Epic F — Release automation
+
+Goal: establish a repeatable, tag-triggered release workflow: `pnpm release:patch/minor/major` bumps version, commits, tags as `release/vX.Y.Z`, and pushes — triggering the GitHub Pages deploy.
+
+Key design decisions:
+- Release scripts in `scripts/release.mjs` and `scripts/verify-release-tag.mjs`. See ADR-0008.
+- Tags follow `release/vX.Y.Z` convention.
+- Deployment only from `main` branch on a clean working tree.
+
+## Epic G — Admin sharing UX
+
+Goal: the admin can share the estimate page URL and QR code with sellers directly from the admin panel, with a copy-to-clipboard button and a print-friendly QR layout.
+
+Key design decisions:
+- `QrPrintPage` at `/#/admin/qr/:configId` renders a print-optimised QR + URL.
+- Copy-URL button uses `navigator.clipboard`.
+
+## Epic H — Configurable form and branding (palette, logo, image)
+
+Goal: each agency can configure its own colour palette (light/dark), logo URL, and cover image URL via the admin panel. Settings are saved to Firestore and localStorage.
+
+Key design decisions:
+- `AdminBrandingConfig` component with colour pickers (react-colorful). See ADR-0011.
+- Images stored as URLs on Cloudinary; uploaded via the admin panel. See ADR-0012.
+- Branding stored in Firestore `branding/{configId}` and localStorage `hous4cast:branding:{configId}`. See ADR-0014.
+- CSS custom properties inject palette into the estimate page. See ADR-0014.
 
 ## Epic I — Admin-editable Estimation Config
 
@@ -43,20 +118,6 @@ Key design decisions (to be confirmed):
 - CSS custom properties (or inline styles) applied to the page root to inject palette colours.
 - Logo shown in header; cover image shown as hero or background above the form.
 - Graceful fallback to default neutrals if no branding is configured.
-
-## Epic P — Fully admin-configurable estimation factor lists
-
-Goal: agency admins can add, rename, reorder, and remove options for every estimation factor (condition, floor, buildEra, accessories) directly from the admin UI. The estimate form renders options dynamically from config — no hardcoded lists.
-
-Key design decisions:
-- `FactorEntry` type: `{ value: string; label: Record<SupportedLocale, string>; coefficient: number }[]`; `AccessoryEntry` adds `bonus: number` (additive €).
-- TypeScript union types replaced by open `string` keys; engine resolves by lookup, defaulting to `1`/`0`.
-- `getConfigWithLocalOverrides` (synchronous localStorage read) eliminates loading flash and e2e race conditions.
-- Legacy flat `*Factors` tables remain supported via `applyOverride` backward-compat layer.
-- Admin open-list editor with add / rename IT-EN labels / reorder / remove for all four factor lists.
-- See ADR-0015 for full rationale.
-
-
 
 ## Epic K — Lead capture and agent notification
 
@@ -149,6 +210,21 @@ Key design decisions:
 
 _Last updated: 2026-05-08_
 
+## Epic S — Dynamic agency creation in admin
+
+Goal: an admin user can create a new agency directly from the admin panel (without code changes), set its name and sqm range, and immediately access a live estimate page for that agency.
+
+Key design decisions:
+- `agencyApi.ts` manages dynamic agencies via localStorage (source of truth) + Firestore fire-and-forget sync.
+- `slugifyAgencyName` generates a unique `configId` from the agency name + timestamp.
+- New agencies are scaffolded from `default-agency-template.ts` with a sensible default zone, property type, and pricing.
+- `registry.ts` gains `registerDynamicAgency`, `unregisterDynamicAgency`, `initDynamicAgencies`, `isDynamicAgency` to integrate dynamic agencies with the existing config system.
+- `AdminPage` gains an "Add Agency" button that opens an inline name input form; on confirm, the agency is created, auto-selected, and its estimation config editor opened.
+- `AdminEstimationConfig` accepts `isDynamicAgency` and `onAgencyUpdated` props; when `isDynamicAgency` is true, the `agencyName` input is editable and saved via `saveAgency` on every config save.
+- Firebase `setDoc` sync-throw bug fixed: wrapped in `try/catch` in both `estimationConfigApi` and `agencyApi` to prevent uncaught synchronous errors from invalid field values (e.g. `undefined`).
+
+_Last updated: 2026-05-08_
+
 ## Delivery Workflow
 - All features are developed outside-in: acceptance tests first, then unit/component tests.
 - Each increment is delivered as a complete, tested slice.
@@ -162,4 +238,4 @@ _Last updated: 2026-05-08_
 
 ---
 
-_Last updated: 2026-05-02_
+_Last updated: 2026-05-09_
