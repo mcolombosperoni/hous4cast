@@ -5,7 +5,7 @@ import {
   saveEstimationConfig,
   clearEstimationConfig,
 } from '../app/estimationConfigApi'
-import type { AgencyConfig, EstimationConfigOverride, FactorEntry, AccessoryEntry, PropertyType, ZoneRate } from '../configs/types'
+import type { AgencyConfig, EstimationConfigOverride, FactorEntry, AccessoryEntry, PropertyType, PropertyTypeEntry, ZoneRate } from '../configs/types'
 
 interface Props {
   configId: string
@@ -38,6 +38,8 @@ interface FormState {
   accessoriesBonuses?: Record<string, string>
   propertyTypes: string[]
   propertyTypeFactors: Record<string, string>
+  /** Open-list property type entries with localized labels (Epic R) */
+  propertyTypeEntries: PropertyTypeEntry[]
 }
 
 /** Parse a string-valued Record back to numbers, skipping NaN entries */
@@ -160,19 +162,27 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
   // Property types: use override if present, else base
   const effectivePropertyTypes: string[] = (override?.propertyTypes ?? base.propertyTypes) as string[]
 
-  // PropertyTypeFactors: merge override over base; include all effective types (default 1)
-  const basePropertyTypeFactors: Record<string, number> = Object.fromEntries(
-    effectivePropertyTypes.map((pt) => [
-      pt,
-      (base.propertyTypeFactors as Record<string, number> | undefined)?.[pt] ?? 1,
-    ])
-  )
-  const propertyTypeFactors = buildTable(
-    basePropertyTypeFactors,
-    override?.propertyTypeFactors as Record<string, number> | undefined,
+  // PropertyTypeEntries: use override if present, else base entries, else synthesize from propertyTypes
+  const effectivePropertyTypeEntries: PropertyTypeEntry[] = (() => {
+    if (override?.propertyTypeEntries && override.propertyTypeEntries.length > 0) return override.propertyTypeEntries
+    // Build from effectivePropertyTypes — use base entry for label if available, override for coefficient
+    return effectivePropertyTypes.map((pt) => {
+      const baseEntry = base.propertyTypeEntries?.find((e) => e.value === pt)
+      const overrideCoeff = (override?.propertyTypeFactors as Record<string, number> | undefined)?.[pt]
+      return {
+        value: pt,
+        label: baseEntry?.label ?? { it: pt, en: pt },
+        coefficient: overrideCoeff !== undefined ? overrideCoeff : (baseEntry?.coefficient ?? 1),
+      }
+    })
+  })()
+
+  // PropertyTypeFactors: derive from entries
+  const propertyTypeFactors = Object.fromEntries(
+    effectivePropertyTypeEntries.map((e) => [e.value, String(e.coefficient)])
   )
 
-  return { spreadFactor, zones, sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, privacyIt, privacyEn }
+  return { spreadFactor, zones, sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, propertyTypeEntries: effectivePropertyTypeEntries, privacyIt, privacyEn }
 }
 
 interface EditorState {
@@ -353,15 +363,17 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     dispatch({ type: 'SET_FORM', formState: { ...formState, accessoryEntries: entries, accessoriesBonuses: flat } })
   }
 
-  /** Add a new property type to the list and initialize its factor to 1 */
+  /** Add a new property type to the list and initialize its entry */
   const handleAddPropertyType = (pt: string) => {
     if (!formState || !pt || formState.propertyTypes.includes(pt)) return
+    const newEntry: PropertyTypeEntry = { value: pt, label: { it: pt, en: pt }, coefficient: 1 }
     dispatch({
       type: 'SET_FORM',
       formState: {
         ...formState,
         propertyTypes: [...formState.propertyTypes, pt],
         propertyTypeFactors: { ...formState.propertyTypeFactors, [pt]: '1' },
+        propertyTypeEntries: [...formState.propertyTypeEntries, newEntry],
       },
     })
   }
@@ -372,7 +384,17 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     const propertyTypes = formState.propertyTypes.filter((t) => t !== pt)
     const propertyTypeFactors = { ...formState.propertyTypeFactors }
     delete propertyTypeFactors[pt]
-    dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypes, propertyTypeFactors } })
+    const propertyTypeEntries = formState.propertyTypeEntries.filter((e) => e.value !== pt)
+    dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypes, propertyTypeFactors, propertyTypeEntries } })
+  }
+
+  /** Update a field of a property type entry (label IT/EN or coefficient) */
+  const handlePropertyTypeEntryChange = (index: number, patch: Partial<PropertyTypeEntry>) => {
+    if (!formState) return
+    const propertyTypeEntries = formState.propertyTypeEntries.map((e, i) => i === index ? { ...e, ...patch } : e)
+    // Keep propertyTypeFactors in sync as string map (for backward compat with handleSave → parseFactorTable)
+    const propertyTypeFactors = Object.fromEntries(propertyTypeEntries.map((e) => [e.value, String(e.coefficient)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypeEntries, propertyTypeFactors } })
   }
 
   const handleZoneFieldChange = (index: number, field: keyof ZoneRow, value: string) => {
@@ -410,7 +432,9 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     if (!formState || index === 0) return
     const propertyTypes = [...formState.propertyTypes]
     ;[propertyTypes[index - 1], propertyTypes[index]] = [propertyTypes[index], propertyTypes[index - 1]]
-    dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypes } })
+    const propertyTypeEntries = [...formState.propertyTypeEntries]
+    ;[propertyTypeEntries[index - 1], propertyTypeEntries[index]] = [propertyTypeEntries[index], propertyTypeEntries[index - 1]]
+    dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypes, propertyTypeEntries } })
   }
 
   const handleSave = async () => {
@@ -446,6 +470,7 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
       spreadFactor: spreadValue,
       zones,
       propertyTypes: formState.propertyTypes as PropertyType[],
+      propertyTypeEntries: formState.propertyTypeEntries,
       propertyTypeFactors: parseFactorTable(formState.propertyTypeFactors),
       sqmBucketPrices: parseFactorTable(formState.sqmBucketPrices),
       conditionEntries: formState.conditionEntries,
@@ -514,43 +539,80 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
             )}
           </div>
 
-          {/* Property types and factors — mirrors form field order (first field when multiple types) */}
+          {/* Property types and factors — with IT/EN labels */}
           <div>
             <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Property Types & Factors</h3>
-            <div className="space-y-2">
-              {formState.propertyTypes.map((pt, index) => (
-                <div key={pt} data-testid={`property-type-row-${index}`} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
-                  <span className="w-28 text-sm text-slate-700 dark:text-slate-300" data-testid={'property-type-id-' + pt}>{pt}</span>
-                  <div className="flex items-center gap-1">
-                    <label className="text-xs text-slate-500" htmlFor={'property-type-factor-' + pt}>Factor</label>
-                    <input
-                      id={'property-type-factor-' + pt}
-                      data-testid={'property-type-factor-' + pt}
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                      value={formState.propertyTypeFactors[pt] ?? '1'}
-                      onChange={(e) => handleFactorChange('propertyTypeFactors', pt, e.target.value)}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    data-testid={`property-type-move-up-${index}`}
-                    disabled={index === 0}
-                    className="text-xs text-slate-400 hover:text-slate-700 disabled:opacity-30"
-                    onClick={() => handleMovePropertyTypeUp(index)}
-                  >↑</button>
-                  {formState.propertyTypes.length > 1 && (
+            <div className="space-y-3">
+              {formState.propertyTypeEntries.map((entry, index) => (
+                <div key={entry.value || `pt-new-${index}`} data-testid={`property-type-row-${index}`} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 space-y-2">
+                  {/* Top row: value (read-only) + factor + reorder/remove */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-mono text-slate-400 dark:text-slate-500 shrink-0" data-testid={'property-type-id-' + entry.value}>{entry.value}</span>
+                    <div className="flex items-center gap-1 ml-auto">
+                      <label className="text-xs text-slate-500 shrink-0" htmlFor={'property-type-factor-' + entry.value}>Factor</label>
+                      <input
+                        id={'property-type-factor-' + entry.value}
+                        data-testid={'property-type-factor-' + entry.value}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        value={formState.propertyTypeFactors[entry.value] ?? '1'}
+                        onChange={(e) => {
+                          const updated = { ...formState.propertyTypeFactors, [entry.value]: e.target.value }
+                          const parsed = parseFloat(e.target.value)
+                          const entries = formState.propertyTypeEntries.map((en, i) =>
+                            i === index ? { ...en, coefficient: isNaN(parsed) ? en.coefficient : parsed } : en
+                          )
+                          dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypeFactors: updated, propertyTypeEntries: entries } })
+                        }}
+                      />
+                    </div>
                     <button
                       type="button"
-                      data-testid={`property-type-remove-${index}`}
-                      className="ml-auto text-xs text-red-500 hover:text-red-700"
-                      onClick={() => handleRemovePropertyType(pt)}
-                    >
-                      Remove
-                    </button>
-                  )}
+                      data-testid={`property-type-move-up-${index}`}
+                      disabled={index === 0}
+                      className="text-xs text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                      onClick={() => handleMovePropertyTypeUp(index)}
+                    >↑</button>
+                    {formState.propertyTypeEntries.length > 1 && (
+                      <button
+                        type="button"
+                        data-testid={`property-type-remove-${index}`}
+                        className="text-xs text-red-500 hover:text-red-700"
+                        onClick={() => handleRemovePropertyType(entry.value)}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {/* Label row: IT + EN */}
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <label className="text-xs text-slate-500 shrink-0" htmlFor={`property-type-label-it-${index}`}>IT</label>
+                      <input
+                        id={`property-type-label-it-${index}`}
+                        data-testid={`property-type-label-it-${index}`}
+                        type="text"
+                        placeholder="Nome tipo (IT)"
+                        className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        value={entry.label.it}
+                        onChange={(e) => handlePropertyTypeEntryChange(index, { label: { ...entry.label, it: e.target.value } })}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <label className="text-xs text-slate-500 shrink-0" htmlFor={`property-type-label-en-${index}`}>EN</label>
+                      <input
+                        id={`property-type-label-en-${index}`}
+                        data-testid={`property-type-label-en-${index}`}
+                        type="text"
+                        placeholder="Type name (EN)"
+                        className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        value={entry.label.en}
+                        onChange={(e) => handlePropertyTypeEntryChange(index, { label: { ...entry.label, en: e.target.value } })}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

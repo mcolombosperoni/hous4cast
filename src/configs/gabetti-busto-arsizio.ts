@@ -21,6 +21,9 @@ export const gabettiBustoArsizioConfig: AgencyConfig = {
   sqmRange: { min: 20, max: 1000 },
   spreadFactor: 0.05,
   propertyTypes: ['appartamento'],
+  propertyTypeEntries: [
+    { value: 'appartamento', label: { it: 'Appartamento', en: 'Apartment' }, coefficient: 1.0 },
+  ],
 
   // ── 10 zones from the Tally form ──────────────────────────────────────────
   zones: [

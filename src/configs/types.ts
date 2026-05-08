@@ -64,6 +64,18 @@ export interface SqmBucketEntry {
   pricePerSqm: number
 }
 
+/**
+ * Open-list entry for a property type (Epic R extension).
+ * Replaces the plain string array — admin can set localized labels and a multiplicative factor.
+ */
+export interface PropertyTypeEntry {
+  value: string
+  label: Record<SupportedLocale, string>
+  /** Multiplicative factor applied to the base estimate (default 1) */
+  coefficient: number
+}
+
+
 export type FormFieldType =
   | 'text'
   | 'number'
@@ -122,6 +134,9 @@ export interface AgencyConfig {
   /** Multiplicative factor per property type (default 1 when absent) */
   propertyTypeFactors?: FactorTable<PropertyType>;
 
+  /** Open-list property type entries with localized labels and coefficient (Epic R) */
+  propertyTypeEntries?: PropertyTypeEntry[];
+
   /** Form fields definition for dynamic form rendering */
   formFields?: FormField[];
   /** Branding: color palette, logo, cover image */
@@ -151,6 +166,7 @@ export type EstimationConfigOverride = Partial<
     AgencyConfig,
     | 'zones'
     | 'propertyTypes'
+    | 'propertyTypeEntries'
     | 'sqmRange'
     | 'spreadFactor'
     | 'sqmBucketPrices'

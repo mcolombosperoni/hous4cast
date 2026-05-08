@@ -165,6 +165,7 @@
 | T113 | R | US-18 | `AdminEstimationConfig`: add ↑ (move up) and ✕ (remove) buttons to each property type row | done | `property-type-move-up-{i}`, `property-type-remove-{i}`, `property-type-row-{i}`; input replaces select |
 | T114 | R | US-18 | Update `handleSave` to persist zone order and removals; update `handleSave` for property type order and removals | done | Handlers `handleZoneMoveUp`, `handleZoneRemove`, `handleMovePropertyTypeUp` |
 | T115 | R | US-18 | Component tests for zone reorder/remove and property type reorder/remove | done | Unit tests updated in `AdminEstimationConfig.test.tsx` |
+| T116b | R | US-18 | Add `PropertyTypeEntry` type with IT/EN labels; seed in static configs; admin editor shows label IT/EN inputs; EstimateForm uses localized labels; e2e coverage (3 new tests × 3 browsers) | done | `types.ts`, `gabetti-busto-arsizio.ts`, `example-agency-milano.ts`, `AdminEstimationConfig.tsx`, `EstimateForm.tsx` |
 
 ## Bug fixes / UX improvements (May 2026)
 | ID | Epic | User Story | Task | Status | Notes |

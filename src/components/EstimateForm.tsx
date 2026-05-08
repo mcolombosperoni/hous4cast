@@ -5,7 +5,8 @@ import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import type { AgencyConfig, EstimateInput, PropertyType, SqmBucket } from '../configs/types'
 import { i18n } from '../app/i18n'
 
-const propertyTypeLabel: Record<PropertyType, Record<'it' | 'en', string>> = {
+/** Fallback hardcoded labels for property types not covered by config entries */
+const propertyTypeLabelFallback: Record<string, Record<'it' | 'en', string>> = {
   appartamento: { it: 'Appartamento', en: 'Apartment' },
   villa: { it: 'Villa', en: 'Villa' },
   ufficio: { it: 'Ufficio', en: 'Office' },
@@ -31,8 +32,15 @@ const FormField = ({ label, error, errorTestId, children }: { label: string; err
 
 export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
   const { locale } = useAppPreferences()
-  const { sqmRange, zones, propertyTypes, sqmBucketPrices } = config
+  const { sqmRange, zones, propertyTypes, propertyTypeEntries, sqmBucketPrices } = config
   const usesBuckets = Boolean(sqmBucketPrices)
+
+  /** Resolve the display label for a property type value */
+  const getPropertyTypeLabel = (value: string): string => {
+    const entry = propertyTypeEntries?.find((e) => e.value === value)
+    if (entry) return entry.label[locale]
+    return propertyTypeLabelFallback[value]?.[locale] ?? value
+  }
 
   const labels = i18n[locale].estimate
 
@@ -121,7 +129,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
             <Controller name="propertyType" control={control} render={({ field }) => (
               <select data-testid="propertyType" className={selectClass} {...field}>
                 {propertyTypes.map((pt) => (
-                  <option key={pt} value={pt}>{propertyTypeLabel[pt][locale]}</option>
+                  <option key={pt} value={pt}>{getPropertyTypeLabel(pt)}</option>
                 ))}
               </select>
             )} />

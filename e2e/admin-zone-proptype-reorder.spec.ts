@@ -105,5 +105,49 @@ test.describe('Admin property type reorder and remove', () => {
   })
 })
 
+test.describe('Admin property type IT/EN labels', () => {
+  test('property type rows show IT and EN label inputs', async ({ page }) => {
+    await openEstimationConfig(page)
+    // First property type (appartamento) should have label inputs pre-filled
+    await expect(page.getByTestId('property-type-label-it-0')).toBeVisible()
+    await expect(page.getByTestId('property-type-label-en-0')).toBeVisible()
+    const itValue = await page.getByTestId('property-type-label-it-0').inputValue()
+    const enValue = await page.getByTestId('property-type-label-en-0').inputValue()
+    expect(itValue.length).toBeGreaterThan(0)
+    expect(enValue.length).toBeGreaterThan(0)
+  })
 
+  test('admin edits property type IT label and it persists after save', async ({ page }) => {
+    await openEstimationConfig(page)
+    const labelItInput = page.getByTestId('property-type-label-it-0')
+    await labelItInput.fill('Appartamento Custom IT')
+    await page.getByTestId('estimation-config-save').click()
+    await expect(page.getByTestId('estimation-config-saved-msg')).toBeVisible({ timeout: 5000 })
+    // Reload admin and check the value persisted
+    await page.reload()
+    await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
+    await page.getByRole('button', { name: /gabetti/i }).click()
+    await page.getByTestId('admin-estimation-config-toggle').click()
+    await expect(page.getByTestId('estimation-config-loaded')).toBeVisible({ timeout: 10000 })
+    const savedValue = await page.getByTestId('property-type-label-it-0').inputValue()
+    expect(savedValue).toBe('Appartamento Custom IT')
+  })
 
+  test('localized property type label appears in estimate form select', async ({ page }) => {
+    await openEstimationConfig(page)
+    // Add a second property type so the selector appears in the estimate form
+    await page.getByTestId('property-type-add-input').fill('villa')
+    await page.getByTestId('property-type-add-btn').click()
+    // Edit the villa IT label
+    const villaRow = page.locator('[data-testid^="property-type-row-"]').last()
+    const villaLabelIt = villaRow.locator('[data-testid*="property-type-label-it"]')
+    await villaLabelIt.fill('Villa Custom')
+    await page.getByTestId('estimation-config-save').click()
+    await expect(page.getByTestId('estimation-config-saved-msg')).toBeVisible({ timeout: 5000 })
+    // Navigate to estimate page in IT locale and check label appears
+    await page.goto('/?lang=it#/estimate/gabetti-busto-arsizio')
+    await expect(page.getByTestId('propertyType')).toBeVisible({ timeout: 10000 })
+    const options = await page.getByTestId('propertyType').locator('option').allTextContents()
+    expect(options.some(o => o.includes('Villa Custom'))).toBe(true)
+  })
+})
