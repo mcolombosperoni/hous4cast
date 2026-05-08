@@ -237,4 +237,10 @@ Acceptance criteria:
 - The "Sqm Range" inputs are displayed directly above the "Sqm Bucket Entries" section, forming a single logical block with a contextual hint that explains the three modes: bucket active (drop-down shown), bucket empty (numeric input shown), no bucket defined (numeric input shown).
 - All section titles and labels in the estimation config editor respond to the app-level language switch (IT/EN).
 - A short explanation of how each field affects the estimation calculation is displayed below each section title (formula and example in the current locale).
+- The "Estimation Config" accordion toggle in AdminPage is localized (IT: "Configurazione stima", EN: "Estimation config").
+- New agencies are created with generic placeholder values (`tipo_1`, `zona_1`) instead of Gabetti-specific identifiers.
+- Factor select fields in the estimate form (condition, floor, era, accessories, sqm bucket) are hidden when the corresponding entries array is empty `[]`; they show options only when entries are configured.
+- All hardcoded option maps (sqmBucketOptions, conditionOptions, etc.) are removed from `i18n.ts`; option labels live exclusively in the agency config entries.
+- The estimation engine never throws for a missing or unconfigured sqm bucket — it falls back to `pricePerSqm × sqm`; all factors default to neutral values (×1/+0) when absent.
+- `low` and `high` are always computed as `mid × (1 ± spread)` using the configured spread factor, never as hardcoded multipliers.
 

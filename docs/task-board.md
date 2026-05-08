@@ -1,7 +1,7 @@
 # Task Board
 
 ## Current Increment
-- Epic: S+ — Admin UX improvements (addendum to Epic S) ✅
+- Epic: S+ — Admin UX improvements + codebase cleanup ✅
 - Status: `waiting-approval`
 
 ## Tasks
@@ -94,7 +94,7 @@
 - Epic Q — Admin-configurable Sqm Bucket Prices and legacy flat factor table removal (US-17) ✅
 - Epic R — Zone and property type reorder/remove in admin (US-18) ✅
   - Epic S — Dynamic agency creation in admin (US-19) ✅
-  - Epic S+ — Admin UX improvements: delete agency, full template, locale-aware editor, calc hints (US-19-imp) ✅
+  - Epic S+ — Admin UX improvements: delete agency, full template, locale-aware editor, calc hints, type cleanup, engine fallback, a11y fix (US-19-imp) ✅
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
@@ -200,4 +200,11 @@
 | T133 | S+ | US-19-imp | `AdminEstimationConfig`: move "Sqm Range" section directly above "Sqm Bucket Entries" to group related concepts; update contextual hint to be locale-aware (3 states: bucket active / bucket empty / no bucket) | done | Sqm Range and Sqm Bucket Entries now form a single logical block |
 | T134 | S+ | US-19-imp | `AdminEstimationConfig`: wire `locale` from `useAppPreferences`; localize all section titles (IT/EN) in the estimation config editor | done | All headings respond to the app-level language switch |
 | T135 | S+ | US-19-imp | `AdminEstimationConfig`: add calc-formula hint below every section title explaining how the field affects the estimation engine | done | Hints for: Agency Name, Spread Factor, Property Types, Zones, Condition Entries, Floor Entries, Era Entries, Accessory Entries, Sqm Range/Buckets, Privacy |
+| T136 | S+ | US-19-imp | `i18n.ts`: add `estimationConfig` key to admin labels (IT/EN); use in AdminPage toggle instead of hardcoded string | done | Toggle accordion "Configurazione stima" / "Estimation config" |
+| T137 | S+ | US-19-imp | `default-agency-template.ts`: use generic `tipo_1`/`zona_1` keys instead of Gabetti-specific `appartamento`; `pricePerSqm` keyed by `tipo_1` | done | New agencies no longer carry Gabetti-specific values |
+| T138 | S+ | US-19-imp | `types.ts`: open `PropertyType` union to `string & {}` (drop @deprecated); open `SqmBucket` union to `string & {}`; remove unused deprecated type aliases (`PropertyCondition`, `PropertyAccessories`, `PropertyFloor`, `BuildEra`, `BonusTable`) | done | All fixed Gabetti keys now live only in `gabetti-busto-arsizio.ts` |
+| T139 | S+ | US-19-imp | `EstimateForm`: hide factor select fields (condition, floor, era, accessories) when `entries` is `[]`; use `sqmBucketEntries` in priority over legacy `sqmBucketOptions`; remove hardcoded i18n option maps | done | Empty `[]` = dynamic agency with no options yet configured; form shows only active fields |
+| T140 | S+ | US-19-imp | `i18n.ts`: remove `sqmBucketOptions`, `conditionOptions`, `floorOptions`, `accessoriesOptions`, `eraOptions` — duplicates of `gabetti-busto-arsizio.ts` entries | done | i18n now contains only UI copy (labels, validation messages); data lives in config |
+| T141 | S+ | US-19-imp | `EstimationEngine`: factor path only when `sqmBucketEntries.length > 0` or `sqmBucketPrices` defined; fallback to `pricePerSqm × sqm` when bucket absent/unknown; apply open-list factors in simple mode; fix `low = mid × (1 − spread)` (was hardcoded `× 0.9`) | done | Engine never throws on missing bucket; missing/unconfigured factors are neutral (×1/+0) |
+| T142 | S+ | US-19-imp | `AdminPage`: fix invalid HTML nesting — agency card changed from `<button>` to `<div role="button">` so the Delete `<button>` is a valid child | done | Resolves React hydration warning "button cannot be a descendant of button" |
 
