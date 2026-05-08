@@ -16,7 +16,7 @@ export const defaultAgencyTemplate: Omit<AgencyConfig, 'id' | 'agencyName'> = {
     {
       zoneId: 'zona_1',
       label: { it: 'Zona 1', en: 'Zone 1' },
-      pricePerSqm: { tipo_1: 3000 } as Record<string, number>,
+      pricePerSqm: { tipo_1: 3000 },
       zoneMultiplier: 1.0,
     },
   ],
@@ -43,3 +43,4 @@ export const defaultAgencyTemplate: Omit<AgencyConfig, 'id' | 'agencyName'> = {
     },
   },
 }
+

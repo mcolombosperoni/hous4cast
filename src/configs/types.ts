@@ -1,25 +1,30 @@
 import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
 
-/** @deprecated Use string — kept for EstimateInput typing convenience */
-export type PropertyType = 'appartamento' | 'villa' | 'ufficio'
+/**
+ * Property type identifier. The built-in Gabetti config uses the fixed values below,
+ * but dynamic agencies can use any string key. The union is kept for backward
+ * compatibility with static configs and legacy saved overrides; the engine and form
+ * treat it as `string` at runtime.
+ */
+export type PropertyType = 'appartamento' | 'villa' | 'ufficio' | (string & {})
 
 /** Surface area buckets (used by single-choice sqm field) */
 export type SqmBucket = 'fino_50' | '51_70' | '71_110' | '111_149' | '150_plus'
 
-/** @deprecated Use string — kept for EstimateInput typing convenience */
+/** @deprecated kept for backward compat — use `string` directly */
 export type PropertyCondition = string
-/** @deprecated Use string — kept for EstimateInput typing convenience */
+/** @deprecated kept for backward compat — use `string` directly */
 export type PropertyAccessories = string
-/** @deprecated Use string — kept for EstimateInput typing convenience */
+/** @deprecated kept for backward compat — use `string` directly */
 export type PropertyFloor = string
-/** @deprecated Use string — kept for EstimateInput typing convenience */
+/** @deprecated kept for backward compat — use `string` directly */
 export type BuildEra = string
 
 export interface ZoneRate {
   zoneId: string
   label: Record<SupportedLocale, string>
-  /** Price per sqm by property type. Accepts any string key (open-list) for dynamic agencies. */
-  pricePerSqm: Partial<Record<PropertyType, number>> & Record<string, number>
+  /** Price per sqm by property type (any string key, open-list compatible). */
+  pricePerSqm: Partial<Record<PropertyType, number>>
   /** Zone multiplier applied to base price (default 1) */
   zoneMultiplier?: number
 }
