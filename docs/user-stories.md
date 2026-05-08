@@ -176,7 +176,7 @@ Acceptance criteria:
 - Changes saved in admin are reflected immediately on the next estimate page load (override via localStorage/Firestore, same mechanism as other factors).
 - Default config for new agencies: `propertyTypes: ['appartamento']`, `propertyTypeFactors: { appartamento: 1 }` — no user-visible change for Gabetti Busto Arsizio.
 
-### US-16 - Fully admin-configurable estimation factor lists (Epic P)
+### US-16 - Fully admin-configurable estimation factor lists (Epic P) ✅
 As an agency admin, I want to define the full list of options (with labels in IT/EN) and coefficients for every estimation factor — stato interno, piano, età di costruzione, accessori — directly from the admin UI, without modifying any code or redeploying.
 As a potential seller, I want the form to show only the options that the agency has configured, with the labels the agency has chosen.
 

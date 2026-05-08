@@ -19,7 +19,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic M: Estimate PDF export _(planned)_
 - Epic N: Admin leads dashboard _(planned)_
 - Epic O: Property type as a configurable estimation factor ✅
-- Epic P: Fully admin-configurable estimation factor lists _(planned)_
+- Epic P: Fully admin-configurable estimation factor lists ✅
 
 ## Epic I — Admin-editable Estimation Config
 
@@ -41,6 +41,20 @@ Key design decisions (to be confirmed):
 - CSS custom properties (or inline styles) applied to the page root to inject palette colours.
 - Logo shown in header; cover image shown as hero or background above the form.
 - Graceful fallback to default neutrals if no branding is configured.
+
+## Epic P — Fully admin-configurable estimation factor lists
+
+Goal: agency admins can add, rename, reorder, and remove options for every estimation factor (condition, floor, buildEra, accessories) directly from the admin UI. The estimate form renders options dynamically from config — no hardcoded lists.
+
+Key design decisions:
+- `FactorEntry` type: `{ value: string; label: Record<SupportedLocale, string>; coefficient: number }[]`; `AccessoryEntry` adds `bonus: number` (additive €).
+- TypeScript union types replaced by open `string` keys; engine resolves by lookup, defaulting to `1`/`0`.
+- `getConfigWithLocalOverrides` (synchronous localStorage read) eliminates loading flash and e2e race conditions.
+- Legacy flat `*Factors` tables remain supported via `applyOverride` backward-compat layer.
+- Admin open-list editor with add / rename IT-EN labels / reorder / remove for all four factor lists.
+- See ADR-0015 for full rationale.
+
+
 
 ## Epic K — Lead capture and agent notification
 

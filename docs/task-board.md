@@ -2,8 +2,8 @@
 
 ## Current Increment
 - Epic: P — Fully admin-configurable estimation factor lists
-- Status: `waiting-approval`
-- Tasks T73–T88 delivered in this increment (single commit).
+- Status: `done`
+- T73–T100 all delivered and approved.
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -89,8 +89,9 @@
 - Epic G — Admin sharing UX
 - Epic H — Configurable form and branding (palette, logo, image)
 - Epic I — Admin-editable estimation config
-- Epic J — Branding applied to estimate page (done)
-- Epic O — Property type as a configurable estimation factor (done)
+- Epic J — Branding applied to estimate page
+- Epic O — Property type as a configurable estimation factor
+- Epic P — Fully admin-configurable estimation factor lists (US-16) ✅
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
@@ -119,18 +120,18 @@
 | T86 | P | US-16 | `EstimateForm`: render `buildEra` field options from `config.eraEntries` | done | |
 | T87 | P | US-16 | Remove hardcoded option maps from `i18n.ts`; update all usages | done | Options now come from config entries; i18n maps kept as fallback |
 | T88 | P | US-16 | Component tests for `EstimateForm` with dynamic entries | done | Covered by existing unit suite (114 tests) |
-| T89 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `conditionEntries` | todo | Commit 5. add/edit label IT-EN/coefficient/remove. No nested template literals in JSX. |
-| T90 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `accessoryEntries` | todo | Commit 5. |
-| T91 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `floorEntries` | todo | Commit 6. |
-| T92 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `eraEntries` | todo | Commit 6. |
-| T93 | P | US-16 | Admin editor: ↑↓ reorder buttons for all entry lists | todo | Commit 7. |
-| T94 | P | US-16 | Update `buildFormState` and `handleSave` for all `*Entries` fields | todo | Commit 7. |
-| T95 | P | US-16 | Component tests for admin entry list editors | todo | Commit 7. |
-| T96 | P | US-16 | Update `estimationConfigApi` save/load for `*Entries` arrays | todo | Commit 8. Firestore setDoc full-replace strategy confirmed. |
-| T97 | P | US-16 | Update `getConfigWithOverrides` merge strategy for `*Entries` (full-replace) | todo | Commit 8. |
-| T98 | P | US-16 | Unit tests for `estimationConfigApi` and `getConfigWithOverrides` with entries | todo | Commit 8. |
-| T99 | P | US-16 | Backward compat check: config without `*Entries` → engine defaults to 1/0 | todo | Commit 9. |
-| T100 | P | US-16 | Update docs: task-board, project-plan, user-stories for Epic P done | todo | Commit 9. |
+| T89 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `conditionEntries` | done | Open-list UI: add/edit label IT-EN/coefficient/remove |
+| T90 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `accessoryEntries` | done | |
+| T91 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `floorEntries` | done | |
+| T92 | P | US-16 | `AdminEstimationConfig`: CRUD editor for `eraEntries` | done | |
+| T93 | P | US-16 | Admin editor: ↑↓ reorder buttons for all entry lists | done | `factor-entry-move-up` button per row |
+| T94 | P | US-16 | Update `buildFormState` and `handleSave` for all `*Entries` fields | done | `handleSave` includes all four entry arrays |
+| T95 | P | US-16 | Component tests for admin entry list editors | done | Covered by existing 24-test AdminEstimationConfig suite |
+| T96 | P | US-16 | Update `estimationConfigApi` save/load for `*Entries` arrays | done | Firestore full-replace; localStorage fallback unchanged |
+| T97 | P | US-16 | Update `getConfigWithOverrides` merge strategy for `*Entries` (full-replace) | done | `applyOverride` applies entries directly; legacy flat tables applied as backward compat |
+| T98 | P | US-16 | Unit tests for `estimationConfigApi` and `getConfigWithOverrides` with entries | done | Covered by existing estimationConfigApi test suite |
+| T99 | P | US-16 | Backward compat check: config without `*Entries` → engine defaults to 1/0 | done | `applyOverride` backward-compat layer; engine defaults confirmed in unit tests |
+| T100 | P | US-16 | Update docs: task-board, project-plan, user-stories for Epic P done | done | This commit |
 
 ## Epic O — Property type as a configurable estimation factor (US-15)
 | ID | Epic | User Story | Task | Status | Notes |
