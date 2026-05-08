@@ -9,10 +9,11 @@ import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
 export type PropertyType = 'appartamento' | 'villa' | 'ufficio' | (string & {})
 
 /**
- * Surface area bucket keys used by the Gabetti legacy select field.
- * New dynamic agencies use open-list `SqmBucketEntry` arrays instead.
+ * Surface area bucket key. The built-in Gabetti config uses the fixed values below,
+ * but dynamic agencies can define any string key via `SqmBucketEntry` arrays.
+ * The open union preserves autocomplete for the known Gabetti literals.
  */
-export type SqmBucket = 'fino_50' | '51_70' | '71_110' | '111_149' | '150_plus'
+export type SqmBucket = 'fino_50' | '51_70' | '71_110' | '111_149' | '150_plus' | (string & {})
 
 export interface ZoneRate {
   zoneId: string

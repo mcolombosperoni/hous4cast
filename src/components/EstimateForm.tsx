@@ -2,7 +2,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
-import type { AgencyConfig, EstimateInput, PropertyType, SqmBucket } from '../configs/types'
+import type { AgencyConfig, EstimateInput, PropertyType } from '../configs/types'
 import { i18n } from '../app/i18n'
 
 /** Fallback hardcoded labels for property types not covered by config entries */
@@ -33,7 +33,12 @@ const FormField = ({ label, error, errorTestId, children }: { label: string; err
 export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
   const { locale } = useAppPreferences()
   const { sqmRange, zones, propertyTypes, propertyTypeEntries, sqmBucketPrices } = config
-  const usesBuckets = Boolean(sqmBucketPrices)
+  // Bucket mode: active when sqmBucketEntries has entries (open-list, new agencies)
+  // OR when legacy sqmBucketPrices is defined (Gabetti static config)
+  const sqmBucketEntries = config.sqmBucketEntries && config.sqmBucketEntries.length > 0
+    ? config.sqmBucketEntries
+    : undefined
+  const usesBuckets = Boolean(sqmBucketEntries ?? sqmBucketPrices)
 
   // An open-list field is "active" only when the entries array has at least one item.
   // undefined = static config (use hardcoded fallback), [] = dynamic but empty (hide field), [..] = show options
@@ -107,7 +112,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
       zoneId: data.zoneId as string,
       propertyType: (data.propertyType ?? '') as PropertyType,
       sqm: usesBuckets ? sqmRange.min : Number(data.sqm),
-      sqmBucket: usesBuckets ? data.sqmBucket as SqmBucket : undefined,
+      sqmBucket: usesBuckets ? data.sqmBucket as string : undefined,
       address: data.address || undefined,
       condition: data.condition || undefined,
       accessories: data.accessories || undefined,
@@ -159,16 +164,21 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
         </FormField>
       </div>
 
-      {/* Surface — bucket mode (Gabetti) or numeric input */}
+      {/* Surface — bucket mode (open-list or legacy Gabetti) or numeric input */}
       {usesBuckets ? (
         <div data-field-error={errors.sqmBucket ? 'true' : undefined}>
           <FormField label={labels.sqmBucket} error={errors.sqmBucket?.message as string} errorTestId="error-sqmBucket">
             <Controller name="sqmBucket" control={control} render={({ field }) => (
               <select data-testid="sqmBucket" className={selectClass} {...field}>
                 <option value="">—</option>
-                {(Object.entries(labels.sqmBucketOptions) as [SqmBucket, string][]).map(([val, lbl]) => (
-                  <option key={val} value={val}>{lbl}</option>
-                ))}
+                {sqmBucketEntries
+                  ? sqmBucketEntries.map((e) => (
+                      <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
+                    ))
+                  : (Object.entries(labels.sqmBucketOptions) as [string, string][]).map(([val, lbl]) => (
+                      <option key={val} value={val}>{lbl}</option>
+                    ))
+                }
               </select>
             )} />
           </FormField>
