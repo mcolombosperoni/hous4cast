@@ -166,16 +166,18 @@ export const AdminPage = () => {
               const effective = overriddenConfigs[config.id] ?? config
               return (
                 <li key={config.id}>
-                  <button
+                  <div
+                    role="button"
                     aria-pressed={selectedConfigId !== null && selectedConfigId === config.id ? 'true' : 'false'}
                     data-testid={`config-card-${config.id}`}
-                    className={`w-full rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                    tabIndex={0}
+                    className={`w-full rounded-lg border p-4 text-left transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                       selectedConfigId === config.id
                         ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
                         : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-500'
                     }`}
                     onClick={() => handleSelectConfig(config.id)}
-                    type="button"
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelectConfig(config.id) }}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-medium text-slate-900 dark:text-slate-100">{config.agencyName}</p>
@@ -203,7 +205,7 @@ export const AdminPage = () => {
                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                       {labels.zones(effective.zones.length)} - {labels.types(effective.propertyTypes.length)}
                     </p>
-                  </button>
+                  </div>
                 </li>
               )
             })}
