@@ -9,6 +9,10 @@ import { EstimatePage } from './pages/EstimatePage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { QrPrintPage } from './pages/QrPrintPage'
+import { initDynamicAgencies } from './configs/registry'
+
+// Initialize dynamic agencies from localStorage at module load time (synchronous)
+initDynamicAgencies()
 
 const localeLabel: Record<SupportedLocale, string> = {
   it: 'IT',

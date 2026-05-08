@@ -120,7 +120,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit(submit, onInvalid)}>
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit(submit, onInvalid)} data-testid="estimate-form">
 
       {/* Property type — first field, only if multiple types configured */}
       {propertyTypes.length > 1 && (

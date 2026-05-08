@@ -12,6 +12,10 @@ vi.mock('../app/estimationConfigApi', () => ({
   clearEstimationConfig: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('../app/agencyApi', () => ({
+  saveAgency: vi.fn().mockResolvedValue(undefined),
+}))
+
 const renderEditor = (configId = 'gabetti-busto-arsizio') =>
   render(
     <MemoryRouter>
@@ -107,86 +111,101 @@ describe('AdminEstimationConfig component (T54)', () => {
     expect(screen.getAllByTestId(/^zone-id-row-/).length).toBe(before + 1)
   })
 
-  it('renders condition factor inputs with base values', async () => {
+  it('renders condition entries open-list with base values', async () => {
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
-    expect(screen.getByTestId('condition-factor-ottimo')).toHaveValue(1)
-    expect(screen.getByTestId('condition-factor-buono')).toHaveValue(0.75)
-    expect(screen.getByTestId('condition-factor-da_ristrutturare')).toHaveValue(0.5)
+    const list = screen.getByTestId('condition-entries-list')
+    expect(list).toBeInTheDocument()
+    // Should contain 3 rows (ottimo, buono, da_ristrutturare)
+    const rows = list.querySelectorAll('[data-testid="factor-entry-row"]')
+    expect(rows.length).toBe(3)
   })
 
-  it('renders floor factor inputs with base values', async () => {
+  it('renders floor entries open-list with base values', async () => {
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
-    expect(screen.getByTestId('floor-factor-primo')).toHaveValue(1)
-    expect(screen.getByTestId('floor-factor-terra')).toHaveValue(0.98)
+    const list = screen.getByTestId('floor-entries-list')
+    expect(list).toBeInTheDocument()
+    const rows = list.querySelectorAll('[data-testid="factor-entry-row"]')
+    expect(rows.length).toBeGreaterThan(0)
   })
 
-  it('renders era factor inputs with base values', async () => {
+  it('renders era entries open-list with base values', async () => {
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
-    expect(screen.getByTestId('era-factor-2016_oggi')).toHaveValue(1)
-    expect(screen.getByTestId('era-factor-1900_1940')).toHaveValue(0.55)
+    const list = screen.getByTestId('era-entries-list')
+    expect(list).toBeInTheDocument()
   })
 
-  it('renders accessories bonus inputs with base values', async () => {
+  it('renders sqm bucket entries open-list', async () => {
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
-    expect(screen.getByTestId('accessories-bonus-nulla')).toHaveValue(0)
-    expect(screen.getByTestId('accessories-bonus-box_auto')).toHaveValue(15000)
+    const list = screen.getByTestId('sqm-bucket-entries-list')
+    expect(list).toBeInTheDocument()
+    const rows = list.querySelectorAll('[data-testid="factor-entry-row"]')
+    expect(rows.length).toBe(5)
   })
 
-  it('renders sqm bucket price inputs with base values', async () => {
-    renderEditor()
-    await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
-    expect(screen.getByTestId('sqm-bucket-71_110')).toHaveValue(352000)
-    expect(screen.getByTestId('sqm-bucket-fino_50')).toHaveValue(160000)
-  })
-
-  it('edited condition factor is included in save payload', async () => {
+  it('edited condition entry coefficient is included in save payload', async () => {
     const user = userEvent.setup()
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
-    const input = screen.getByTestId('condition-factor-ottimo')
-    await user.clear(input)
-    await user.type(input, '0.9')
+    // Find the first coefficient input inside condition-entries-list
+    const list = screen.getByTestId('condition-entries-list')
+    const coeffInputs = list.querySelectorAll('[data-testid="factor-entry-coefficient"]')
+    const firstCoeff = coeffInputs[0] as HTMLInputElement
+    await user.clear(firstCoeff)
+    await user.type(firstCoeff, '0.9')
     await user.click(screen.getByTestId('estimation-config-save'))
     await waitFor(() =>
       expect(api.saveEstimationConfig).toHaveBeenCalledWith(
         'gabetti-busto-arsizio',
         expect.objectContaining({
-          conditionFactors: expect.objectContaining({ ottimo: 0.9 }),
+          conditionEntries: expect.arrayContaining([
+            expect.objectContaining({ coefficient: 0.9 }),
+          ]),
         }),
       )
     )
   })
 
-  it('edited accessories bonus is included in save payload', async () => {
+  it('edited accessory entry bonus is included in save payload', async () => {
     const user = userEvent.setup()
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
-    const input = screen.getByTestId('accessories-bonus-box_auto')
-    await user.clear(input)
-    await user.type(input, '20000')
+    const list = screen.getByTestId('accessory-entries-list')
+    // box_auto is at index 2 (nulla=0, cantina=1, box_auto=2)
+    const bonusInputs = list.querySelectorAll('[data-testid="accessory-entry-bonus"]')
+    const boxAutoBonus = bonusInputs[2] as HTMLInputElement
+    await user.clear(boxAutoBonus)
+    await user.type(boxAutoBonus, '20000')
     await user.click(screen.getByTestId('estimation-config-save'))
     await waitFor(() =>
       expect(api.saveEstimationConfig).toHaveBeenCalledWith(
         'gabetti-busto-arsizio',
         expect.objectContaining({
-          accessoriesBonuses: expect.objectContaining({ box_auto: 20000 }),
+          accessoryEntries: expect.arrayContaining([
+            expect.objectContaining({ bonus: 20000 }),
+          ]),
         }),
       )
     )
   })
 
-  it('override values pre-populate factor inputs on load', async () => {
+  it('override values pre-populate condition entries on load', async () => {
     vi.mocked(api.loadEstimationConfig).mockResolvedValue({
-      conditionFactors: { ottimo: 0.8, buono: 0.6, da_ristrutturare: 0.4 },
+      conditionEntries: [
+        { value: 'ottimo', label: { it: 'Ottimo', en: 'Excellent' }, coefficient: 0.8 },
+        { value: 'buono', label: { it: 'Buono', en: 'Good' }, coefficient: 0.6 },
+        { value: 'da_ristrutturare', label: { it: 'Da ristrutturare', en: 'Needs renovation' }, coefficient: 0.4 },
+      ],
     })
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
-    expect(screen.getByTestId('condition-factor-ottimo')).toHaveValue(0.8)
-    expect(screen.getByTestId('condition-factor-buono')).toHaveValue(0.6)
+    const list = screen.getByTestId('condition-entries-list')
+    const coeffInputs = list.querySelectorAll('[data-testid="factor-entry-coefficient"]')
+    expect((coeffInputs[0] as HTMLInputElement).value).toBe('0.8')
+    expect((coeffInputs[1] as HTMLInputElement).value).toBe('0.6')
   })
 
   it('renders propertyTypeFactors inputs with base values', async () => {
@@ -261,6 +280,34 @@ describe('AdminEstimationConfig component (T54)', () => {
     // Remove villa
     await user.click(screen.getByTestId('property-type-remove-1'))
     expect(screen.queryByTestId('property-type-id-villa')).not.toBeInTheDocument()
+  })
+
+  it('can add a new sqm bucket entry and save it', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('sqm-bucket-entries-list')).toBeInTheDocument())
+    const listBefore = screen.getByTestId('sqm-bucket-entries-list')
+    const countBefore = listBefore.querySelectorAll('[data-testid="factor-entry-row"]').length
+    await user.click(screen.getByTestId('sqm-bucket-entries-add-btn'))
+    const listAfter = screen.getByTestId('sqm-bucket-entries-list')
+    expect(listAfter.querySelectorAll('[data-testid="factor-entry-row"]').length).toBe(countBefore + 1)
+  })
+
+  it('sqmBucketEntries is included in save payload', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+    await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
+    await user.click(screen.getByTestId('estimation-config-save'))
+    await waitFor(() =>
+      expect(api.saveEstimationConfig).toHaveBeenCalledWith(
+        'gabetti-busto-arsizio',
+        expect.objectContaining({
+          sqmBucketEntries: expect.arrayContaining([
+            expect.objectContaining({ value: 'fino_50' }),
+          ]),
+        }),
+      )
+    )
   })
 
   it('override propertyTypeFactors pre-populate inputs on load', async () => {

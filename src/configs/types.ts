@@ -135,7 +135,10 @@ export interface AgencyConfig {
   propertyTypeFactors?: FactorTable<PropertyType>;
 
   /** Open-list property type entries with localized labels and coefficient (Epic R) */
-  propertyTypeEntries?: PropertyTypeEntry[];
+  propertyTypeEntries?: PropertyTypeEntry[]
+
+  /** Open-list sqm bucket price entries (Epic Q). Replaces legacy `sqmBucketPrices` flat table. */
+  sqmBucketEntries?: SqmBucketEntry[];
 
   /** Form fields definition for dynamic form rendering */
   formFields?: FormField[];
@@ -170,6 +173,7 @@ export type EstimationConfigOverride = Partial<
     | 'sqmRange'
     | 'spreadFactor'
     | 'sqmBucketPrices'
+    | 'sqmBucketEntries'
     | 'conditionEntries'
     | 'floorEntries'
     | 'eraEntries'

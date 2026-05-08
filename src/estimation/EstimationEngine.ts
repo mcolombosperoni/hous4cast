@@ -41,7 +41,7 @@ export class EstimationEngine {
     }
 
     // ── Gabetti-style factor-based estimation ────────────────────────────────
-    if (this.config.sqmBucketPrices) {
+    if (this.config.sqmBucketEntries || this.config.sqmBucketPrices) {
       return this._estimateWithFactors(input, zone.zoneMultiplier ?? 1)
     }
 
@@ -76,7 +76,7 @@ export class EstimationEngine {
    * Falls back to 1 / 0 when entries or a matching value are absent.
    */
   private _estimateWithFactors(input: EstimateInput, zoneMultiplier: number): EstimateResult {
-    const { sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, propertyTypeFactors } = this.config
+    const { sqmBucketEntries, sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, propertyTypeFactors } = this.config
 
     if (!input.sqmBucket) {
       throw new EstimationEngineError(
@@ -85,7 +85,14 @@ export class EstimationEngine {
       )
     }
 
-    const base = sqmBucketPrices![input.sqmBucket]
+    // Prefer open-list sqmBucketEntries (Epic Q); fall back to legacy flat table
+    let base: number | undefined
+    if (sqmBucketEntries && sqmBucketEntries.length > 0) {
+      base = sqmBucketEntries.find((e) => e.value === input.sqmBucket)?.pricePerSqm
+    } else {
+      base = sqmBucketPrices![input.sqmBucket]
+    }
+
     if (base === undefined) {
       throw new EstimationEngineError(
         'sqmBucket "' + input.sqmBucket + '" has no base price in config "' + this.config.id + '"',

@@ -5,10 +5,15 @@ import {
   saveEstimationConfig,
   clearEstimationConfig,
 } from '../app/estimationConfigApi'
-import type { AgencyConfig, EstimationConfigOverride, FactorEntry, AccessoryEntry, PropertyType, PropertyTypeEntry, ZoneRate } from '../configs/types'
+import { saveAgency } from '../app/agencyApi'
+import type { AgencyConfig, EstimationConfigOverride, FactorEntry, AccessoryEntry, SqmBucketEntry, PropertyType, PropertyTypeEntry, ZoneRate } from '../configs/types'
 
 interface Props {
   configId: string
+  /** True when this is a dynamic (admin-created) agency — enables editing of agencyName and sqmRange */
+  isDynamicAgency?: boolean
+  /** Called after a dynamic agency config is saved — receives the updated AgencyConfig */
+  onAgencyUpdated?: (config: AgencyConfig) => void
 }
 
 interface ZoneRow {
@@ -21,7 +26,10 @@ interface ZoneRow {
 }
 
 interface FormState {
+  agencyName: string
   spreadFactor: string
+  sqmRangeMin: string
+  sqmRangeMax: string
   zones: ZoneRow[]
   privacyIt: string
   privacyEn: string
@@ -31,6 +39,7 @@ interface FormState {
   floorEntries?: FactorEntry[]
   eraEntries?: FactorEntry[]
   accessoryEntries?: AccessoryEntry[]
+  sqmBucketEntries?: SqmBucketEntry[]
   /** Flat factor tables (derived from entries — kept for legacy save payload) */
   conditionFactors?: Record<string, string>
   floorFactors?: Record<string, string>
@@ -54,9 +63,12 @@ function parseFactorTable(table: Record<string, string> | undefined): Record<str
 }
 
 function buildFormState(base: AgencyConfig, override: EstimationConfigOverride | null): FormState {
+  const agencyName = base.agencyName
   const spreadFactor = override?.spreadFactor !== undefined
     ? String(override.spreadFactor)
     : String(base.spreadFactor ?? 0.1)
+  const sqmRangeMin = String(override?.sqmRange?.min ?? base.sqmRange?.min ?? 20)
+  const sqmRangeMax = String(override?.sqmRange?.max ?? base.sqmRange?.max ?? 500)
 
   // Merge override zones over base zones
   const effectiveZones: ZoneRate[] = override?.zones
@@ -144,6 +156,17 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
     override?.accessoryEntries,
   )
 
+  // SqmBucketEntries: use override if present, else base entries
+  const sqmBucketEntries: SqmBucketEntry[] | undefined = (() => {
+    if (!base.sqmBucketEntries) return undefined
+    if (override?.sqmBucketEntries && override.sqmBucketEntries.length > 0) return override.sqmBucketEntries
+    // Apply override sqmBucketPrices if available
+    return base.sqmBucketEntries.map((e) => {
+      const ov = (override?.sqmBucketPrices as Record<string, number> | undefined)?.[e.value]
+      return ov !== undefined ? { ...e, pricePerSqm: ov } : e
+    })
+  })()
+
   // Derive flat factor/bonus tables from entries (for legacy save payload + unit tests)
   const entriesToFactorTable = (entries: FactorEntry[] | undefined): Record<string, string> | undefined => {
     if (!entries) return undefined
@@ -182,7 +205,7 @@ function buildFormState(base: AgencyConfig, override: EstimationConfigOverride |
     effectivePropertyTypeEntries.map((e) => [e.value, String(e.coefficient)])
   )
 
-  return { spreadFactor, zones, sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, propertyTypeEntries: effectivePropertyTypeEntries, privacyIt, privacyEn }
+  return { agencyName, spreadFactor, sqmRangeMin, sqmRangeMax, zones, sqmBucketPrices, sqmBucketEntries, conditionEntries, floorEntries, eraEntries, accessoryEntries, conditionFactors, floorFactors, eraFactors, accessoriesBonuses, propertyTypes: effectivePropertyTypes, propertyTypeFactors, propertyTypeEntries: effectivePropertyTypeEntries, privacyIt, privacyEn }
 }
 
 interface EditorState {
@@ -211,7 +234,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
   }
 }
 
-export const AdminEstimationConfig = ({ configId }: Props) => {
+export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, onAgencyUpdated }: Props) => {
   const [state, dispatch] = useReducer(editorReducer, {
     loading: true,
     formState: null,
@@ -363,6 +386,33 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     dispatch({ type: 'SET_FORM', formState: { ...formState, accessoryEntries: entries, accessoriesBonuses: flat } })
   }
 
+  const handleSqmBucketEntryChange = (index: number, patch: Partial<SqmBucketEntry>) => {
+    if (!formState) return
+    const entries = (formState.sqmBucketEntries ?? []).map((e, i) => i === index ? { ...e, ...patch } : e)
+    const flat = Object.fromEntries(entries.map((e) => [e.value, String(e.pricePerSqm)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, sqmBucketEntries: entries, sqmBucketPrices: flat } })
+  }
+
+  const handleSqmBucketEntryAdd = () => {
+    if (!formState) return
+    const entries = [...(formState.sqmBucketEntries ?? []), { value: '', label: { it: '', en: '' }, pricePerSqm: 0 }]
+    dispatch({ type: 'SET_FORM', formState: { ...formState, sqmBucketEntries: entries } })
+  }
+
+  const handleSqmBucketEntryRemove = (index: number) => {
+    if (!formState) return
+    const entries = (formState.sqmBucketEntries ?? []).filter((_, i) => i !== index)
+    const flat = Object.fromEntries(entries.map((e) => [e.value, String(e.pricePerSqm)]))
+    dispatch({ type: 'SET_FORM', formState: { ...formState, sqmBucketEntries: entries, sqmBucketPrices: flat } })
+  }
+
+  const handleSqmBucketEntryMoveUp = (index: number) => {
+    if (!formState || index === 0) return
+    const entries = [...(formState.sqmBucketEntries ?? [])]
+    ;[entries[index - 1], entries[index]] = [entries[index], entries[index - 1]]
+    dispatch({ type: 'SET_FORM', formState: { ...formState, sqmBucketEntries: entries } })
+  }
+
   /** Add a new property type to the list and initialize its entry */
   const handleAddPropertyType = (pt: string) => {
     if (!formState || !pt || formState.propertyTypes.includes(pt)) return
@@ -468,11 +518,16 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
 
     const override: EstimationConfigOverride = {
       spreadFactor: spreadValue,
+      sqmRange: {
+        min: isNaN(parseInt(formState.sqmRangeMin)) ? base.sqmRange?.min ?? 20 : parseInt(formState.sqmRangeMin),
+        max: isNaN(parseInt(formState.sqmRangeMax)) ? base.sqmRange?.max ?? 500 : parseInt(formState.sqmRangeMax),
+      },
       zones,
       propertyTypes: formState.propertyTypes as PropertyType[],
       propertyTypeEntries: formState.propertyTypeEntries,
       propertyTypeFactors: parseFactorTable(formState.propertyTypeFactors),
       sqmBucketPrices: parseFactorTable(formState.sqmBucketPrices),
+      sqmBucketEntries: formState.sqmBucketEntries,
       conditionEntries: formState.conditionEntries,
       floorEntries: formState.floorEntries,
       eraEntries: formState.eraEntries,
@@ -492,6 +547,18 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
 
     try {
       await saveEstimationConfig(configId, override)
+      // For dynamic agencies: also persist agencyName and sqmRange in the full agency document
+      if (isDynamic) {
+        const updatedConfig: AgencyConfig = {
+          ...base,
+          ...override,
+          agencyName: (document.getElementById('agency-name-input') as HTMLInputElement | null)?.value.trim() || formState.agencyName || base.agencyName,
+          id: configId,
+        }
+        await saveAgency(updatedConfig)
+        baseConfigRef.current = updatedConfig
+        onAgencyUpdated?.(updatedConfig)
+      }
       dispatch({ type: 'SAVE_STATUS', status: 'saved' })
     } catch {
       dispatch({ type: 'SAVE_STATUS', status: 'error' })
@@ -517,6 +584,56 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
 
       {!loading && formState && (
         <div data-testid="estimation-config-loaded" className="space-y-6">
+
+          {/* Agency Name — editable for dynamic agencies, read-only for static */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="agency-name-input">
+              Agency Name
+            </label>
+            <input
+              id="agency-name-input"
+              data-testid="agency-name-input"
+              type="text"
+              disabled={!isDynamic}
+              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-700"
+              defaultValue={formState.agencyName}
+              onChange={(e) => dispatch({ type: 'SET_FORM', formState: { ...formState, agencyName: e.target.value } })}
+            />
+            {!isDynamic && (
+              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Read-only for built-in agencies</p>
+            )}
+          </div>
+
+          {/* Sqm Range — always visible */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Sqm Range</h3>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-1">
+                <label className="text-xs text-slate-500 shrink-0" htmlFor="sqm-range-min">Min</label>
+                <input
+                  id="sqm-range-min"
+                  data-testid="sqm-range-min"
+                  type="number"
+                  min="1"
+                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  value={formState.sqmRangeMin}
+                  onChange={(e) => dispatch({ type: 'SET_FORM', formState: { ...formState, sqmRangeMin: e.target.value } })}
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <label className="text-xs text-slate-500 shrink-0" htmlFor="sqm-range-max">Max</label>
+                <input
+                  id="sqm-range-max"
+                  data-testid="sqm-range-max"
+                  type="number"
+                  min="1"
+                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  value={formState.sqmRangeMax}
+                  onChange={(e) => dispatch({ type: 'SET_FORM', formState: { ...formState, sqmRangeMax: e.target.value } })}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Spread factor */}
           <div>
@@ -746,18 +863,21 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
             </button>
           </div>
 
-          {/* Factor table sections — legacy flat inputs (still used by unit tests T54) */}
+          {/* Factor table sections — legacy flat inputs; hidden when open-list entries exist */}
           {(
             [
-              { field: 'sqmBucketPrices', label: 'Sqm Bucket Prices (€)', testPrefix: 'sqm-bucket' },
-              { field: 'conditionFactors', label: 'Condition Factors', testPrefix: 'condition-factor' },
-              { field: 'floorFactors', label: 'Floor Factors', testPrefix: 'floor-factor' },
-              { field: 'eraFactors', label: 'Era Factors', testPrefix: 'era-factor' },
-              { field: 'accessoriesBonuses', label: 'Accessories Bonuses (€)', testPrefix: 'accessories-bonus' },
+              { field: 'sqmBucketPrices', label: 'Sqm Bucket Prices (€)', testPrefix: 'sqm-bucket', entriesField: 'sqmBucketEntries' as const },
+              { field: 'conditionFactors', label: 'Condition Factors', testPrefix: 'condition-factor', entriesField: 'conditionEntries' as const },
+              { field: 'floorFactors', label: 'Floor Factors', testPrefix: 'floor-factor', entriesField: 'floorEntries' as const },
+              { field: 'eraFactors', label: 'Era Factors', testPrefix: 'era-factor', entriesField: 'eraEntries' as const },
+              { field: 'accessoriesBonuses', label: 'Accessories Bonuses (€)', testPrefix: 'accessories-bonus', entriesField: 'accessoryEntries' as const },
             ] as const
-          ).map(({ field, label, testPrefix }) => {
+          ).map(({ field, label, testPrefix, entriesField }) => {
             const table = formState[field]
             if (!table || Object.keys(table).length === 0) return null
+            // Hide if open-list entries exist (they supersede the flat table)
+            const entries = formState[entriesField]
+            if (entries && (entries as unknown[]).length > 0) return null
             return (
               <div key={field}>
                 <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</h3>
@@ -933,6 +1053,75 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
                 data-testid="accessory-entries-add-btn"
                 className="mt-2 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
                 onClick={handleAccessoryEntryAdd}
+              >+ Add</button>
+            </div>
+          )}
+
+          {/* Sqm Bucket Entries open-list editor */}
+          {formState.sqmBucketEntries !== undefined && (
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Sqm Bucket Entries</h3>
+              <div className="space-y-2" data-testid="sqm-bucket-entries-list">
+                {(formState.sqmBucketEntries ?? []).map((entry, i) => (
+                  <div
+                    key={entry.value || `new-${i}`}
+                    data-testid="factor-entry-row"
+                    className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-700"
+                  >
+                    <input
+                      data-testid="factor-entry-value"
+                      type="text"
+                      placeholder="value"
+                      className="w-28 rounded-md border border-slate-300 px-2 py-1 text-xs font-mono dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.value}
+                      onChange={(e) => handleSqmBucketEntryChange(i, { value: e.target.value })}
+                    />
+                    <input
+                      data-testid="factor-entry-label-it"
+                      type="text"
+                      placeholder="Label IT"
+                      className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.label.it}
+                      onChange={(e) => handleSqmBucketEntryChange(i, { label: { ...entry.label, it: e.target.value } })}
+                    />
+                    <input
+                      data-testid="factor-entry-label-en"
+                      type="text"
+                      placeholder="Label EN"
+                      className="flex-1 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.label.en}
+                      onChange={(e) => handleSqmBucketEntryChange(i, { label: { ...entry.label, en: e.target.value } })}
+                    />
+                    <input
+                      data-testid="factor-entry-coefficient"
+                      type="number"
+                      step="1"
+                      placeholder="price/sqm"
+                      className="w-24 rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                      value={entry.pricePerSqm}
+                      onChange={(e) => handleSqmBucketEntryChange(i, { pricePerSqm: parseFloat(e.target.value) })}
+                    />
+                    <button
+                      type="button"
+                      data-testid="factor-entry-move-up"
+                      disabled={i === 0}
+                      className="text-xs text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                      onClick={() => handleSqmBucketEntryMoveUp(i)}
+                    >↑</button>
+                    <button
+                      type="button"
+                      data-testid="factor-entry-remove-btn"
+                      className="text-xs text-red-500 hover:text-red-700"
+                      onClick={() => handleSqmBucketEntryRemove(i)}
+                    >✕</button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                data-testid="sqm-bucket-entries-add-btn"
+                className="mt-2 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
+                onClick={handleSqmBucketEntryAdd}
               >+ Add</button>
             </div>
           )}

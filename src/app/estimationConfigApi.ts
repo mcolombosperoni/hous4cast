@@ -63,10 +63,14 @@ export async function saveEstimationConfig(
   writeLocal(configId, override)
   // Fire-and-forget: Firestore sync runs in background, localStorage is the source of truth
   if (db) {
-    const ref = doc(db, 'estimationConfig', configId)
-    setDoc(ref, override).catch((err) => {
-      console.error('[estimationConfigApi] saveEstimationConfig error:', err)
-    })
+    try {
+      const ref = doc(db, 'estimationConfig', configId)
+      setDoc(ref, override).catch((err) => {
+        console.error('[estimationConfigApi] saveEstimationConfig error:', err)
+      })
+    } catch (err) {
+      console.error('[estimationConfigApi] saveEstimationConfig sync error:', err)
+    }
   }
 }
 

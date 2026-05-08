@@ -50,8 +50,8 @@ test.describe('Admin sqm bucket entries', () => {
     await expect(rows).toHaveCount(initialCount - 1)
 
     // Save
-    await page.getByTestId('admin-estimation-config-save').click()
-    await expect(page.getByTestId('admin-estimation-config-save-status')).toContainText(/saved|salvato/i, { timeout: 10000 })
+    await page.getByTestId('estimation-config-save').click()
+    await expect(page.getByTestId('estimation-config-save-status')).toContainText(/saved|salvato/i, { timeout: 10000 })
   })
 
   test('admin reorders sqm bucket entry and saves', async ({ page }) => {

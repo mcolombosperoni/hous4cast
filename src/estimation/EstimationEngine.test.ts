@@ -7,6 +7,7 @@ const legacyConfig = {
   ...gabettiBustoArsizioConfig,
   id: 'legacy-test',
   sqmBucketPrices: undefined,
+  sqmBucketEntries: undefined,
   conditionEntries: undefined,
   floorEntries: undefined,
   eraEntries: undefined,
@@ -271,6 +272,71 @@ describe('EstimationEngine — FactorEntry open-list lookup', () => {
     expect(result.mid).toBe(expected)
     expect(result.low).toBe(Math.round(expected * 0.9))
     expect(result.high).toBe(Math.round(expected * 1.05))
+  })
+})
+
+// ── sqmBucketEntries engine tests (Epic Q) ────────────────────────────────────
+import type { AgencyConfig } from '../configs/types'
+
+describe('EstimationEngine — sqmBucketEntries (open-list, Epic Q)', () => {
+  const configWithEntries: AgencyConfig = {
+    ...gabettiBustoArsizioConfig,
+    sqmBucketPrices: undefined,
+    sqmBucketEntries: [
+      { value: 'small', label: { it: 'Piccolo', en: 'Small' }, pricePerSqm: 100000 },
+      { value: 'large', label: { it: 'Grande', en: 'Large' }, pricePerSqm: 200000 },
+    ],
+    conditionEntries: undefined,
+    floorEntries: undefined,
+    eraEntries: undefined,
+    accessoryEntries: undefined,
+  }
+  const engEntries = new EstimationEngine(configWithEntries)
+
+  it('resolves base price from sqmBucketEntries when present', () => {
+    const result = engEntries.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: 'small',
+    })
+    expect(result.mid).toBe(100000)
+  })
+
+  it('resolves correct price for second bucket value', () => {
+    const result = engEntries.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
+      sqmBucket: 'large',
+    })
+    expect(result.mid).toBe(200000)
+  })
+
+  it('throws SQM_BUCKET_REQUIRED when bucket value not in sqmBucketEntries', () => {
+    expect(() =>
+      engEntries.estimate({ zoneId: 'centro', propertyType: 'appartamento', sqm: 90, sqmBucket: 'unknown' }),
+    ).toThrow(expect.objectContaining({ code: 'SQM_BUCKET_REQUIRED' }))
+  })
+
+  it('falls back to sqmBucketPrices when sqmBucketEntries is absent', () => {
+    const engLegacy = new EstimationEngine({
+      ...configWithEntries,
+      sqmBucketEntries: undefined,
+      sqmBucketPrices: { fino_50: 160000 },
+    })
+    const result = engLegacy.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 40, sqmBucket: 'fino_50',
+    })
+    expect(result.mid).toBe(160000)
+  })
+
+  it('prefers sqmBucketEntries over sqmBucketPrices when both are present', () => {
+    const engBoth = new EstimationEngine({
+      ...configWithEntries,
+      sqmBucketEntries: [{ value: 'fino_50', label: { it: 'Fino 50', en: 'Up to 50' }, pricePerSqm: 999 }],
+      sqmBucketPrices: { fino_50: 160000 },
+    })
+    const result = engBoth.estimate({
+      zoneId: 'centro', propertyType: 'appartamento', sqm: 40, sqmBucket: 'fino_50',
+    })
+    expect(result.mid).toBe(999)
   })
 })
 

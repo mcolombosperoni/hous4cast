@@ -48,6 +48,15 @@ export const gabettiBustoArsizioConfig: AgencyConfig = {
     '150_plus':544000,
   },
 
+  // ── Sqm bucket entries (open list, Epic Q) ────────────────────────────────
+  sqmBucketEntries: [
+    { value: 'fino_50',   label: { it: 'Fino a 50 mq',     en: 'Up to 50 sqm'       }, pricePerSqm: 160000 },
+    { value: '51_70',     label: { it: '51 – 70 mq',       en: '51 – 70 sqm'        }, pricePerSqm: 224000 },
+    { value: '71_110',    label: { it: '71 – 110 mq',      en: '71 – 110 sqm'       }, pricePerSqm: 352000 },
+    { value: '111_149',   label: { it: '111 – 149 mq',     en: '111 – 149 sqm'      }, pricePerSqm: 476800 },
+    { value: '150_plus',  label: { it: '150 mq e oltre',   en: '150 sqm and above'  }, pricePerSqm: 544000 },
+  ],
+
   // ── Condition entries (open list, Epic P) ─────────────────────────────────
   conditionEntries: [
     { value: 'ottimo',           label: { it: 'Ottimo',            en: 'Excellent'       }, coefficient: 1.00 },

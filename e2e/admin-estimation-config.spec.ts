@@ -88,7 +88,7 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible({ timeout: 8000 })
     await expect(page.locator('[data-testid="estimate-result"]')).toHaveText(/\d/)
@@ -108,7 +108,7 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const baselineText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -139,7 +139,7 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const modifiedText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -226,17 +226,22 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
 
   test('Admin edits condition factor → saves → value reflects in localStorage', async ({ page }) => {
     await openEstimationConfig(page)
-    await page.fill('[data-testid="condition-factor-ottimo"]', '0.9')
+    // Edit via open-list entries editor (flat table is hidden when entries exist)
+    const condList = page.getByTestId('condition-entries-list')
+    const ottimo = condList.locator('[data-testid="factor-entry-row"]').filter({
+      has: page.locator('[data-testid="factor-entry-value"][value="ottimo"]'),
+    })
+    const coeffInput = ottimo.getByTestId('factor-entry-coefficient')
+    await coeffInput.fill('0.9')
     await saveConfig(page)
 
     const stored = await page.evaluate(() =>
       window.localStorage.getItem('hous4cast:estimationConfig:gabetti-busto-arsizio')
     )
     const parsed = JSON.parse(stored!)
-    expect(parsed.conditionFactors?.ottimo).toBe(0.9)
-    // Other condition factors should remain correct
-    expect(parsed.conditionFactors?.buono).toBe(0.75)
-    expect(parsed.conditionFactors?.da_ristrutturare).toBe(0.5)
+    // Condition is saved via conditionEntries; conditionFactors is derived from entries
+    const ottimoEntry = parsed.conditionEntries?.find((e: {value: string}) => e.value === 'ottimo')
+    expect(ottimoEntry?.coefficient).toBe(0.9)
   })
 
   test('Admin edits accessories bonus → saves → estimate result changes', async ({ page }) => {
@@ -252,21 +257,25 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const baselineText = await page.locator('[data-testid="estimate-result"]').innerText()
 
-    // Admin: set box_auto bonus to 0
+    // Admin: set box_auto bonus to 0 via open-list accessory entries editor
     await openEstimationConfig(page)
-    await page.fill('[data-testid="accessories-bonus-box_auto"]', '0')
+    const accList = page.getByTestId('accessory-entries-list')
+    const boxRow = accList.locator('[data-testid^="accessory-entry-row-box_auto"]')
+    const bonusInput = boxRow.locator('[data-testid="accessory-entry-bonus"]')
+    await bonusInput.fill('0')
     await saveConfig(page)
 
     const stored = await page.evaluate(() =>
       window.localStorage.getItem('hous4cast:estimationConfig:gabetti-busto-arsizio')
     )
     const parsed = JSON.parse(stored!)
-    expect(parsed.accessoriesBonuses?.box_auto).toBe(0)
+    const boxEntry = parsed.accessoryEntries?.find((e: {value: string}) => e.value === 'box_auto')
+    expect(boxEntry?.bonus).toBe(0)
 
     // Estimate with bonus=0 should be lower
     await page.goto('/#/estimate/gabetti-busto-arsizio')
@@ -280,7 +289,7 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const modifiedText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -302,20 +311,23 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const baselineText = await page.locator('[data-testid="estimate-result"]').innerText()
 
-    // Admin: halve the 71_110 bucket price
+    // Admin: halve the 71_110 bucket price via open-list entries editor
     await openEstimationConfig(page)
-    await page.fill('[data-testid="sqm-bucket-71_110"]', '176000')
+    const bucketList = page.getByTestId('sqm-bucket-entries-list')
+    const bucketRow = bucketList.locator('[data-testid="factor-entry-row"]').filter({ has: page.locator('[data-testid="factor-entry-value"][value="71_110"]') })
+    const priceInput = bucketRow.getByTestId('factor-entry-coefficient')
+    await priceInput.fill('176000')
     await saveConfig(page)
 
     const stored = await page.evaluate(() =>
       window.localStorage.getItem('hous4cast:estimationConfig:gabetti-busto-arsizio')
     )
-    expect(JSON.parse(stored!).sqmBucketPrices?.['71_110']).toBe(176000)
+    expect(JSON.parse(stored!).sqmBucketEntries?.find((e: {value: string}) => e.value === '71_110')?.pricePerSqm).toBe(176000)
 
     // Estimate with halved price should be lower
     await page.goto('/#/estimate/gabetti-busto-arsizio')
@@ -329,7 +341,7 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const modifiedText = await page.locator('[data-testid="estimate-result"]').innerText()

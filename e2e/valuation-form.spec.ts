@@ -2,6 +2,15 @@ import { test, expect } from '@playwright/test'
 
 // Acceptance test for US-07: Fill out valuation form and get instant estimate
 test.describe('Valuation form (US-07)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route(/firestore\.googleapis\.com/, (route) => route.abort())
+    await page.goto('/')
+    await page.evaluate(() => {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('hous4cast:estimationConfig:'))
+        .forEach((k) => localStorage.removeItem(k))
+    })
+  })
   test('User can fill the form and see the estimate result', async ({ page }) => {
     await page.goto('/#/estimate/gabetti-busto-arsizio')
     await page.waitForSelector('form')
@@ -21,7 +30,7 @@ test.describe('Valuation form (US-07)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
 
     // Submit
     await page.click('button[type="submit"]')
@@ -46,6 +55,15 @@ test.describe('Valuation form (US-07)', () => {
 
 // Acceptance test for US-08: Extended valuation form with all Gabetti fields
 test.describe('Extended valuation form — Gabetti (US-08)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route(/firestore\.googleapis\.com/, (route) => route.abort())
+    await page.goto('/')
+    await page.evaluate(() => {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('hous4cast:estimationConfig:'))
+        .forEach((k) => localStorage.removeItem(k))
+    })
+  })
 
   test('User can fill all Gabetti extended fields and see the estimate result', async ({ page }) => {
     await page.goto('/#/estimate/gabetti-busto-arsizio')
@@ -76,7 +94,7 @@ test.describe('Extended valuation form — Gabetti (US-08)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '+39 333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
 
     // Submit
     await page.click('button[type="submit"]')
@@ -100,7 +118,7 @@ test.describe('Extended valuation form — Gabetti (US-08)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const centroText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -116,7 +134,7 @@ test.describe('Extended valuation form — Gabetti (US-08)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible()
     const periferiaText = await page.locator('[data-testid="estimate-result"]').innerText()

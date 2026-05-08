@@ -54,7 +54,7 @@ test.describe.serial('Property type factors (US-15)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible({ timeout: 8000 })
     const baselineText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -83,7 +83,7 @@ test.describe.serial('Property type factors (US-15)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible({ timeout: 8000 })
     const modifiedText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -98,7 +98,7 @@ test.describe.serial('Property type factors (US-15)', () => {
     await openEstimationConfig(page)
 
     // Add villa as a second property type
-    await page.selectOption('[data-testid="property-type-add-select"]', 'villa')
+    await page.fill('[data-testid="property-type-add-input"]', 'villa')
     await page.click('[data-testid="property-type-add-btn"]')
     // Set villa factor to 0.5
     await page.fill('[data-testid="property-type-factor-villa"]', '0.5')
@@ -128,7 +128,7 @@ test.describe.serial('Property type factors (US-15)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible({ timeout: 8000 })
     const appartamentoText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -146,7 +146,7 @@ test.describe.serial('Property type factors (US-15)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible({ timeout: 8000 })
     const villaText = await page.locator('[data-testid="estimate-result"]').innerText()
@@ -159,7 +159,7 @@ test.describe.serial('Property type factors (US-15)', () => {
   test('Reset restores single property type and hides selector on estimate page', async ({ page }) => {
     // Admin: add villa, save
     await openEstimationConfig(page)
-    await page.selectOption('[data-testid="property-type-add-select"]', 'villa')
+    await page.fill('[data-testid="property-type-add-input"]', 'villa')
     await page.click('[data-testid="property-type-add-btn"]')
     await saveConfig(page)
 
