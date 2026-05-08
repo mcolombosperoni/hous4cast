@@ -228,3 +228,13 @@ Acceptance criteria:
 - The new agency's estimate page is immediately accessible at `/#/estimate/:configId`.
 - All acceptance, unit and component tests cover the full lifecycle.
 
+### US-19-imp - Admin UX improvements (Epic S+ — addendum to Epic S)
+As an agency admin, I want the admin estimation config editor to be fully locale-aware, show contextual explanations for every field, allow me to delete agencies I no longer need, and present all configuration sections (including open-list factor entries) immediately when creating a new agency.
+
+Acceptance criteria:
+- Each dynamic agency card in the admin list shows a "✕ Delete" button; clicking it prompts a confirmation dialog and, on confirmation, removes the agency from the list and localStorage.
+- When a new agency is created from the "Add Agency" form, all open-list sections (Condition Entries, Floor Entries, Era Entries, Accessory Entries, Sqm Bucket Entries) are immediately visible with a "+ Add" button, even before any entry is added.
+- The "Sqm Range" inputs are displayed directly above the "Sqm Bucket Entries" section, forming a single logical block with a contextual hint that explains the three modes: bucket active (drop-down shown), bucket empty (numeric input shown), no bucket defined (numeric input shown).
+- All section titles and labels in the estimation config editor respond to the app-level language switch (IT/EN).
+- A short explanation of how each field affects the estimation calculation is displayed below each section title (formula and example in the current locale).
+

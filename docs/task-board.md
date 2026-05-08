@@ -1,7 +1,7 @@
 # Task Board
 
 ## Current Increment
-- Epic: S — Dynamic agency creation in admin ✅
+- Epic: S+ — Admin UX improvements (addendum to Epic S) ✅
 - Status: `waiting-approval`
 
 ## Tasks
@@ -93,7 +93,8 @@
 - Epic P — Fully admin-configurable estimation factor lists (US-16) ✅
 - Epic Q — Admin-configurable Sqm Bucket Prices and legacy flat factor table removal (US-17) ✅
 - Epic R — Zone and property type reorder/remove in admin (US-18) ✅
-- Epic S — Dynamic agency creation in admin (US-19) ✅
+  - Epic S — Dynamic agency creation in admin (US-19) ✅
+  - Epic S+ — Admin UX improvements: delete agency, full template, locale-aware editor, calc hints (US-19-imp) ✅
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
@@ -190,4 +191,13 @@
 | T128 | S | US-19 | E2E isolation: add `beforeEach` localStorage cleanup to all affected specs | done | `valuation-form`, `estimate-privacy`, `admin-factor-lists`, `admin-sqm-bucket-entries`, `admin-zone-proptype-reorder`, `estimate-branding` |
 | T129 | S | US-19 | Fix `estimate-branding` webkit flakiness: `waitForFunction` for CSS custom property readiness | done | `waitForFunction` polls `--brand-primary` before asserting |
 | T130 | S | US-19 | Update docs: project-plan, task-board, user-stories for Epic Q/R/S done | done | This commit |
+
+## Epic S+ — Admin UX improvements (addendum to Epic S, US-19-imp)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T131 | S+ | US-19-imp | `default-agency-template.ts`: add empty `conditionEntries`, `floorEntries`, `eraEntries`, `accessoryEntries`, `sqmBucketEntries` arrays so all admin sections are visible on new agency creation | done | All open-list panels shown with "+ Add" button immediately |
+| T132 | S+ | US-19-imp | `AdminPage`: add "✕ Delete" button on each dynamic agency card; `handleDeleteAgency` with confirm dialog; deselect on delete | done | `delete-agency-btn-{id}`, `deleteAgency` from `agencyApi`, `unregisterDynamicAgency` from registry |
+| T133 | S+ | US-19-imp | `AdminEstimationConfig`: move "Sqm Range" section directly above "Sqm Bucket Entries" to group related concepts; update contextual hint to be locale-aware (3 states: bucket active / bucket empty / no bucket) | done | Sqm Range and Sqm Bucket Entries now form a single logical block |
+| T134 | S+ | US-19-imp | `AdminEstimationConfig`: wire `locale` from `useAppPreferences`; localize all section titles (IT/EN) in the estimation config editor | done | All headings respond to the app-level language switch |
+| T135 | S+ | US-19-imp | `AdminEstimationConfig`: add calc-formula hint below every section title explaining how the field affects the estimation engine | done | Hints for: Agency Name, Spread Factor, Property Types, Zones, Condition Entries, Floor Entries, Era Entries, Accessory Entries, Sqm Range/Buckets, Privacy |
 

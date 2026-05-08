@@ -96,6 +96,7 @@ export const i18n = {
       copySuccess: 'Link copiato negli appunti.',
       copyError: 'Copia non disponibile su questo browser.',
       branding: 'Branding agenzia',
+      estimationConfig: 'Configurazione stima',
     },
   },
   en: {
@@ -193,6 +194,7 @@ export const i18n = {
       copySuccess: 'Link copied to clipboard.',
       copyError: 'Copy is not available on this browser.',
       branding: 'Agency branding',
+      estimationConfig: 'Estimation config',
     },
   },
 } as const

@@ -1,11 +1,9 @@
-import { exampleAgencyMilanoConfig } from './example-agency-milano'
 import { gabettiBustoArsizioConfig } from './gabetti-busto-arsizio'
 import type { AgencyConfig, EstimationConfigOverride } from './types'
 import { loadEstimationConfig } from '../app/estimationConfigApi'
 import { loadAllLocalAgencies } from '../app/agencyApi'
 
 const staticRegistry: Record<string, AgencyConfig> = {
-  [exampleAgencyMilanoConfig.id]: exampleAgencyMilanoConfig,
   [gabettiBustoArsizioConfig.id]: gabettiBustoArsizioConfig,
 }
 

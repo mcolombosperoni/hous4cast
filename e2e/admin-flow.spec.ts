@@ -43,8 +43,8 @@ test('admin flow supports config selection and preview link with dl', async ({ p
 })
 
 test('admin print qr link opens printable page for selected config', async ({ page, context }) => {
-  // Mock branding config for example agency milano
-  await page.route('**/branding/example-agency-milano', route => {
+  // Mock branding config for gabetti busto arsizio
+  await page.route('**/branding/gabetti-busto-arsizio', route => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -67,16 +67,16 @@ test('admin print qr link opens printable page for selected config', async ({ pa
 
   await page.goto('/?lang=en#/admin')
 
-  await page.getByRole('button', { name: /example agency milano/i }).click()
+  await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
 
   const popupPromise = context.waitForEvent('page')
   await page.getByRole('link', { name: 'Print QR' }).click()
   const printPage = await popupPromise
 
   await printPage.waitForLoadState('domcontentloaded')
-  await expect(printPage.getByRole('heading', { name: 'Example Agency Milano' })).toBeVisible()
+  await expect(printPage.getByRole('heading', { name: 'gabetti busto arsizio' })).toBeVisible()
   await expect(printPage.getByRole('button', { name: 'Print' })).toBeVisible()
-  await expect(printPage).toHaveURL(/\/admin\/qr\/example-agency-milano\?dl=en/)
+  await expect(printPage).toHaveURL(/\/admin\/qr\/gabetti-busto-arsizio\?dl=en/)
   await expect(printPage.locator('svg')).toBeVisible()
 })
 

@@ -22,7 +22,8 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic P: Fully admin-configurable estimation factor lists ✅
 - Epic Q: Admin-configurable Sqm Bucket Prices and legacy factor tables as open lists ✅
 - Epic R: Zone and property type reorder/remove in admin ✅
-- Epic S: Dynamic agency creation in admin ✅
+  - Epic S: Dynamic agency creation in admin ✅
+  - Epic S+: Admin UX improvements — delete agency, full default template, locale-aware editor with calc hints ✅
 
 ## Epic A — Foundation and CI/CD guardrails
 

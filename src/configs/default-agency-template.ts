@@ -20,6 +20,14 @@ export const defaultAgencyTemplate: Omit<AgencyConfig, 'id' | 'agencyName'> = {
       zoneMultiplier: 1.0,
     },
   ],
+  // Open-list factor entries — start empty so the admin can add entries as needed
+  conditionEntries: [],
+  floorEntries: [],
+  eraEntries: [],
+  accessoryEntries: [],
+  // sqmBucketEntries: start as empty array so the admin can add bucket entries;
+  // if left empty, the estimation form will use the numeric sqmRange input instead.
+  sqmBucketEntries: [],
   privacy: {
     text: {
       it: 'Inserire qui il testo della privacy policy...',

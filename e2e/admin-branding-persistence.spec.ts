@@ -12,7 +12,7 @@ test.describe('Admin branding palette', () => {
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
 
 
-    await page.getByRole('button', { name: /example agency milano/i }).click()
+    await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
     await openBrandingSection(page)
     // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
     await page.waitForFunction(() => {
@@ -35,7 +35,7 @@ test.describe('Admin branding palette', () => {
     await expect(page.getByText(/salvato/i)).toBeVisible()
 
     await page.reload()
-    await page.getByRole('button', { name: /example agency milano/i }).click()
+    await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
     await openBrandingSection(page)
     // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
     await page.waitForFunction(() => {
@@ -53,7 +53,7 @@ test.describe('Admin branding palette', () => {
   test('live preview updates as palette changes', async ({ page }) => {
     await page.goto('/?lang=en#/admin')
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
-    await page.getByRole('button', { name: /example agency milano/i }).click()
+    await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
     await openBrandingSection(page)
     // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
     await page.waitForFunction(() => {

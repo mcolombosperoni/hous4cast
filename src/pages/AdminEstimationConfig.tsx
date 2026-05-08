@@ -6,6 +6,7 @@ import {
   clearEstimationConfig,
 } from '../app/estimationConfigApi'
 import { saveAgency } from '../app/agencyApi'
+import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import type { AgencyConfig, EstimationConfigOverride, FactorEntry, AccessoryEntry, SqmBucketEntry, PropertyType, PropertyTypeEntry, ZoneRate } from '../configs/types'
 
 interface Props {
@@ -235,6 +236,7 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 }
 
 export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, onAgencyUpdated }: Props) => {
+  const { locale } = useAppPreferences()
   const [state, dispatch] = useReducer(editorReducer, {
     loading: true,
     formState: null,
@@ -588,8 +590,13 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
           {/* Agency Name — editable for dynamic agencies, read-only for static */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="agency-name-input">
-              Agency Name
+              {locale === 'it' ? 'Nome agenzia' : 'Agency Name'}
             </label>
+            <p className="mb-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {locale === 'it'
+                ? 'Nome visualizzato nella lista agenzie e nella pagina di stima.'
+                : 'Name displayed in the agency list and on the estimate page.'}
+            </p>
             <input
               id="agency-name-input"
               data-testid="agency-name-input"
@@ -604,42 +611,16 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
             )}
           </div>
 
-          {/* Sqm Range — always visible */}
-          <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Sqm Range</h3>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-1">
-                <label className="text-xs text-slate-500 shrink-0" htmlFor="sqm-range-min">Min</label>
-                <input
-                  id="sqm-range-min"
-                  data-testid="sqm-range-min"
-                  type="number"
-                  min="1"
-                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  value={formState.sqmRangeMin}
-                  onChange={(e) => dispatch({ type: 'SET_FORM', formState: { ...formState, sqmRangeMin: e.target.value } })}
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <label className="text-xs text-slate-500 shrink-0" htmlFor="sqm-range-max">Max</label>
-                <input
-                  id="sqm-range-max"
-                  data-testid="sqm-range-max"
-                  type="number"
-                  min="1"
-                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  value={formState.sqmRangeMax}
-                  onChange={(e) => dispatch({ type: 'SET_FORM', formState: { ...formState, sqmRangeMax: e.target.value } })}
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Spread factor */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="spread-factor-input">
-              Spread Factor (0–1)
+              {locale === 'it' ? 'Fattore di Spread (0–1)' : 'Spread Factor (0–1)'}
             </label>
+            <p className="mb-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {locale === 'it'
+                ? 'Definisce l\'ampiezza del range min/max intorno alla stima centrale. Es: 0.1 = ±10%. Formula: min = stima × (1 − spread), max = stima × (1 + spread).'
+                : 'Defines the width of the min/max range around the central estimate. E.g. 0.1 = ±10%. Formula: min = estimate × (1 − spread), max = estimate × (1 + spread).'}
+            </p>
             <input
               id="spread-factor-input"
               data-testid="spread-factor-input"
@@ -658,7 +639,14 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
 
           {/* Property types and factors — with IT/EN labels */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Property Types & Factors</h3>
+            <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {locale === 'it' ? 'Tipologie di immobile' : 'Property Types'}
+            </h3>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              {locale === 'it'
+                ? 'Ogni tipologia ha un coefficiente moltiplicativo applicato alla stima base. Formula: stima × coeff_tipologia × altri_fattori. Valore 1.0 = nessun effetto.'
+                : 'Each property type has a multiplicative coefficient applied to the base estimate. Formula: estimate × type_coeff × other_factors. Value 1.0 = no effect.'}
+            </p>            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Property Types & Factors</h3>
             <div className="space-y-3">
               {formState.propertyTypeEntries.map((entry, index) => (
                 <div key={entry.value || `pt-new-${index}`} data-testid={`property-type-row-${index}`} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 space-y-2">
@@ -760,7 +748,14 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
 
           {/* Zones */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Zones</h3>
+            <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {locale === 'it' ? 'Zone' : 'Zones'}
+            </h3>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              {locale === 'it'
+                ? 'Ogni zona ha un moltiplicatore di zona e un prezzo base €/mq per tipologia. Formula: base = prezzo_zona × mq × moltiplicatore_zona × coeff_tipologia × fattori.'
+                : 'Each zone has a zone multiplier and a base price €/sqm per property type. Formula: base = zone_price × sqm × zone_multiplier × type_coeff × factors.'}
+            </p>
             <div className="space-y-3">
               {formState.zones.map((zone, i) => {
                 const zoneKey = zone.isNew ? 'new-' + i : zone.zoneId
@@ -904,16 +899,41 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
           {/* Open-list entries editor (Epic P / US-16) */}
           {(
             [
-              { field: 'conditionEntries' as EntriesField, listTestId: 'condition-entries-list', addTestId: 'condition-entries-add-btn', label: 'Condition Entries' },
-              { field: 'floorEntries' as EntriesField, listTestId: 'floor-entries-list', addTestId: 'floor-entries-add-btn', label: 'Floor Entries' },
-              { field: 'eraEntries' as EntriesField, listTestId: 'era-entries-list', addTestId: 'era-entries-add-btn', label: 'Era Entries' },
+              {
+                field: 'conditionEntries' as EntriesField,
+                listTestId: 'condition-entries-list',
+                addTestId: 'condition-entries-add-btn',
+                label: locale === 'it' ? 'Stato interno (condizione)' : 'Condition Entries',
+                hint: locale === 'it'
+                  ? 'Coefficiente moltiplicativo applicato alla stima in base allo stato di conservazione dell\'immobile. Formula: stima × coeff_stato. Es: "ottimo" = 1.0, "da ristrutturare" = 0.6.'
+                  : 'Multiplicative coefficient applied to the estimate based on the property\'s condition. Formula: estimate × condition_coeff. E.g. "excellent" = 1.0, "needs renovation" = 0.6.',
+              },
+              {
+                field: 'floorEntries' as EntriesField,
+                listTestId: 'floor-entries-list',
+                addTestId: 'floor-entries-add-btn',
+                label: locale === 'it' ? 'Piano' : 'Floor Entries',
+                hint: locale === 'it'
+                  ? 'Coefficiente moltiplicativo applicato in base al piano dell\'immobile. Formula: stima × coeff_piano. Es: "attico" = 1.15, "seminterrato" = 0.85.'
+                  : 'Multiplicative coefficient applied based on the floor level. Formula: estimate × floor_coeff. E.g. "penthouse" = 1.15, "basement" = 0.85.',
+              },
+              {
+                field: 'eraEntries' as EntriesField,
+                listTestId: 'era-entries-list',
+                addTestId: 'era-entries-add-btn',
+                label: locale === 'it' ? 'Età di costruzione' : 'Era Entries',
+                hint: locale === 'it'
+                  ? 'Coefficiente moltiplicativo applicato in base all\'epoca di costruzione. Formula: stima × coeff_era. Es: "dopo 2000" = 1.1, "prima del 1960" = 0.9.'
+                  : 'Multiplicative coefficient applied based on the construction era. Formula: estimate × era_coeff. E.g. "after 2000" = 1.1, "before 1960" = 0.9.',
+              },
             ]
-          ).map(({ field, listTestId, addTestId, label }) => {
+          ).map(({ field, listTestId, addTestId, label, hint }) => {
             const entries = (formState[field] ?? []) as FactorEntry[]
             if (entries.length === 0 && !formState[field]) return null
             return (
               <div key={field}>
-                <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</h3>
+                <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</h3>
+                <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">{hint}</p>
                 <div className="space-y-2" data-testid={listTestId}>
                   {entries.map((entry, i) => {
                     // Each row is wrapped with the specific testid (factor-entry-row-{value}) when it has a value,
@@ -991,7 +1011,14 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
           {/* Accessory entries open-list editor */}
           {formState.accessoryEntries !== undefined && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Accessory Entries</h3>
+              <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                {locale === 'it' ? 'Accessori e dotazioni' : 'Accessory Entries'}
+              </h3>
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                {locale === 'it'
+                  ? 'Bonus additivo in € aggiunto alla stima base per ogni accessorio selezionato. Formula: stima + bonus_accessorio. Es: "garage" = +15.000€.'
+                  : 'Additive bonus in € added to the base estimate for each selected accessory. Formula: estimate + accessory_bonus. E.g. "garage" = +€15,000.'}
+              </p>
               <div className="space-y-2" data-testid="accessory-entries-list">
                 {(formState.accessoryEntries ?? []).map((entry, i) => (
                   <div
@@ -1057,10 +1084,68 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
             </div>
           )}
 
+          {/* Sqm — range + bucket entries, grouped together */}
+          {/* Sqm Range — displayed above the bucket entries, with a contextual hint */}
+          <div>
+            <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {locale === 'it' ? 'Range mq (input numerico)' : 'Sqm Range (numeric input)'}
+            </h3>
+            <p className="mb-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300" data-testid="sqm-range-hint">
+              {formState.sqmBucketEntries !== undefined && formState.sqmBucketEntries.length > 0
+                ? (locale === 'it'
+                  ? '⚠️ I bucket mq sono definiti e non vuoti — nel form di stima apparirà un menu a tendina al posto dell\'input numerico. I valori Min/Max sono salvati ma ignorati a runtime.'
+                  : '⚠️ Sqm Bucket Entries are defined and non-empty — the estimation form will show a drop-down select instead of a numeric input. These Min/Max values are stored but ignored at runtime.')
+                : formState.sqmBucketEntries !== undefined
+                  ? (locale === 'it'
+                    ? 'ℹ️ Lista bucket mq vuota — il form userà un input numerico vincolato a questo range Min/Max. Aggiungi bucket qui sotto per passare alla modalità a tendina.'
+                    : 'ℹ️ Sqm Bucket Entries list is empty — the estimation form will use a numeric input constrained to this Min/Max range. Add bucket entries below to switch to drop-down mode.')
+                  : (locale === 'it'
+                    ? 'ℹ️ Nessun bucket mq definito — il form userà un input numerico vincolato a questo range Min/Max.'
+                    : 'ℹ️ No Sqm Bucket Entries defined — the estimation form will show a numeric input constrained to this Min/Max range.')}
+            </p>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs text-slate-500 mb-1" htmlFor="sqm-range-min">
+                  {locale === 'it' ? 'Minimo (m²)' : 'Min (m²)'}
+                </label>
+                <input
+                  id="sqm-range-min"
+                  data-testid="sqm-range-min"
+                  type="number"
+                  min="1"
+                  className="w-32 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  value={formState.sqmRangeMin}
+                  onChange={(e) => dispatch({ type: 'SET_FORM', formState: { ...formState, sqmRangeMin: e.target.value } })}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1" htmlFor="sqm-range-max">
+                  {locale === 'it' ? 'Massimo (m²)' : 'Max (m²)'}
+                </label>
+                <input
+                  id="sqm-range-max"
+                  data-testid="sqm-range-max"
+                  type="number"
+                  min="1"
+                  className="w-32 rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  value={formState.sqmRangeMax}
+                  onChange={(e) => dispatch({ type: 'SET_FORM', formState: { ...formState, sqmRangeMax: e.target.value } })}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Sqm Bucket Entries open-list editor */}
           {formState.sqmBucketEntries !== undefined && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Sqm Bucket Entries</h3>
+              <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                {locale === 'it' ? 'Bucket mq (menu a tendina)' : 'Sqm Bucket Entries (drop-down)'}
+              </h3>
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                {locale === 'it'
+                  ? 'Se presente e non vuota, questa lista sostituisce l\'input numerico mq con un menu a tendina. Ogni voce ha un prezzo base €/mq usato dal motore di stima. Formula: base = prezzo_bucket × zone_multiplier × altri_fattori.'
+                  : 'If present and non-empty, this list replaces the numeric sqm input with a drop-down select. Each entry has a base price €/sqm used by the estimation engine. Formula: base = bucket_price × zone_multiplier × other_factors.'}
+              </p>
               <div className="space-y-2" data-testid="sqm-bucket-entries-list">
                 {(formState.sqmBucketEntries ?? []).map((entry, i) => (
                   <div
@@ -1128,7 +1213,14 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
 
           {/* Privacy text */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Privacy Text</h3>
+            <h3 className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {locale === 'it' ? 'Testo privacy' : 'Privacy Text'}
+            </h3>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              {locale === 'it'
+                ? 'Il testo viene mostrato all\'utente prima di inviare il modulo. Deve essere accettato per procedere. Inserire la versione nella lingua corrispondente.'
+                : 'This text is shown to the user before submitting the form. It must be accepted to proceed. Enter the version in the corresponding language.'}
+            </p>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs text-slate-500" htmlFor="privacy-text-it">IT</label>

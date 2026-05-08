@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
-import { getAllConfigs, getConfigWithLocalOverrides, initDynamicAgencies, isDynamicAgency, registerDynamicAgency } from '../configs/registry'
+import { getAllConfigs, getConfigWithLocalOverrides, initDynamicAgencies, isDynamicAgency, registerDynamicAgency, unregisterDynamicAgency } from '../configs/registry'
 import type { AgencyConfig } from '../configs/types'
 import { AdminBrandingConfig } from './AdminBrandingConfig'
 import { AdminEstimationConfig } from './AdminEstimationConfig'
 import { i18n } from '../app/i18n'
-import { createAgency } from '../app/agencyApi'
+import { createAgency, deleteAgency } from '../app/agencyApi'
 
 const buildQrUrl = (configId: string, dl: SupportedLocale, baseUrl: string): string => {
   const params = new URLSearchParams({ dl })
@@ -32,6 +32,7 @@ export const AdminPage = () => {
   const [newAgencyName, setNewAgencyName] = useState('')
   const [newAgencyNameError, setNewAgencyNameError] = useState('')
   const [addingAgency, setAddingAgency] = useState(false)
+  const [deletingAgencyId, setDeletingAgencyId] = useState<string | null>(null)
 
   const selectedConfig = configs.find((config) => config.id === selectedConfigId) ?? null
   const publicBase = (import.meta.env.VITE_PUBLIC_BASE_URL as string | undefined) ?? window.location.origin
@@ -123,6 +124,24 @@ export const AdminPage = () => {
     }
   }
 
+  const handleDeleteAgency = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this agency? This action cannot be undone.')) return
+    setDeletingAgencyId(id)
+    try {
+      await deleteAgency(id)
+      unregisterDynamicAgency(id)
+      const updated = getAllConfigs().toSorted((a, b) => a.agencyName.localeCompare(b.agencyName))
+      setConfigs(updated)
+      if (selectedConfigId === id) {
+        setSelectedConfigId(null)
+        setEstConfigOpen(false)
+        setBrandingOpen(false)
+      }
+    } finally {
+      setDeletingAgencyId(null)
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
       <section className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -160,11 +179,25 @@ export const AdminPage = () => {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-medium text-slate-900 dark:text-slate-100">{config.agencyName}</p>
-                      {selectedConfigId === config.id && (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                          {labels.selected}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {selectedConfigId === config.id && (
+                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                            {labels.selected}
+                          </span>
+                        )}
+                        {isDynamicAgency(config.id) && (
+                          <button
+                            data-testid={`delete-agency-btn-${config.id}`}
+                            type="button"
+                            disabled={deletingAgencyId === config.id}
+                            className="rounded px-2 py-0.5 text-[11px] font-medium text-red-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 dark:hover:bg-red-900/20"
+                            onClick={(e) => { e.stopPropagation(); void handleDeleteAgency(config.id) }}
+                            title="Delete agency"
+                          >
+                            {deletingAgencyId === config.id ? '…' : '✕ Delete'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">ID: {config.id}</p>
                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
@@ -335,7 +368,7 @@ export const AdminPage = () => {
           onClick={() => handleToggleEstConfig()}
           data-testid="admin-estimation-config-toggle"
         >
-          <span>Estimation Config</span>
+          <span>{labels.estimationConfig}</span>
           <span>{estConfigOpen ? '▲' : '▼'}</span>
         </button>
         {estConfigOpen && selectedConfig && (
