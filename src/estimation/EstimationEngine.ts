@@ -41,11 +41,15 @@ export class EstimationEngine {
     }
 
     // ── Gabetti-style factor-based estimation ────────────────────────────────
-    if (this.config.sqmBucketEntries || this.config.sqmBucketPrices) {
+    // Use factor path only when bucket entries are non-empty OR legacy sqmBucketPrices is defined.
+    const hasBucketEntries = (this.config.sqmBucketEntries?.length ?? 0) > 0
+    const hasLegacyBuckets = Boolean(this.config.sqmBucketPrices)
+    if (hasBucketEntries || hasLegacyBuckets) {
       return this._estimateWithFactors(input, zone.zoneMultiplier ?? 1)
     }
 
-    // ── Legacy simple estimation: pricePerSqm × sqm ─────────────────────────
+    // ── Simple estimation: pricePerSqm × sqm ────────────────────────────────
+    // Still applies property type and factor entries as multipliers (neutral = 1).
     const pricePerSqm = zone.pricePerSqm[input.propertyType]
     if (pricePerSqm === undefined) {
       throw new EstimationEngineError(
@@ -54,7 +58,15 @@ export class EstimationEngine {
       )
     }
 
-    const mid = Math.round(pricePerSqm * input.sqm)
+    // Apply open-list factors even in simple mode (neutral = 1 / 0 when absent or not selected)
+    const { conditionEntries, floorEntries, eraEntries, accessoryEntries, propertyTypeFactors } = this.config
+    const propertyTypeFactor = propertyTypeFactors?.[input.propertyType] ?? 1
+    const conditionFactor  = (input.condition  && conditionEntries?.find((e) => e.value === input.condition)?.coefficient)  ?? 1
+    const floorFactor      = (input.floor      && floorEntries?.find((e) => e.value === input.floor)?.coefficient)          ?? 1
+    const eraFactor        = (input.buildEra   && eraEntries?.find((e) => e.value === input.buildEra)?.coefficient)         ?? 1
+    const accessoriesBonus = (input.accessories && accessoryEntries?.find((e) => e.value === input.accessories)?.bonus)     ?? 0
+
+    const mid = Math.round(pricePerSqm * input.sqm * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
     const low = Math.round(mid * (1 - this.spread))
     const high = Math.round(mid * (1 + this.spread))
 
@@ -65,39 +77,34 @@ export class EstimationEngine {
    * Gabetti-style multi-factor estimation.
    *
    * Formula:
-   *   base       = sqmBucketPrices[sqmBucket]
+   *   base       = sqmBucketEntries[sqmBucket].pricePerSqm  (or sqmBucketPrices[sqmBucket] legacy)
+   *                Falls back to zone.pricePerSqm × sqm when sqmBucket is absent.
    *   mid        = base × zoneMultiplier × propertyTypeFactor
    *                     × conditionFactor × floorFactor × eraFactor
    *                     + accessoriesBonus
-   *   min (low)  = mid × 0.9
-   *   max (high) = mid × (1 + spreadFactor)
+   *   low        = mid × (1 − spreadFactor)
+   *   high       = mid × (1 + spreadFactor)
    *
-   * Factors are resolved from open-list *Entries arrays (Epic P).
-   * Falls back to 1 / 0 when entries or a matching value are absent.
+   * Factors default to 1 (multipliers) or 0 (bonuses) when entries are absent
+   * or the submitted value does not match any configured entry.
    */
   private _estimateWithFactors(input: EstimateInput, zoneMultiplier: number): EstimateResult {
     const { sqmBucketEntries, sqmBucketPrices, conditionEntries, floorEntries, eraEntries, accessoryEntries, propertyTypeFactors } = this.config
 
-    if (!input.sqmBucket) {
-      throw new EstimationEngineError(
-        'sqmBucket is required when the config uses sqmBucketPrices',
-        'SQM_BUCKET_REQUIRED',
-      )
-    }
-
-    // Prefer open-list sqmBucketEntries (Epic Q); fall back to legacy flat table
+    // Resolve base price from bucket if available; otherwise fall back to pricePerSqm × sqm
     let base: number | undefined
-    if (sqmBucketEntries && sqmBucketEntries.length > 0) {
-      base = sqmBucketEntries.find((e) => e.value === input.sqmBucket)?.pricePerSqm
-    } else {
-      base = sqmBucketPrices![input.sqmBucket]
+    if (input.sqmBucket) {
+      if (sqmBucketEntries && sqmBucketEntries.length > 0) {
+        base = sqmBucketEntries.find((e) => e.value === input.sqmBucket)?.pricePerSqm
+      } else if (sqmBucketPrices) {
+        base = sqmBucketPrices[input.sqmBucket]
+      }
     }
 
+    // Fallback: no bucket submitted or bucket not found → use pricePerSqm × sqm
     if (base === undefined) {
-      throw new EstimationEngineError(
-        'sqmBucket "' + input.sqmBucket + '" has no base price in config "' + this.config.id + '"',
-        'SQM_BUCKET_REQUIRED',
-      )
+      const pricePerSqm = this.config.zones.find((z) => z.zoneId === input.zoneId)?.pricePerSqm[input.propertyType]
+      base = (pricePerSqm ?? 0) * input.sqm
     }
 
     const propertyTypeFactor = propertyTypeFactors?.[input.propertyType] ?? 1
@@ -107,7 +114,7 @@ export class EstimationEngine {
     const accessoriesBonus = (input.accessories && accessoryEntries?.find((e) => e.value === input.accessories)?.bonus)     ?? 0
 
     const mid  = Math.round(base * zoneMultiplier * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
-    const low  = Math.round(mid * 0.9)
+    const low  = Math.round(mid * (1 - this.spread))
     const high = Math.round(mid * (1 + this.spread))
 
     return { low, mid, high, currency: 'EUR' }
