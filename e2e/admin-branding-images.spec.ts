@@ -20,12 +20,18 @@ function safeUnlink(p: string) {
 }
 
 test.describe('Admin branding images', () => {
+  /** Open the Agency Branding accordion after selecting an agency */
+  async function openBrandingSection(page: Parameters<typeof test>[1]['page']) {
+    await page.getByTestId('admin-branding-config-toggle').click()
+  }
+
   test('logo upload shows preview image in accordion and in palette preview', async ({ page }) => {
     await page.goto('/?lang=en#/admin')
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
 
-    // Select an agency
+    // Select an agency and open branding section
     await page.getByRole('button', { name: /example agency milano/i }).click()
+    await openBrandingSection(page)
     // Wait for branding UI to be fully loaded (color pickers visible = loading done)
     await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
 
@@ -50,8 +56,9 @@ test.describe('Admin branding images', () => {
     await page.goto('/?lang=en#/admin')
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
 
-    // Select an agency
+    // Select an agency and open branding section
     await page.getByRole('button', { name: /example agency milano/i }).click()
+    await openBrandingSection(page)
     await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
 
     // Open Immagine section
@@ -76,6 +83,7 @@ test.describe('Admin branding images', () => {
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
 
     await page.getByRole('button', { name: /example agency milano/i }).click()
+    await openBrandingSection(page)
     await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
 
     // Upload logo

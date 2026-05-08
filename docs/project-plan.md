@@ -20,6 +20,8 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic N: Admin leads dashboard _(planned)_
 - Epic O: Property type as a configurable estimation factor ✅
 - Epic P: Fully admin-configurable estimation factor lists ✅
+- Epic Q: Admin-configurable Sqm Bucket Prices and legacy factor tables as open lists _(in progress)_
+- Epic R: Zone and property type reorder/remove in admin _(in progress)_
 
 ## Epic I — Admin-editable Estimation Config
 
@@ -123,6 +125,29 @@ Key design decisions (to be confirmed in ADR):
 - `EstimationConfigOverride` is updated to include the new entry-based fields.
 
 _Last updated: 2026-05-07_
+
+## Epic Q — Admin-configurable Sqm Bucket Prices and legacy factor tables as open lists
+
+Goal: the five remaining "flat key-value" sections in AdminEstimationConfig (Sqm Bucket Prices, Condition Factors, Floor Factors, Era Factors, Accessories Bonuses) are migrated to the same open-list FactorEntry/AccessoryEntry model used by Epic P for condition/floor/era/accessory entries, with IT/EN labels and add/rename/reorder/remove support in the admin UI.
+
+Key design decisions:
+- `sqmBucketPrices` becomes a `SqmBucketEntry[]` open list with an `it`/`en` label and a `price` field (€/sqm).
+- Legacy flat `conditionFactors`, `floorFactors`, `eraFactors` tables are superseded by `conditionEntries`, `floorEntries`, `eraEntries` (already done in Epic P); the flat-table UI is removed.
+- `accessoriesBonuses` is superseded by `accessoryEntries` (already done in Epic P); flat-table UI is removed.
+- Admin editor: Sqm Bucket Prices section becomes an open-list editor consistent with Epic P.
+
+_Last updated: 2026-05-08_
+
+## Epic R — Zone and property type reorder/remove in admin
+
+Goal: Zones and Property Types in AdminEstimationConfig gain the same UX consistency as factor entries (Epic P): each row has ↑↓ reorder buttons and a ✕ remove button.
+
+Key design decisions:
+- Zones: add ↑↓ and ✕ per zone row; update `handleSave` to persist new order.
+- Property Types: add ↑↓ and ✕ per property type row; update `handleSave` to persist new order.
+- Backward compat: removing a zone removes it from the saved override; engine uses remaining zones.
+
+_Last updated: 2026-05-08_
 
 ## Delivery Workflow
 - All features are developed outside-in: acceptance tests first, then unit/component tests.

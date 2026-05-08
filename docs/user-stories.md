@@ -190,10 +190,28 @@ Acceptance criteria:
 - All acceptance, unit and component tests are updated or added to cover the new dynamic format.
 
 _Notes for implementation:_
-- `FactorEntry` replaces the current union-key tables: `{ value: string; label: Record<SupportedLocale, string>; coefficient: number }[]`.
+- `FactorEntry` replaces the current union-key tables: `{ value: string; label: Record<SupportedLocale, string>; coefficient: number }`.
 - `AccessoryEntry` is the same but `coefficient` is additive (bonus €).
 - Engine lookup: `config.conditionEntries?.find(e => e.value === input.condition)?.coefficient ?? 1`.
 - Admin editor: each factor section becomes a list with add/edit/remove rows (same pattern as zones).
 - Form labels for options come from `entry.label[locale]` instead of hardcoded i18n maps.
 - The existing `i18n.ts` option maps become the **seed** for the static Gabetti config migration; they are no longer the source of truth at runtime.
 
+### US-17 - Admin-configurable Sqm Bucket Prices and removal of legacy flat factor tables (Epic Q)
+As an agency admin, I want to configure sqm bucket prices (price per sqm by surface range) as an editable open list with IT/EN labels, add/rename/reorder/remove options, directly from the admin UI.
+As an agency admin, I no longer want to see the legacy flat-key editors for Condition Factors, Floor Factors, Era Factors, and Accessories Bonuses — those are now managed via the open-list entries editors (from Epic P).
+
+Acceptance criteria:
+- Sqm Bucket Prices is shown as an open-list editor with rows: value (e.g. "0-50"), label IT, label EN, price (€/sqm). Admin can add, rename, reorder, remove rows.
+- The legacy flat-table sections (conditionFactors, floorFactors, eraFactors, accessoriesBonuses) are removed from the admin UI; only the Epic-P open-list editors are shown.
+- The estimation engine resolves sqm price by looking up the correct bucket from the ordered entry list.
+- All acceptance, unit and component tests updated or added.
+
+### US-18 - Zone and property type reorder/remove in admin (Epic R)
+As an agency admin, I want to reorder and remove zones and property types from the estimation config editor, using the same UX as factor entry lists (↑↓ buttons and ✕ remove).
+
+Acceptance criteria:
+- Each zone row has ↑ (move up) and ✕ (remove) buttons; the order is persisted on save.
+- Each property type row has ↑ (move up) and ✕ (remove) buttons; the order is persisted on save.
+- Removing a zone or property type removes it from the override; the engine and form reflect the change.
+- All acceptance, unit and component tests updated or added.

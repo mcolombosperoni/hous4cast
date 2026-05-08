@@ -102,9 +102,9 @@ describe('AdminEstimationConfig component (T54)', () => {
     const user = userEvent.setup()
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('zone-add-btn')).toBeInTheDocument())
-    const before = screen.getAllByTestId(/^zone-id-/).length
+    const before = screen.getAllByTestId(/^zone-id-row-/).length
     await user.click(screen.getByTestId('zone-add-btn'))
-    expect(screen.getAllByTestId(/^zone-id-/).length).toBe(before + 1)
+    expect(screen.getAllByTestId(/^zone-id-row-/).length).toBe(before + 1)
   })
 
   it('renders condition factor inputs with base values', async () => {
@@ -213,11 +213,12 @@ describe('AdminEstimationConfig component (T54)', () => {
     )
   })
 
-  it('can add a second property type via add select and button', async () => {
+  it('can add a second property type via add input and button', async () => {
     const user = userEvent.setup()
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
-    await user.selectOptions(screen.getByTestId('property-type-add-select'), 'villa')
+    await user.clear(screen.getByTestId('property-type-add-input'))
+    await user.type(screen.getByTestId('property-type-add-input'), 'villa')
     await user.click(screen.getByTestId('property-type-add-btn'))
     expect(screen.getByTestId('property-type-id-villa')).toBeInTheDocument()
     expect(screen.getByTestId('property-type-factor-villa')).toHaveValue(1)
@@ -227,7 +228,8 @@ describe('AdminEstimationConfig component (T54)', () => {
     const user = userEvent.setup()
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-save')).not.toBeDisabled())
-    await user.selectOptions(screen.getByTestId('property-type-add-select'), 'villa')
+    await user.clear(screen.getByTestId('property-type-add-input'))
+    await user.type(screen.getByTestId('property-type-add-input'), 'villa')
     await user.click(screen.getByTestId('property-type-add-btn'))
     // Set villa factor
     const factorInput = screen.getByTestId('property-type-factor-villa')
@@ -250,13 +252,14 @@ describe('AdminEstimationConfig component (T54)', () => {
     renderEditor()
     await waitFor(() => expect(screen.getByTestId('estimation-config-loaded')).toBeInTheDocument())
     // Remove button hidden when only one type
-    expect(screen.queryByTestId('property-type-remove-appartamento')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('property-type-remove-0')).not.toBeInTheDocument()
     // Add villa
-    await user.selectOptions(screen.getByTestId('property-type-add-select'), 'villa')
+    await user.clear(screen.getByTestId('property-type-add-input'))
+    await user.type(screen.getByTestId('property-type-add-input'), 'villa')
     await user.click(screen.getByTestId('property-type-add-btn'))
-    expect(screen.getByTestId('property-type-remove-villa')).toBeInTheDocument()
+    expect(screen.getByTestId('property-type-remove-1')).toBeInTheDocument()
     // Remove villa
-    await user.click(screen.getByTestId('property-type-remove-villa'))
+    await user.click(screen.getByTestId('property-type-remove-1'))
     expect(screen.queryByTestId('property-type-id-villa')).not.toBeInTheDocument()
   })
 

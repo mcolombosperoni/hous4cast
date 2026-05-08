@@ -53,6 +53,17 @@ export interface AccessoryEntry {
   bonus: number
 }
 
+/**
+ * Open-list entry for an sqm bucket price.
+ * `value` is the bucket key (e.g. "0-50"), `pricePerSqm` is the base price in €/sqm.
+ * Replaces the legacy `SqmBucketPrices` flat table (Epic Q).
+ */
+export interface SqmBucketEntry {
+  value: string
+  label: Record<SupportedLocale, string>
+  pricePerSqm: number
+}
+
 export type FormFieldType =
   | 'text'
   | 'number'

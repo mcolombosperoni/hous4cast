@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test'
 
+/** Open the Agency Branding accordion after selecting an agency */
+async function openBrandingSection(page: Parameters<typeof test>[1]['page']) {
+  await page.getByTestId('admin-branding-config-toggle').click()
+}
+
 test.describe('Admin branding palette', () => {
   test('persist branding palette for agency', async ({ page }) => {
     await page.goto('/?lang=en#/admin')
@@ -8,6 +13,7 @@ test.describe('Admin branding palette', () => {
 
 
     await page.getByRole('button', { name: /example agency milano/i }).click()
+    await openBrandingSection(page)
     // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
     await page.waitForFunction(() => {
       const el = document.querySelector('[data-testid="palette-preview"]')
@@ -30,6 +36,7 @@ test.describe('Admin branding palette', () => {
 
     await page.reload()
     await page.getByRole('button', { name: /example agency milano/i }).click()
+    await openBrandingSection(page)
     // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
     await page.waitForFunction(() => {
       const el = document.querySelector('[data-testid="palette-preview"]')
@@ -47,6 +54,7 @@ test.describe('Admin branding palette', () => {
     await page.goto('/?lang=en#/admin')
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: /example agency milano/i }).click()
+    await openBrandingSection(page)
     // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
     await page.waitForFunction(() => {
       const el = document.querySelector('[data-testid="palette-preview"]')

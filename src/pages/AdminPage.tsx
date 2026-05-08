@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { useAppPreferences } from '../app/providers/AppPreferencesProvider'
 import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
-import { getAllConfigs } from '../configs/registry'
+import { getAllConfigs, getConfigWithLocalOverrides } from '../configs/registry'
+import type { AgencyConfig } from '../configs/types'
 import { AdminBrandingConfig } from './AdminBrandingConfig'
 import { AdminEstimationConfig } from './AdminEstimationConfig'
 import { i18n } from '../app/i18n'
@@ -20,14 +21,50 @@ export const AdminPage = () => {
   const [qrLocale, setQrLocale] = useState<SupportedLocale>(locale)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [estConfigOpen, setEstConfigOpen] = useState(false)
+  const [brandingOpen, setBrandingOpen] = useState(false)
+  // Runtime-overridden counters for the selected config card
+  const [overriddenConfigs, setOverriddenConfigs] = useState<Record<string, AgencyConfig>>({})
+
   const selectedConfig = configs.find((config) => config.id === selectedConfigId) ?? null
   const publicBase = (import.meta.env.VITE_PUBLIC_BASE_URL as string | undefined) ?? window.location.origin
   const qrUrl = selectedConfig ? buildQrUrl(selectedConfig.id, qrLocale, publicBase) : ''
   const labels = i18n[locale].admin
 
+  const configIds = configs.map((c) => c.id).join(',')
+  const [overrideVersion, setOverrideVersion] = useState(0)
+
+  // Resolve runtime overrides for all configs (synchronous from localStorage only)
+  useEffect(() => {
+    const resolved: Record<string, AgencyConfig> = {}
+    for (const c of configs) {
+      const withOverride = getConfigWithLocalOverrides(c.id)
+      if (withOverride) resolved[c.id] = withOverride
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOverriddenConfigs(resolved)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configIds, overrideVersion])
+
+  // Re-read overrides when localStorage changes (after save from AdminEstimationConfig)
+  useEffect(() => {
+    const handler = () => setOverrideVersion((v) => v + 1)
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [])
+
   const handleSelectConfig = (configId: string) => {
     setSelectedConfigId(configId)
     setCopyStatus('idle')
+    setBrandingOpen(false)
+    setEstConfigOpen(false)
+  }
+
+  /** Refresh overrides from localStorage (called after potential saves) */
+  const refreshOverrides = () => setOverrideVersion((v) => v + 1)
+
+  const handleToggleEstConfig = () => {
+    if (estConfigOpen) refreshOverrides() // closing: may have saved
+    setEstConfigOpen((o) => !o)
   }
 
   const handleCopyQrUrl = async () => {
@@ -64,34 +101,37 @@ export const AdminPage = () => {
           </p>
         ) : (
           <ul className="mt-3 space-y-3">
-            {configs.map((config) => (
-              <li key={config.id}>
-                <button
-                  aria-pressed={selectedConfigId !== null && selectedConfigId === config.id ? 'true' : 'false'}
-                  data-testid={`config-card-${config.id}`}
-                  className={`w-full rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-                    selectedConfigId === config.id
-                      ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
-                      : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-500'
-                  }`}
-                  onClick={() => handleSelectConfig(config.id)}
-                  type="button"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium text-slate-900 dark:text-slate-100">{config.agencyName}</p>
-                    {selectedConfigId === config.id && (
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                        {labels.selected}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">ID: {config.id}</p>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                    {labels.zones(config.zones.length)} - {labels.types(config.propertyTypes.length)}
-                  </p>
-                </button>
-              </li>
-            ))}
+            {configs.map((config) => {
+              const effective = overriddenConfigs[config.id] ?? config
+              return (
+                <li key={config.id}>
+                  <button
+                    aria-pressed={selectedConfigId !== null && selectedConfigId === config.id ? 'true' : 'false'}
+                    data-testid={`config-card-${config.id}`}
+                    className={`w-full rounded-lg border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                      selectedConfigId === config.id
+                        ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
+                        : 'border-slate-200 bg-slate-50 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-500'
+                    }`}
+                    onClick={() => handleSelectConfig(config.id)}
+                    type="button"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{config.agencyName}</p>
+                      {selectedConfigId === config.id && (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                          {labels.selected}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">ID: {config.id}</p>
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                      {labels.zones(effective.zones.length)} - {labels.types(effective.propertyTypes.length)}
+                    </p>
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         )}
 
@@ -174,21 +214,38 @@ export const AdminPage = () => {
         )}
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-2 text-lg font-semibold">{labels.branding}</h2>
-        <AdminBrandingConfig configId={selectedConfig?.id ?? undefined} />
+      {/* Agency Branding — collapsible section, visible only when an agency is selected */}
+      <section
+        className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+        style={{ display: selectedConfig ? undefined : 'none' }}
+        data-testid="branding-config-section"
+      >
+        <button
+          type="button"
+          className="flex w-full items-center justify-between text-left font-semibold text-slate-900 dark:text-slate-100"
+          onClick={() => setBrandingOpen((o) => !o)}
+          data-testid="admin-branding-config-toggle"
+        >
+          <span>{labels.branding}</span>
+          <span>{brandingOpen ? '▲' : '▼'}</span>
+        </button>
+        {brandingOpen && (
+          <div className="mt-4">
+            <AdminBrandingConfig configId={selectedConfig?.id ?? undefined} />
+          </div>
+        )}
       </section>
 
       {/* Estimation Config editor — visible only when an agency is selected */}
       <section
-        className="mt-8 rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+        className="rounded-xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900"
         data-testid="estimation-config-section"
         style={{ display: selectedConfig ? undefined : 'none' }}
       >
         <button
           type="button"
           className="flex w-full items-center justify-between text-left font-semibold text-slate-900 dark:text-slate-100"
-          onClick={() => setEstConfigOpen((o) => !o)}
+          onClick={() => handleToggleEstConfig()}
           data-testid="admin-estimation-config-toggle"
         >
           <span>Estimation Config</span>

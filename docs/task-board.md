@@ -1,9 +1,10 @@
 # Task Board
 
 ## Current Increment
-- Epic: P — Fully admin-configurable estimation factor lists
-- Status: `done`
-- T73–T100 all delivered and approved.
+- Epic: Q — Admin-configurable Sqm Bucket Prices and legacy flat factor table removal
+- Epic: R — Zone and property type reorder/remove in admin
+- Also: Bug fix — zone/property-type counters now reflect runtime overrides; Agency Branding section is now collapsible
+- Status: `in-progress`
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -142,5 +143,33 @@
 | T71 | O | US-15 | E2E acceptance tests: admin edits property type factor → estimate changes; add type → selector visible | done | Playwright: 4 scenarios × 3 browsers = 12 tests. |
 | T72 | O | US-15 | Unit/component tests for property type factor | done | Vitest: engine backward compat, factor applies correctly, admin editor renders/saves new fields, add/remove type. |
 
-## Wont-Do
-- None
+## Epic Q — Admin-configurable Sqm Bucket Prices and legacy flat factor table removal (US-17)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T101 | Q | US-17 | Add `SqmBucketEntry` type; extend `AgencyConfig` and `EstimationConfigOverride` with `sqmBucketEntries` field | todo | |
+| T102 | Q | US-17 | Migrate `gabetti-busto-arsizio.ts`: seed `sqmBucketEntries` from existing `sqmBucketPrices` | todo | |
+| T103 | Q | US-17 | Update `EstimationEngine` to resolve sqm price from `sqmBucketEntries` (full-replace strategy, fallback to flat table) | todo | |
+| T104 | Q | US-17 | `AdminEstimationConfig`: replace flat-table sections with open-list editor for `sqmBucketEntries` | todo | Remove conditionFactors/floorFactors/eraFactors/accessoriesBonuses flat UI |
+| T105 | Q | US-17 | Unit tests for engine with `sqmBucketEntries` lookup | todo | |
+| T106 | Q | US-17 | E2E acceptance tests: admin adds/renames/reorders/removes sqm bucket entry → estimate reflects new pricing | todo | |
+| T107 | Q | US-17 | Component tests for admin `sqmBucketEntries` editor | todo | |
+| T108 | Q | US-17 | Update `estimationConfigApi` save/load for `sqmBucketEntries` | todo | |
+| T109 | Q | US-17 | Update `getConfigWithOverrides` merge strategy for `sqmBucketEntries` (full-replace) | todo | |
+
+## Epic R — Zone and property type reorder/remove in admin (US-18)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T110 | R | US-18 | E2E acceptance tests (outside-in): admin reorders zone → order reflected in form; admin removes zone → zone absent in form | done | `e2e/admin-zone-proptype-reorder.spec.ts` |
+| T111 | R | US-18 | E2E acceptance tests: admin reorders property type → order reflected in form; admin removes property type → absent in form | done | |
+| T112 | R | US-18 | `AdminEstimationConfig`: add ↑ (move up) and ✕ (remove) buttons to each zone row | done | `zone-move-up-{i}`, `zone-remove-{i}`, `zone-id-row-{i}` testids |
+| T113 | R | US-18 | `AdminEstimationConfig`: add ↑ (move up) and ✕ (remove) buttons to each property type row | done | `property-type-move-up-{i}`, `property-type-remove-{i}`, `property-type-row-{i}`; input replaces select |
+| T114 | R | US-18 | Update `handleSave` to persist zone order and removals; update `handleSave` for property type order and removals | done | Handlers `handleZoneMoveUp`, `handleZoneRemove`, `handleMovePropertyTypeUp` |
+| T115 | R | US-18 | Component tests for zone reorder/remove and property type reorder/remove | done | Unit tests updated in `AdminEstimationConfig.test.tsx` |
+
+## Bug fixes / UX improvements (May 2026)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T116 | - | - | Fix zone/property-type counters in agency card to reflect runtime overrides (localStorage) | done | `AdminPage` uses `getConfigWithLocalOverrides` + `overrideVersion` refresh |
+| T117 | - | - | Wrap Agency Branding in collapsible section (same UX as Estimation Config) | done | `admin-branding-config-toggle` data-testid added; branding e2e tests updated |
+
+

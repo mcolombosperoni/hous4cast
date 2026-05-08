@@ -7,8 +7,6 @@ import {
 } from '../app/estimationConfigApi'
 import type { AgencyConfig, EstimationConfigOverride, FactorEntry, AccessoryEntry, PropertyType, ZoneRate } from '../configs/types'
 
-const ALL_PROPERTY_TYPES: PropertyType[] = ['appartamento', 'villa', 'ufficio']
-
 interface Props {
   configId: string
 }
@@ -395,6 +393,26 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
     dispatch({ type: 'SET_FORM', formState: { ...formState, zones: [...formState.zones, newRow] } })
   }
 
+  const handleZoneMoveUp = (index: number) => {
+    if (!formState || index === 0) return
+    const zones = [...formState.zones]
+    ;[zones[index - 1], zones[index]] = [zones[index], zones[index - 1]]
+    dispatch({ type: 'SET_FORM', formState: { ...formState, zones } })
+  }
+
+  const handleZoneRemove = (index: number) => {
+    if (!formState || formState.zones.length <= 1) return
+    const zones = formState.zones.filter((_, i) => i !== index)
+    dispatch({ type: 'SET_FORM', formState: { ...formState, zones } })
+  }
+
+  const handleMovePropertyTypeUp = (index: number) => {
+    if (!formState || index === 0) return
+    const propertyTypes = [...formState.propertyTypes]
+    ;[propertyTypes[index - 1], propertyTypes[index]] = [propertyTypes[index], propertyTypes[index - 1]]
+    dispatch({ type: 'SET_FORM', formState: { ...formState, propertyTypes } })
+  }
+
   const handleSave = async () => {
     if (!formState || !baseConfigRef.current) return
 
@@ -500,8 +518,8 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
           <div>
             <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Property Types & Factors</h3>
             <div className="space-y-2">
-              {formState.propertyTypes.map((pt) => (
-                <div key={pt} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
+              {formState.propertyTypes.map((pt, index) => (
+                <div key={pt} data-testid={`property-type-row-${index}`} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
                   <span className="w-28 text-sm text-slate-700 dark:text-slate-300" data-testid={'property-type-id-' + pt}>{pt}</span>
                   <div className="flex items-center gap-1">
                     <label className="text-xs text-slate-500" htmlFor={'property-type-factor-' + pt}>Factor</label>
@@ -516,10 +534,17 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
                       onChange={(e) => handleFactorChange('propertyTypeFactors', pt, e.target.value)}
                     />
                   </div>
+                  <button
+                    type="button"
+                    data-testid={`property-type-move-up-${index}`}
+                    disabled={index === 0}
+                    className="text-xs text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                    onClick={() => handleMovePropertyTypeUp(index)}
+                  >↑</button>
                   {formState.propertyTypes.length > 1 && (
                     <button
                       type="button"
-                      data-testid={'property-type-remove-' + pt}
+                      data-testid={`property-type-remove-${index}`}
                       className="ml-auto text-xs text-red-500 hover:text-red-700"
                       onClick={() => handleRemovePropertyType(pt)}
                     >
@@ -529,34 +554,29 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
                 </div>
               ))}
             </div>
-            {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).length > 0 && (
-              <div className="mt-2 flex items-center gap-2">
-                <select
-                  data-testid="property-type-add-select"
-                  className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                  value={addPropertyTypeValue}
-                  onChange={(e) => setAddPropertyTypeValue(e.target.value)}
-                >
-                  <option value="" disabled>Add type…</option>
-                  {ALL_PROPERTY_TYPES.filter((pt) => !formState.propertyTypes.includes(pt)).map((pt) => (
-                    <option key={pt} value={pt}>{pt}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  data-testid="property-type-add-btn"
-                  className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
-                  onClick={() => {
-                    if (addPropertyTypeValue) {
-                      handleAddPropertyType(addPropertyTypeValue)
-                      setAddPropertyTypeValue('')
-                    }
-                  }}
-                >
-                  + Add
-                </button>
-              </div>
-            )}
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                data-testid="property-type-add-input"
+                type="text"
+                placeholder="New property type…"
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                value={addPropertyTypeValue}
+                onChange={(e) => setAddPropertyTypeValue(e.target.value)}
+              />
+              <button
+                type="button"
+                data-testid="property-type-add-btn"
+                className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-blue-400 hover:text-blue-500 dark:border-slate-600 dark:text-slate-400"
+                onClick={() => {
+                  if (addPropertyTypeValue) {
+                    handleAddPropertyType(addPropertyTypeValue)
+                    setAddPropertyTypeValue('')
+                  }
+                }}
+              >
+                + Add
+              </button>
+            </div>
           </div>
 
           {/* Zones */}
@@ -570,7 +590,7 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
                 const labelEnTestId = zone.isNew ? 'zone-label-en-new-' + i : 'zone-label-en-' + zone.zoneId
                 const multiplierHtmlId = 'zone-multiplier-' + (zone.isNew ? String(i) : zone.zoneId)
                 return (
-                  <div key={zoneKey} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 space-y-2">
+                  <div key={zoneKey} data-testid={`zone-id-row-${i}`} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 space-y-2">
                     {/* Header row: zone id (read-only) or editable id for new zones */}
                     <div className="flex flex-wrap items-center gap-2">
                       {zone.isNew ? (
@@ -607,6 +627,21 @@ export const AdminEstimationConfig = ({ configId }: Props) => {
                           onChange={(e) => handleZoneFieldChange(i, 'zoneMultiplier', e.target.value)}
                         />
                       </div>
+                      <button
+                        type="button"
+                        data-testid={`zone-move-up-${i}`}
+                        disabled={i === 0}
+                        className="text-xs text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                        onClick={() => handleZoneMoveUp(i)}
+                      >↑</button>
+                      {formState.zones.length > 1 && (
+                        <button
+                          type="button"
+                          data-testid={`zone-remove-${i}`}
+                          className="text-xs text-red-500 hover:text-red-700"
+                          onClick={() => handleZoneRemove(i)}
+                        >✕</button>
+                      )}
                     </div>
                     {/* Label row: IT + EN */}
                     <div className="flex flex-wrap gap-2">
