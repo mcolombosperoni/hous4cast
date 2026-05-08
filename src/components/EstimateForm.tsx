@@ -164,21 +164,16 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
         </FormField>
       </div>
 
-      {/* Surface — bucket mode (open-list or legacy Gabetti) or numeric input */}
+      {/* Surface — bucket mode (open-list entries) or numeric input */}
       {usesBuckets ? (
         <div data-field-error={errors.sqmBucket ? 'true' : undefined}>
           <FormField label={labels.sqmBucket} error={errors.sqmBucket?.message as string} errorTestId="error-sqmBucket">
             <Controller name="sqmBucket" control={control} render={({ field }) => (
               <select data-testid="sqmBucket" className={selectClass} {...field}>
                 <option value="">—</option>
-                {sqmBucketEntries
-                  ? sqmBucketEntries.map((e) => (
-                      <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
-                    ))
-                  : (Object.entries(labels.sqmBucketOptions) as [string, string][]).map(([val, lbl]) => (
-                      <option key={val} value={val}>{lbl}</option>
-                    ))
-                }
+                {sqmBucketEntries?.map((e) => (
+                  <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
+                ))}
               </select>
             )} />
           </FormField>
@@ -214,14 +209,9 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           <Controller name="condition" control={control} render={({ field }) => (
             <select name="condition" data-testid="condition" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.conditionEntries && config.conditionEntries.length > 0
-                ? config.conditionEntries.map((e) => (
-                    <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
-                  ))
-                : (Object.entries(labels.conditionOptions) as [string, string][]).map(([val, lbl]) => (
-                    <option key={val} value={val}>{lbl}</option>
-                  ))
-              }
+              {config.conditionEntries?.map((e) => (
+                <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
+              ))}
             </select>
           )} />
         </FormField>
@@ -235,14 +225,9 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           <Controller name="accessories" control={control} render={({ field }) => (
             <select name="accessories" data-testid="accessories" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.accessoryEntries && config.accessoryEntries.length > 0
-                ? config.accessoryEntries.map((e) => (
-                    <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
-                  ))
-                : (Object.entries(labels.accessoriesOptions) as [string, string][]).map(([val, lbl]) => (
-                    <option key={val} value={val}>{lbl}</option>
-                  ))
-              }
+              {config.accessoryEntries?.map((e) => (
+                <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
+              ))}
             </select>
           )} />
         </FormField>
@@ -256,14 +241,9 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           <Controller name="floor" control={control} render={({ field }) => (
             <select name="floor" data-testid="floor" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.floorEntries && config.floorEntries.length > 0
-                ? config.floorEntries.map((e) => (
-                    <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
-                  ))
-                : (Object.entries(labels.floorOptions) as [string, string][]).map(([val, lbl]) => (
-                    <option key={val} value={val}>{lbl}</option>
-                  ))
-              }
+              {config.floorEntries?.map((e) => (
+                <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
+              ))}
             </select>
           )} />
         </FormField>
@@ -277,14 +257,9 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           <Controller name="buildEra" control={control} render={({ field }) => (
             <select name="buildEra" data-testid="buildEra" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.eraEntries && config.eraEntries.length > 0
-                ? config.eraEntries.map((e) => (
-                    <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
-                  ))
-                : (Object.entries(labels.eraOptions) as [string, string][]).map(([val, lbl]) => (
-                    <option key={val} value={val}>{lbl}</option>
-                  ))
-              }
+              {config.eraEntries?.map((e) => (
+                <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
+              ))}
             </select>
           )} />
         </FormField>
