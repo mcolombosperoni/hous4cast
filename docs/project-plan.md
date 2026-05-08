@@ -15,7 +15,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic I: Admin-editable estimation config ✅
 - Epic J: Branding applied to estimate page ✅
 - Epic K: Lead capture and agent notification _(planned)_
-- Epic L: Multi-agency support _(planned)_
+- Epic L: Multi-agency support ~~_(planned)_~~ → **superseded by Epic S** (dynamic agency creation from admin)
 - Epic M: Estimate PDF export _(planned)_
 - Epic N: Admin leads dashboard _(planned)_
 - Epic O: Property type as a configurable estimation factor ✅

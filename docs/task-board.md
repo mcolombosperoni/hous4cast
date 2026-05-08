@@ -100,9 +100,10 @@
 | Epic | User Story | Description |
 |------|-----------|-------------|
 | K | US-11 | Lead capture and agent notification — save leads to Firestore, email the agent |
-| L | US-12 | Multi-agency support — second agency config fully operational |
 | M | US-13 | Estimate PDF export — branded downloadable PDF from result page |
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
+
+> **Epic L (Multi-agency support) superseded by Epic S.** The original goal (a second static agency config) is fully covered by the dynamic agency creation feature: admins can create unlimited agencies from the admin panel without any deployment.
 
 ## Epic P — Fully admin-configurable estimation factor lists (US-16)
 | ID | Epic | User Story | Task | Status | Notes |
