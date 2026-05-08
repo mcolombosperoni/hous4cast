@@ -2,23 +2,17 @@ import type { SupportedLocale } from '../app/providers/AppPreferencesProvider'
 
 /**
  * Property type identifier. The built-in Gabetti config uses the fixed values below,
- * but dynamic agencies can use any string key. The union is kept for backward
- * compatibility with static configs and legacy saved overrides; the engine and form
- * treat it as `string` at runtime.
+ * but dynamic agencies can use any arbitrary string key.
+ * The open union `(string & {})` preserves autocomplete for the known literals
+ * while accepting any other string at runtime.
  */
 export type PropertyType = 'appartamento' | 'villa' | 'ufficio' | (string & {})
 
-/** Surface area buckets (used by single-choice sqm field) */
+/**
+ * Surface area bucket keys used by the Gabetti legacy select field.
+ * New dynamic agencies use open-list `SqmBucketEntry` arrays instead.
+ */
 export type SqmBucket = 'fino_50' | '51_70' | '71_110' | '111_149' | '150_plus'
-
-/** @deprecated kept for backward compat — use `string` directly */
-export type PropertyCondition = string
-/** @deprecated kept for backward compat — use `string` directly */
-export type PropertyAccessories = string
-/** @deprecated kept for backward compat — use `string` directly */
-export type PropertyFloor = string
-/** @deprecated kept for backward compat — use `string` directly */
-export type BuildEra = string
 
 export interface ZoneRate {
   zoneId: string
@@ -34,9 +28,6 @@ export type SqmBucketPrices = Partial<Record<SqmBucket, number>>
 
 /** Multiplicative factor table keyed by enum value */
 export type FactorTable<T extends string> = Partial<Record<T, number>>
-
-/** Additive bonus table keyed by enum value */
-export type BonusTable<T extends string> = Partial<Record<T, number>>
 
 /**
  * Open-list entry for a multiplicative estimation factor.
@@ -80,7 +71,6 @@ export interface PropertyTypeEntry {
   coefficient: number
 }
 
-
 export type FormFieldType =
   | 'text'
   | 'number'
@@ -89,38 +79,38 @@ export type FormFieldType =
   | 'checkbox'
   | 'email'
   | 'tel'
-  | 'textarea';
+  | 'textarea'
 
 export interface FormFieldOption {
-  value: string;
-  label: Record<SupportedLocale, string>;
+  value: string
+  label: Record<SupportedLocale, string>
 }
 
 export interface FormField {
-  name: string;
-  type: FormFieldType;
-  label: Record<SupportedLocale, string>;
-  required?: boolean;
-  options?: FormFieldOption[];
-  placeholder?: Record<SupportedLocale, string>;
-  min?: number;
-  max?: number;
-  infoText?: Record<SupportedLocale, string>;
+  name: string
+  type: FormFieldType
+  label: Record<SupportedLocale, string>
+  required?: boolean
+  options?: FormFieldOption[]
+  placeholder?: Record<SupportedLocale, string>
+  min?: number
+  max?: number
+  infoText?: Record<SupportedLocale, string>
   conditional?: {
-    field: string;
-    value: string | number | boolean;
-  };
+    field: string
+    value: string | number | boolean
+  }
 }
 
 export interface AgencyConfig {
-  id: string;
-  agencyName: string;
+  id: string
+  agencyName: string
   /** Allowed surface range in sqm */
-  sqmRange: { min: number; max: number };
-  zones: ZoneRate[];
-  propertyTypes: PropertyType[];
+  sqmRange: { min: number; max: number }
+  zones: ZoneRate[]
+  propertyTypes: PropertyType[]
   /** Spread percentage for low/high range (0–1), default 0.1 */
-  spreadFactor?: number;
+  spreadFactor?: number
 
   /**
    * Gabetti-style estimation factors.
@@ -128,41 +118,41 @@ export interface AgencyConfig {
    * Formula: baseBySqmBucket × zoneMultiplier × propertyTypeFactor
    *          × conditionFactor × floorFactor × eraFactor + accessoriesBonus
    */
-  sqmBucketPrices?: SqmBucketPrices;
+  sqmBucketPrices?: SqmBucketPrices
 
   /** Open-list factor entries (Epic P). Engine looks up coefficient by entry.value. */
-  conditionEntries?: FactorEntry[];
-  floorEntries?: FactorEntry[];
-  eraEntries?: FactorEntry[];
-  accessoryEntries?: AccessoryEntry[];
+  conditionEntries?: FactorEntry[]
+  floorEntries?: FactorEntry[]
+  eraEntries?: FactorEntry[]
+  accessoryEntries?: AccessoryEntry[]
 
   /** Multiplicative factor per property type (default 1 when absent) */
-  propertyTypeFactors?: FactorTable<PropertyType>;
+  propertyTypeFactors?: FactorTable<PropertyType>
 
   /** Open-list property type entries with localized labels and coefficient (Epic R) */
   propertyTypeEntries?: PropertyTypeEntry[]
 
   /** Open-list sqm bucket price entries (Epic Q). Replaces legacy `sqmBucketPrices` flat table. */
-  sqmBucketEntries?: SqmBucketEntry[];
+  sqmBucketEntries?: SqmBucketEntry[]
 
   /** Form fields definition for dynamic form rendering */
-  formFields?: FormField[];
+  formFields?: FormField[]
   /** Branding: color palette, logo, cover image */
   branding?: {
     palette: {
-      primary: string;
-      secondary: string;
-      text: string;
-      background: string;
-    };
-    logoUrl?: string;
-    coverImageUrl?: string;
-  };
+      primary: string
+      secondary: string
+      text: string
+      background: string
+    }
+    logoUrl?: string
+    coverImageUrl?: string
+  }
   /** Privacy: localized privacy policy text or link */
   privacy?: {
-    text?: Record<SupportedLocale, string>;
-    link?: Record<SupportedLocale, string>;
-  };
+    text?: Record<SupportedLocale, string>
+    link?: Record<SupportedLocale, string>
+  }
 }
 
 /**
