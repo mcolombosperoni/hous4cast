@@ -1,10 +1,8 @@
 # Task Board
 
 ## Current Increment
-- Epic: Q — Admin-configurable Sqm Bucket Prices and legacy flat factor table removal
-- Epic: R — Zone and property type reorder/remove in admin
-- Also: Bug fix — zone/property-type counters now reflect runtime overrides; Agency Branding section is now collapsible
-- Status: `in-progress`
+- Epic: S — Dynamic agency creation in admin ✅
+- Status: `waiting-approval`
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -93,6 +91,9 @@
 - Epic J — Branding applied to estimate page
 - Epic O — Property type as a configurable estimation factor
 - Epic P — Fully admin-configurable estimation factor lists (US-16) ✅
+- Epic Q — Admin-configurable Sqm Bucket Prices and legacy flat factor table removal (US-17) ✅
+- Epic R — Zone and property type reorder/remove in admin (US-18) ✅
+- Epic S — Dynamic agency creation in admin (US-19) ✅
 
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
@@ -146,15 +147,15 @@
 ## Epic Q — Admin-configurable Sqm Bucket Prices and legacy flat factor table removal (US-17)
 | ID | Epic | User Story | Task | Status | Notes |
 |---|---|---|---|---|---|
-| T101 | Q | US-17 | Add `SqmBucketEntry` type; extend `AgencyConfig` and `EstimationConfigOverride` with `sqmBucketEntries` field | todo | |
-| T102 | Q | US-17 | Migrate `gabetti-busto-arsizio.ts`: seed `sqmBucketEntries` from existing `sqmBucketPrices` | todo | |
-| T103 | Q | US-17 | Update `EstimationEngine` to resolve sqm price from `sqmBucketEntries` (full-replace strategy, fallback to flat table) | todo | |
-| T104 | Q | US-17 | `AdminEstimationConfig`: replace flat-table sections with open-list editor for `sqmBucketEntries` | todo | Remove conditionFactors/floorFactors/eraFactors/accessoriesBonuses flat UI |
-| T105 | Q | US-17 | Unit tests for engine with `sqmBucketEntries` lookup | todo | |
-| T106 | Q | US-17 | E2E acceptance tests: admin adds/renames/reorders/removes sqm bucket entry → estimate reflects new pricing | todo | |
-| T107 | Q | US-17 | Component tests for admin `sqmBucketEntries` editor | todo | |
-| T108 | Q | US-17 | Update `estimationConfigApi` save/load for `sqmBucketEntries` | todo | |
-| T109 | Q | US-17 | Update `getConfigWithOverrides` merge strategy for `sqmBucketEntries` (full-replace) | todo | |
+| T101 | Q | US-17 | Add `SqmBucketEntry` type; extend `AgencyConfig` and `EstimationConfigOverride` with `sqmBucketEntries` field | done | `SqmBucketEntry` in `configs/types.ts`; `sqmBucketEntries` added to `AgencyConfig` and `EstimationConfigOverride` |
+| T102 | Q | US-17 | Migrate `gabetti-busto-arsizio.ts`: seed `sqmBucketEntries` from existing `sqmBucketPrices` | done | Full IT/EN labels and `pricePerSqm` seeded |
+| T103 | Q | US-17 | Update `EstimationEngine` to resolve sqm price from `sqmBucketEntries` (fallback to flat `sqmBucketPrices`) | done | `find(e => e.value === input.sqmBucket)?.pricePerSqm` with flat-table fallback |
+| T104 | Q | US-17 | `AdminEstimationConfig`: open-list editor for `sqmBucketEntries`; hide legacy flat-table sections when entries exist | done | `sqm-bucket-entries-list`, `sqm-bucket-entries-add-btn`; flat tables hidden via `entriesField` guard |
+| T105 | Q | US-17 | Unit tests for engine with `sqmBucketEntries` lookup | done | `EstimationEngine.test.ts` updated |
+| T106 | Q | US-17 | E2E acceptance tests: admin adds/renames/reorders/removes sqm bucket entry → estimate reflects new pricing | done | `e2e/admin-sqm-bucket-entries.spec.ts` |
+| T107 | Q | US-17 | Component tests for admin `sqmBucketEntries` editor | done | `AdminEstimationConfig.test.tsx` — sqmBucketEntries tests |
+| T108 | Q | US-17 | Update `estimationConfigApi` save/load for `sqmBucketEntries` | done | Included in override payload; Firebase setDoc sync-throw fixed |
+| T109 | Q | US-17 | Update `getConfigWithOverrides` merge strategy for `sqmBucketEntries` (full-replace with price overlay) | done | `buildFormState` merges override `sqmBucketEntries` or applies price overrides to base entries |
 
 ## Epic R — Zone and property type reorder/remove in admin (US-18)
 | ID | Epic | User Story | Task | Status | Notes |
@@ -173,4 +174,20 @@
 | T116 | - | - | Fix zone/property-type counters in agency card to reflect runtime overrides (localStorage) | done | `AdminPage` uses `getConfigWithLocalOverrides` + `overrideVersion` refresh |
 | T117 | - | - | Wrap Agency Branding in collapsible section (same UX as Estimation Config) | done | `admin-branding-config-toggle` data-testid added; branding e2e tests updated |
 
+## Epic S — Dynamic agency creation in admin (US-19)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T118 | S | US-19 | `agencyApi.ts`: create/save/load/delete dynamic agencies (localStorage + Firestore fire-and-forget) | done | `slugifyAgencyName`, `createAgency`, `saveAgency`, `loadAgency`, `loadAllLocalAgencies`, `deleteAgency` |
+| T119 | S | US-19 | `default-agency-template.ts`: scaffold config for new agencies | done | Default zone, property type, sqm range, spread factor |
+| T120 | S | US-19 | `registry.ts`: `registerDynamicAgency`, `unregisterDynamicAgency`, `initDynamicAgencies`, `isDynamicAgency` | done | Integrated with `getAllConfigs()` and `getConfig()` |
+| T121 | S | US-19 | `AdminPage`: "Add Agency" button + inline name input form with validation; auto-select and auto-open estimation config | done | `add-agency-btn`, `new-agency-name-input`, `new-agency-confirm-btn`, `new-agency-cancel-btn`, `new-agency-name-error` |
+| T122 | S | US-19 | `AdminEstimationConfig`: `isDynamicAgency` prop; editable `agencyName` input (uncontrolled); `sqmRangeMin/Max` inputs | done | `agency-name-input`, `sqm-range-min`, `sqm-range-max`; disabled for static agencies |
+| T123 | S | US-19 | `AdminEstimationConfig`: `sqmBucketEntries` open-list editor (same UX as Epic P/Q entries) | done | `sqm-bucket-entries-list`, handlers for add/change/remove/reorder |
+| T124 | S | US-19 | `handleSave` for dynamic agencies: persist `agencyName` + `sqmRange` in full `AgencyConfig` via `saveAgency` | done | Calls `saveAgency(updatedConfig)` + `onAgencyUpdated` callback |
+| T125 | S | US-19 | Fix Firebase `setDoc` sync-throw: wrap in `try/catch` in `estimationConfigApi` and `agencyApi` | done | Prevents uncaught error when override contains `undefined` fields |
+| T126 | S | US-19 | Unit tests: `agencyApi.test.ts` (12 tests); `AdminEstimationConfig.test.tsx` mock for `agencyApi` | done | Vitest |
+| T127 | S | US-19 | E2E acceptance tests: `add-agency.spec.ts` — full dynamic agency lifecycle | done | Create, persist after reload, edit agencyName, edit sqmRange, estimate page accessible |
+| T128 | S | US-19 | E2E isolation: add `beforeEach` localStorage cleanup to all affected specs | done | `valuation-form`, `estimate-privacy`, `admin-factor-lists`, `admin-sqm-bucket-entries`, `admin-zone-proptype-reorder`, `estimate-branding` |
+| T129 | S | US-19 | Fix `estimate-branding` webkit flakiness: `waitForFunction` for CSS custom property readiness | done | `waitForFunction` polls `--brand-primary` before asserting |
+| T130 | S | US-19 | Update docs: project-plan, task-board, user-stories for Epic Q/R/S done | done | This commit |
 

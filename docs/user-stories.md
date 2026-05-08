@@ -215,3 +215,16 @@ Acceptance criteria:
 - Each property type row has ↑ (move up) and ✕ (remove) buttons; the order is persisted on save.
 - Removing a zone or property type removes it from the override; the engine and form reflect the change.
 - All acceptance, unit and component tests updated or added.
+
+### US-19 - Dynamic agency creation in admin (Epic S)
+As an agency admin, I want to create a new agency directly from the admin panel without any code deployment, so that I can onboard a new client immediately.
+
+Acceptance criteria:
+- The admin page shows an "Add Agency" button that opens an inline name input form.
+- Submitting an empty name shows a validation error.
+- Submitting a valid name creates the agency, adds it to the agency list, auto-selects it, and opens its estimation config editor.
+- The new agency persists after a page reload (stored in localStorage).
+- For dynamic agencies, the estimation config editor shows an editable "Agency Name" field and sqm range (min/max) inputs; these are saved to the agency config on every save.
+- The new agency's estimate page is immediately accessible at `/#/estimate/:configId`.
+- All acceptance, unit and component tests cover the full lifecycle.
+
