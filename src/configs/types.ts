@@ -18,8 +18,8 @@ export type BuildEra = string
 export interface ZoneRate {
   zoneId: string
   label: Record<SupportedLocale, string>
-  /** Price per sqm by property type */
-  pricePerSqm: Partial<Record<PropertyType, number>>
+  /** Price per sqm by property type. Accepts any string key (open-list) for dynamic agencies. */
+  pricePerSqm: Partial<Record<PropertyType, number>> & Record<string, number>
   /** Zone multiplier applied to base price (default 1) */
   zoneMultiplier?: number
 }

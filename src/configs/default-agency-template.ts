@@ -8,15 +8,15 @@ import type { AgencyConfig } from './types'
 export const defaultAgencyTemplate: Omit<AgencyConfig, 'id' | 'agencyName'> = {
   sqmRange: { min: 20, max: 500 },
   spreadFactor: 0.1,
-  propertyTypes: ['appartamento'],
+  propertyTypes: ['tipo_1'],
   propertyTypeEntries: [
-    { value: 'appartamento', label: { it: 'Appartamento', en: 'Apartment' }, coefficient: 1.0 },
+    { value: 'tipo_1', label: { it: 'Tipologia 1', en: 'Type 1' }, coefficient: 1.0 },
   ],
   zones: [
     {
       zoneId: 'zona_1',
       label: { it: 'Zona 1', en: 'Zone 1' },
-      pricePerSqm: { appartamento: 3000 },
+      pricePerSqm: { tipo_1: 3000 } as Record<string, number>,
       zoneMultiplier: 1.0,
     },
   ],
@@ -43,4 +43,3 @@ export const defaultAgencyTemplate: Omit<AgencyConfig, 'id' | 'agencyName'> = {
     },
   },
 }
-

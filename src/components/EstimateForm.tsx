@@ -35,6 +35,13 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
   const { sqmRange, zones, propertyTypes, propertyTypeEntries, sqmBucketPrices } = config
   const usesBuckets = Boolean(sqmBucketPrices)
 
+  // An open-list field is "active" only when the entries array has at least one item.
+  // undefined = static config (use hardcoded fallback), [] = dynamic but empty (hide field), [..] = show options
+  const hasConditionOptions = config.conditionEntries === undefined || config.conditionEntries.length > 0
+  const hasFloorOptions = config.floorEntries === undefined || config.floorEntries.length > 0
+  const hasEraOptions = config.eraEntries === undefined || config.eraEntries.length > 0
+  const hasAccessoryOptions = config.accessoryEntries === undefined || config.accessoryEntries.length > 0
+
   /** Resolve the display label for a property type value */
   const getPropertyTypeLabel = (value: string): string => {
     const entry = propertyTypeEntries?.find((e) => e.value === value)
@@ -60,10 +67,10 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
         ),
     sqmBucket: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
     address: z.string().optional(),
-    condition: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
-    accessories: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
-    floor: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
-    buildEra: usesBuckets ? z.string().min(1, labels.required) : z.string().optional(),
+    condition: usesBuckets && hasConditionOptions ? z.string().min(1, labels.required) : z.string().optional(),
+    accessories: usesBuckets && hasAccessoryOptions ? z.string().min(1, labels.required) : z.string().optional(),
+    floor: usesBuckets && hasFloorOptions ? z.string().min(1, labels.required) : z.string().optional(),
+    buildEra: usesBuckets && hasEraOptions ? z.string().min(1, labels.required) : z.string().optional(),
     email: z.string().email(labels.emailInvalid).min(1, labels.required),
     phone: z.string().min(1, labels.required),
     privacy: z.boolean().refine((val) => val, { message: labels.privacyRequired }),
@@ -93,17 +100,19 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
     defaultValues,
   })
 
-  const submit = (data: typeof defaultValues) => {
+  type FormData = z.infer<typeof schema>
+
+  const submit = (data: FormData) => {
     onSubmit({
-      zoneId: data.zoneId,
-      propertyType: data.propertyType as PropertyType,
+      zoneId: data.zoneId as string,
+      propertyType: (data.propertyType ?? '') as PropertyType,
       sqm: usesBuckets ? sqmRange.min : Number(data.sqm),
       sqmBucket: usesBuckets ? data.sqmBucket as SqmBucket : undefined,
       address: data.address || undefined,
-      condition: data.condition ? data.condition as PropertyCondition : undefined,
-      accessories: data.accessories ? data.accessories as PropertyAccessories : undefined,
-      floor: data.floor ? data.floor as PropertyFloor : undefined,
-      buildEra: data.buildEra ? data.buildEra as BuildEra : undefined,
+      condition: data.condition || undefined,
+      accessories: data.accessories || undefined,
+      floor: data.floor || undefined,
+      buildEra: data.buildEra || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
     })
@@ -189,12 +198,13 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
       </FormField>
 
       {/* Condition */}
+      {hasConditionOptions && (
       <div data-field-error={errors.condition ? 'true' : undefined}>
         <FormField label={labels.condition} error={errors.condition?.message as string}>
           <Controller name="condition" control={control} render={({ field }) => (
             <select name="condition" data-testid="condition" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.conditionEntries
+              {config.conditionEntries && config.conditionEntries.length > 0
                 ? config.conditionEntries.map((e) => (
                     <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
                   ))
@@ -206,14 +216,16 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           )} />
         </FormField>
       </div>
+      )}
 
       {/* Accessories */}
+      {hasAccessoryOptions && (
       <div data-field-error={errors.accessories ? 'true' : undefined}>
         <FormField label={labels.accessories} error={errors.accessories?.message as string}>
           <Controller name="accessories" control={control} render={({ field }) => (
             <select name="accessories" data-testid="accessories" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.accessoryEntries
+              {config.accessoryEntries && config.accessoryEntries.length > 0
                 ? config.accessoryEntries.map((e) => (
                     <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
                   ))
@@ -225,14 +237,16 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           )} />
         </FormField>
       </div>
+      )}
 
       {/* Floor */}
+      {hasFloorOptions && (
       <div data-field-error={errors.floor ? 'true' : undefined}>
         <FormField label={labels.floor} error={errors.floor?.message as string}>
           <Controller name="floor" control={control} render={({ field }) => (
             <select name="floor" data-testid="floor" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.floorEntries
+              {config.floorEntries && config.floorEntries.length > 0
                 ? config.floorEntries.map((e) => (
                     <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
                   ))
@@ -244,14 +258,16 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           )} />
         </FormField>
       </div>
+      )}
 
       {/* Build era */}
+      {hasEraOptions && (
       <div data-field-error={errors.buildEra ? 'true' : undefined}>
         <FormField label={labels.buildEra} error={errors.buildEra?.message as string}>
           <Controller name="buildEra" control={control} render={({ field }) => (
             <select name="buildEra" data-testid="buildEra" className={selectClass} {...field}>
               <option value="">—</option>
-              {config.eraEntries
+              {config.eraEntries && config.eraEntries.length > 0
                 ? config.eraEntries.map((e) => (
                     <option key={e.value} value={e.value}>{e.label[locale] ?? e.label['it']}</option>
                   ))
@@ -263,6 +279,7 @@ export const EstimateForm = ({ config, onSubmit }: EstimateFormProps) => {
           )} />
         </FormField>
       </div>
+      )}
 
       {/* Email */}
       <div data-field-error={errors.email ? 'true' : undefined}>
