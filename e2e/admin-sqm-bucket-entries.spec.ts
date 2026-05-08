@@ -17,6 +17,15 @@ async function openEstimationConfig(page: Parameters<typeof test>[1]['page']) {
 }
 
 test.describe('Admin sqm bucket entries', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route(/firestore\.googleapis\.com/, (route) => route.abort())
+    await page.goto('/')
+    await page.evaluate(() => {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('hous4cast:estimationConfig:'))
+        .forEach((k) => localStorage.removeItem(k))
+    })
+  })
   test('sqm bucket prices renders as open list with add/remove/reorder', async ({ page }) => {
     await openEstimationConfig(page)
 

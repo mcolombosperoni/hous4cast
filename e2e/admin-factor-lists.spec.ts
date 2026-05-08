@@ -16,10 +16,22 @@ async function openAdmin(page: Parameters<typeof test>[1]['page']) {
   await page.getByTestId('config-card-gabetti-busto-arsizio').click()
 }
 
+// Shared beforeEach: block Firestore and clear estimation config overrides
+async function cleanupBeforeEach(page: Parameters<typeof test>[1]['page']) {
+  await page.route(/firestore\.googleapis\.com/, (route) => route.abort())
+  await page.goto('/')
+  await page.evaluate(() => {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('hous4cast:estimationConfig:'))
+      .forEach((k) => localStorage.removeItem(k))
+  })
+}
+
 // ---------------------------------------------------------------------------
 // T78: Admin adds a new conditionEntry → appears in estimate form
 // ---------------------------------------------------------------------------
 test.describe('T78 — admin adds new condition entry', () => {
+  test.beforeEach(async ({ page }) => { await cleanupBeforeEach(page) })
   test('new entry appears in estimate form select', async ({ page }) => {
     await openAdmin(page)
 
@@ -50,6 +62,7 @@ test.describe('T78 — admin adds new condition entry', () => {
 // T79: Admin renames a factor label → updated label shown in form
 // ---------------------------------------------------------------------------
 test.describe('T79 — admin renames factor label', () => {
+  test.beforeEach(async ({ page }) => { await cleanupBeforeEach(page) })
   test('renamed label is shown in estimate form', async ({ page }) => {
     await openAdmin(page)
     await page.getByTestId('admin-estimation-config-toggle').click()
@@ -73,6 +86,7 @@ test.describe('T79 — admin renames factor label', () => {
 // T80: Admin removes a factor entry → option absent in form
 // ---------------------------------------------------------------------------
 test.describe('T80 — admin removes a factor entry', () => {
+  test.beforeEach(async ({ page }) => { await cleanupBeforeEach(page) })
   test('removed entry does not appear in estimate form select', async ({ page }) => {
     await openAdmin(page)
     await page.getByTestId('admin-estimation-config-toggle').click()
@@ -94,6 +108,7 @@ test.describe('T80 — admin removes a factor entry', () => {
 // T81: Admin reorders entries → order reflected in form select
 // ---------------------------------------------------------------------------
 test.describe('T81 — admin reorders factor entries', () => {
+  test.beforeEach(async ({ page }) => { await cleanupBeforeEach(page) })
   test('reordered entries shown in new order in estimate form', async ({ page }) => {
     await openAdmin(page)
     await page.getByTestId('admin-estimation-config-toggle').click()
@@ -121,6 +136,7 @@ test.describe('T81 — admin reorders factor entries', () => {
 // T82: Form labels come from config entries, not i18n.ts hardcoded values
 // ---------------------------------------------------------------------------
 test.describe('T82 — form labels sourced from config entries', () => {
+  test.beforeEach(async ({ page }) => { await cleanupBeforeEach(page) })
   test('changing label in admin updates form option text (not from hardcoded i18n)', async ({ page }) => {
     await openAdmin(page)
     await page.getByTestId('admin-estimation-config-toggle').click()
@@ -138,4 +154,3 @@ test.describe('T82 — form labels sourced from config entries', () => {
     await expect(page.locator('select[name="condition"] option[value="buono"]')).toHaveText('BuonoModificato')
   })
 })
-

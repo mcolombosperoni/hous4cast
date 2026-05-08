@@ -69,6 +69,16 @@ test.describe('Branded estimate page (US-10)', () => {
   test('Estimate page applies agency palette as CSS custom properties', async ({ page }) => {
     await loadWithBranding(page, FIXTURE_BRANDING)
 
+    // Wait until the CSS custom property is actually applied (branding loads async)
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector('[data-testid="estimate-brand-wrapper"]') as HTMLElement | null
+        if (!el) return false
+        return getComputedStyle(el).getPropertyValue('--brand-primary').trim() !== ''
+      },
+      { timeout: 8000 },
+    )
+
     const primary = await page.evaluate(() => {
       const el = document.querySelector('[data-testid="estimate-brand-wrapper"]') as HTMLElement | null
       return el ? getComputedStyle(el).getPropertyValue('--brand-primary').trim() : null
@@ -116,7 +126,7 @@ test.describe('Branded estimate page (US-10)', () => {
     await page.selectOption('[data-testid="buildEra"]', '2016_oggi')
     await page.fill('[data-testid="email"]', 'test@example.com')
     await page.fill('[data-testid="phone"]', '333 1234567')
-    await page.check('[data-testid="privacy"]')
+    await page.click('label[for="privacy"]')
     await page.click('button[type="submit"]')
     await expect(page.locator('[data-testid="estimate-result"]')).toBeVisible({ timeout: 8000 })
   })

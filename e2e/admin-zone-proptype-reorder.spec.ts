@@ -12,7 +12,9 @@ async function openEstimationConfig(page: Parameters<typeof test>[1]['page']) {
   await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
   // Clear any stored overrides to start from a clean state
   await page.evaluate(() => {
-    Object.keys(localStorage).filter(k => k.startsWith('estimationConfig')).forEach(k => localStorage.removeItem(k))
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('hous4cast:estimationConfig:'))
+      .forEach(k => localStorage.removeItem(k))
   })
   await page.getByRole('button', { name: /gabetti/i }).click()
   await page.getByTestId('admin-estimation-config-toggle').click()
