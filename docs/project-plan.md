@@ -123,13 +123,22 @@ Key design decisions (to be confirmed):
 
 ## Epic K — Lead capture and agent notification
 
-Goal: after form submission, the seller's contact details (name, email, phone, address) are saved to Firestore and the agent receives a notification email.
+Goal: after form submission, the seller's contact details are saved and the agent receives an immediate notification (email and/or Telegram), without exposing any API key or lead data to the public.
 
-Key design decisions (to be confirmed):
-- Firestore collection `leads`, one doc per submission, fields: configId, timestamp, name, email, phone, address, estimateResult.
-- Email notification via Firebase Callable Function + Resend (or SendGrid) — to be decided in ADR.
-- `name` field added to the estimate form (optional or required — to be decided per config).
-- Submission is fire-and-forget from the client; errors shown as non-blocking toast.
+Key design decisions:
+- **Security model**: Firestore `leads/{configId}/submissions` collection uses **write-only Security Rules** (`allow create: if true; allow read, update, delete: if false`). Lead data is write-only from the public internet — no client can read or list submissions.
+- **Why not client-side email (EmailJS, Brevo, SendGrid, Mailgun directly)?** All require an API key in the JS bundle, which is exposed to anyone who opens DevTools. ❌ Ruled out.
+- **Why not Telegram Bot from client?** Bot token exposed in the bundle — anyone could send spam to the agent's chat. ❌ Ruled out for production (acceptable only for a private/internal demo with no security concerns).
+- **Notification architecture: Firebase Cloud Functions**
+  - A `onDocumentCreated` trigger on `leads/{configId}/submissions/{leadId}` sends the notification server-side. The Blaze (pay-as-you-go) plan is required but the free quota covers thousands of leads at no cost.
+  - API keys stored as Firebase Function secrets (`firebase functions:secrets:set`), never in the client bundle.
+- **Email provider: Resend** — modern, developer-friendly, free tier (3,000 emails/month, 100/day). More than sufficient for a small Italian real estate agency. SendGrid (100/day free) or Brevo (300/day free) are alternatives if Resend is unavailable.
+- **Telegram notification (optional, via Cloud Function)**: the Function can also post to the agent's Telegram chat via Bot API. Bot token stored as a Function secret. Zero cost, instant mobile notification.
+- **Per-agency routing**: `agentEmail` (and optionally `agentTelegramChatId`) added to `AgencyConfig`. The Function resolves the notification target from the configId path — no hardcoding per agency.
+- **Non-blocking submission**: the SPA calls `addDoc()` to Firestore after showing the estimate result. If the write fails, a non-blocking toast is shown; the estimate result remains visible.
+- **`name` field**: added to the estimate form (required or optional, configurable per agency via `AgencyConfig`).
+
+_Last updated: 2026-05-09_
 
 ## Epic L — Multi-agency support
 

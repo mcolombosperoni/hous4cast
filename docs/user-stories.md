@@ -129,13 +129,17 @@ Acceptance criteria:
 
 ### US-11 - Lead capture and agent notification (Epic K)
 As a potential seller, I want my contact details to be saved after I submit the estimate form, so that the agent can follow up with me.
-As an agency agent, I want to receive an email notification for each new lead, so that I can promptly contact interested sellers.
+As an agency agent, I want to receive an immediate notification (email and/or Telegram) for each new lead, so that I can promptly contact interested sellers.
 
 Acceptance criteria:
-- After form submission the lead (name, email, phone, address, estimate result, configId, timestamp) is saved to Firestore collection `leads`.
-- The agent receives an email notification with the lead details.
-- Submission is non-blocking: the estimate result is shown even if the lead save or email fails.
-- The `name` field is added to the estimate form (required or optional, configurable per agency).
+- After form submission the lead (name, email, phone, address, estimate result, configId, timestamp) is saved to Firestore collection `leads/{configId}/submissions`.
+- Firestore Security Rules allow `create` from any client but deny `read`, `list`, `update`, `delete` — data is write-only from the public internet.
+- The agent receives an email notification with the lead details via a Firebase Cloud Function (Resend as email provider; SendGrid or Brevo as alternatives).
+- Optionally, the Cloud Function also sends a Telegram message to the agent's configured chat ID.
+- No API keys (email provider, Telegram bot token) are ever present in the client-side JS bundle — all secrets are stored as Firebase Function secrets.
+- Submission is non-blocking: the estimate result is shown even if the Firestore write or notification fails; a non-blocking error message is shown on failure.
+- The `name` field is added to the estimate form (required or optional, configurable per agency via `AgencyConfig`).
+- `agentEmail` (and optionally `agentTelegramChatId`) are added to `AgencyConfig` to route notifications per agency.
 
 ### US-12 - Multi-agency support (Epic L)
 As a product owner, I want a second fully operational agency config deployed, so that I can demonstrate the multi-tenant model to new clients.
