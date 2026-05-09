@@ -1,142 +1,141 @@
-# hous4cast — Analisi e razionale delle scelte di prodotto
+# hous4cast — Product Rationale and Architectural Decisions
 
-> Documento di supporto alla presentazione al committente.
-> Spiega il contesto competitivo, le alternative valutate e le motivazioni dietro le decisioni chiave del progetto.
-
----
-
-## 1. Il punto di partenza: Gabetti Busto Arsizio su Tally
-
-Il committente utilizzava già una soluzione operativa: un form di valutazione immobiliare costruito su **Tally** (piattaforma SaaS di form builder), accessibile all'URL `tally.so/r/7RW98P`.
-
-Il form Tally includeva:
-
-- Tutti i campi di qualificazione del venditore (metratura, zona, indirizzo, stato interno, piano, anno di costruzione, accessori, email, telefono)
-- Una **pagina di risultato** con la stima min/max calcolata tramite la funzione **Tally Calculations** (disponibile nel piano Pro)
-- Cover image dell'agenzia e colori brandizzati Gabetti (rosso `#982121`)
-- Invio automatico di una email di notifica all'agente ad ogni submission
-
-Tally rendeva tutto questo **accessibile senza competenze di sviluppo**: l'interfaccia drag & drop permette di definire variabili per ogni campo, scrivere formule moltiplicative e mostrare il risultato in una pagina finale, il tutto in pochi pomeriggi.
+> Supporting document for the client presentation.
+> Explains the competitive context, evaluated alternatives, and the reasoning behind the key decisions made throughout the project.
 
 ---
 
-## 2. Perché non continuare con Tally?
+## 1. The starting point: Gabetti Busto Arsizio on Tally
 
-Nonostante la semplicità di Tally, sono emersi limiti strutturali che rendono la soluzione non scalabile per un prodotto serio.
+The client was already running a working solution: a property valuation form built on **Tally** (a SaaS form builder), accessible at `tally.so/r/7RW98P`.
 
-### 2.1 I coefficienti di stima sono pubblici
+The Tally form included:
 
-La limitazione più critica: **le formule di calcolo sono visibili nel sorgente HTML/JS della pagina**. Chiunque apra gli strumenti di sviluppo del browser può leggere i prezzi al metro quadro per zona, i coefficienti per piano, stato, anno di costruzione — i dati commercialmente più sensibili dell'agenzia.
+- All seller qualification fields (floor area, zone, address, internal condition, floor level, construction year, accessories, email, phone)
+- A **result page** showing the min/max estimate calculated via **Tally Calculations** (available on the Pro plan)
+- An agency cover image and Gabetti-branded colours (red `#982121`)
+- Automatic email notification to the agent on every submission
 
-Con hous4cast, tutta la logica di calcolo vive in **Firestore** (database server-side) e nel bundle compilato dell'applicazione. I valori non sono mai esposti in chiaro nel DOM o in form nascosti.
-
-### 2.2 Costo per agenzia
-
-Tally Pro costa circa **€29/mese per workspace**. Ogni agenzia che adotta la soluzione richiede un workspace separato. Con 5 agenzie clienti: €145/mese, circa €1.740/anno — solo per il form builder, senza alcuna personalizzazione.
-
-hous4cast gira su **Firebase free tier** (Spark plan): le funzionalità attuali (form, Firestore, hosting statico su GitHub Pages) hanno costo operativo pari a zero per il numero di agenzie gestibili nella fascia tipica di un'agenzia immobiliare italiana.
-
-### 2.3 Zero white-label nel piano gratuito
-
-Il piano free di Tally mostra il footer "Realizzato con Tally, il modo più semplice per creare moduli" — visibile nella pagina dell'utente finale. Il piano Pro rimuove il branding, ma al costo mensile sopra citato.
-
-hous4cast è completamente white-label per costruzione: nessun logo di terze parti, nessun costo per rimuoverlo.
-
-### 2.4 Multi-agenzia: un form per agenzia, non un prodotto
-
-Con Tally, gestire più agenzie significa gestire più form separati, in workspace separati, con configurazioni duplicate. Non esiste il concetto di "admin centralizzato" che gestisce N clienti da un unico pannello.
-
-hous4cast nasce come piattaforma multi-tenant: un unico pannello admin, N agenzie, ognuna con la propria configurazione indipendente di branding, zone, prezzi e privacy.
-
-### 2.5 Ownership dei dati
-
-I lead compilati su Tally sono salvati sui server di Tally (UE, ma pur sempre un third party). L'agenzia non ha accesso diretto al database. In caso di cancellazione dell'account o modifica dei termini di servizio, i dati storici sono a rischio.
-
-Con hous4cast, ogni lead viene scritto nel **Firestore dell'agenzia** — un database Firebase gestito dall'agenzia stessa, esportabile, integrabile con qualsiasi sistema CRM via API.
+Tally made all of this **accessible without any development skills**: the drag & drop interface lets you define variables for each field, write multiplicative formulas, and display the result on a final page — achievable in a few afternoons.
 
 ---
 
-## 3. Cosa fa hous4cast che Tally non può fare
+## 2. Why not continue with Tally?
 
-| Funzione | Tally | hous4cast |
+Despite its simplicity, Tally has structural limitations that make it unscalable for a serious product.
+
+### 2.1 Estimation coefficients are publicly visible
+
+The most critical limitation: **the calculation formulas are visible in the page's HTML/JS source**. Anyone who opens browser developer tools can read the price per square metre by zone, the coefficients for floor level, condition, and construction year — the agency's most commercially sensitive data.
+
+With hous4cast, all calculation logic lives in **Firestore** (a server-side database) and in the compiled application bundle. Values are never exposed in plain text in the DOM or hidden form fields.
+
+### 2.2 Cost per agency
+
+Tally Pro costs approximately **€29/month per workspace**. Every agency that adopts the solution requires a separate workspace. With 5 client agencies: €145/month, roughly €1,740/year — just for the form builder, with no customisation included.
+
+hous4cast runs on the **Firebase free tier** (Spark plan): the current features (form, Firestore, static hosting on GitHub Pages) have zero operational cost for the typical number of agencies an Italian real estate firm would manage.
+
+### 2.3 No white-label on the free plan
+
+Tally's free plan displays the footer "Made with Tally, the simplest way to create forms" — visible to the end user. The Pro plan removes that branding, but at the monthly cost mentioned above.
+
+hous4cast is completely white-label by construction: no third-party logos, no cost to remove them.
+
+### 2.4 Multi-agency: one form per agency, not a product
+
+With Tally, managing multiple agencies means managing multiple separate forms, in separate workspaces, with duplicated configurations. There is no concept of a "centralised admin" that manages N clients from a single panel.
+
+hous4cast is built as a multi-tenant platform: one admin panel, N agencies, each with its own independent configuration for branding, zones, pricing, and privacy.
+
+### 2.5 Data ownership
+
+Leads submitted through Tally are stored on Tally's servers (EU-based, but still a third party). The agency has no direct database access. If the account is cancelled or the terms of service change, historical data is at risk.
+
+With hous4cast, every lead is written to the **agency's own Firestore** — a Firebase database owned by the agency, exportable, and integrable with any CRM system via API.
+
+---
+
+## 3. What hous4cast does that Tally cannot
+
+| Feature | Tally | hous4cast |
 |---|---|---|
-| Form di valutazione + stima istantanea | ✅ (Pro, ~€29/mese) | ✅ |
-| Branding colori | ✅ limitato | ✅ palette completa, logo, cover image, dark mode |
-| White-label (zero "Powered by…") | ❌ free / ✅ Pro a pagamento | ✅ sempre |
-| Admin self-service per l'agenzia | ❌ richiede account Tally | ✅ pannello dedicato |
-| Modifica prezzi e zone senza sviluppatore | ❌ | ✅ editor in-app |
-| Coefficienti di stima privati (non in chiaro) | ❌ visibili nel sorgente | ✅ su Firestore |
-| Multi-agenzia da un unico pannello | ❌ | ✅ |
-| QR code generato dall'admin con locale preimpostato | ❌ | ✅ |
-| Ownership completa dei lead | ❌ (server Tally) | ✅ (Firestore agenzia) |
-| Notifica agente email/Telegram server-side | ❌ (solo Zapier/webhook Pro) | ✅ (Firebase Cloud Functions) |
-| PDF branded scaricabile dal venditore | ❌ | ✅ (roadmap) |
-| Dashboard lead con filtri ed export CSV | ❌ (export base Pro) | ✅ (roadmap) |
-| Autenticazione admin | ❌ chiunque abbia il link | ✅ Firebase Auth (roadmap) |
-| Costo operativo per agenzia aggiuntiva | ~€29/mese | ~€0 |
+| Valuation form + instant estimate | ✅ (Pro, ~€29/month) | ✅ |
+| Colour branding | ✅ limited | ✅ full palette, logo, cover image, dark mode |
+| White-label (zero "Powered by…") | ❌ free / ✅ Pro at cost | ✅ always |
+| Self-service admin for the agency | ❌ requires Tally account | ✅ dedicated panel |
+| Edit prices and zones without a developer | ❌ | ✅ in-app editor |
+| Private estimation coefficients (not exposed) | ❌ visible in source | ✅ on Firestore |
+| Multi-agency from a single panel | ❌ | ✅ |
+| QR code generated by admin with preset locale | ❌ | ✅ |
+| Full lead data ownership | ❌ (Tally servers) | ✅ (agency Firestore) |
+| Server-side agent notification (email/Telegram) | ❌ (Zapier/webhook Pro only) | ✅ (Firebase Cloud Functions) |
+| Branded downloadable PDF for the seller | ❌ | ✅ (roadmap) |
+| Lead dashboard with filters and CSV export | ❌ (basic export Pro) | ✅ (roadmap) |
+| Admin authentication | ❌ anyone with the link | ✅ Firebase Auth (roadmap) |
+| Operational cost per additional agency | ~€29/month | ~€0 |
 
 ---
 
-## 4. Le scelte tecnologiche e perché
+## 4. Technology choices and rationale
 
 ### 4.1 Vite + React + TypeScript
 
-Stack moderno, ampiamente supportato, con ecosistema maturo. TypeScript strict garantisce che errori di configurazione (es. coefficiente mancante, zona non trovata) vengano intercettati a compile time, non in produzione davanti all'utente finale.
+A modern, widely supported stack with a mature ecosystem. TypeScript strict mode ensures that configuration errors (e.g. missing coefficient, unknown zone) are caught at compile time, not in production in front of the end user.
 
 ### 4.2 GitHub Pages + hash routing
 
-Deployment gratuito, zero infrastruttura da gestire. Il hash routing (`/#/estimate/gabetti-busto-arsizio`) è necessario perché GitHub Pages non supporta il server-side routing delle SPA. La struttura URL è comunque leggibile e condivisibile.
+Free deployment, zero infrastructure to manage. Hash routing (`/#/estimate/gabetti-busto-arsizio`) is required because GitHub Pages does not support server-side routing for SPAs. The URL structure remains readable and shareable.
 
 ### 4.3 Firebase (Firestore + Authentication + Cloud Functions)
 
-Scelto per tre motivi:
+Chosen for three reasons:
 
-1. **Un unico account** per tutto: database (Firestore), autenticazione admin (Authentication), logica server-side per le email (Cloud Functions). Non serve gestire 4-5 tool diversi con credenziali separate.
-2. **Free tier generoso**: le funzionalità attuali e quelle pianificate (lead capture, notifiche) rientrano nel piano Spark gratuito o nel piano Blaze con costi minimi (€0 per <125k scritture/mese, <1M letture/mese).
-3. **Sicurezza server-side**: le Firestore Security Rules permettono di definire in modo dichiarativo chi può leggere/scrivere cosa. I venditori possono solo creare lead (`create: if true`), mai leggerli. Solo admin autenticati possono modificare configurazioni.
+1. **A single account for everything**: database (Firestore), admin authentication (Authentication), server-side email logic (Cloud Functions). No need to manage 4–5 different tools with separate credentials.
+2. **Generous free tier**: current and planned features (lead capture, notifications) fit within the free Spark plan or the Blaze plan at minimal cost (€0 for <125k writes/month, <1M reads/month).
+3. **Server-side security**: Firestore Security Rules allow declarative control over who can read and write what. Sellers can only create leads (`create: if true`), never read them. Only authenticated admins can modify configurations.
 
-### 4.4 Cloudinary per le immagini
+### 4.4 Cloudinary for images
 
-Le immagini (logo, cover) vengono caricate su Cloudinary (piano free: 25 crediti/mese, ~25k trasformazioni) anziché su Firebase Storage. Vantaggio principale: trasformazione automatica delle immagini (resize, compressione, WebP) tramite URL parametrico — nessun codice di resize lato server.
+Images (logo, cover) are uploaded to Cloudinary (free plan: 25 credits/month, ~25k transformations) rather than Firebase Storage. Key advantage: automatic image transformation (resize, compression, WebP) via parametric URL — no server-side resize code needed.
 
-### 4.5 Config-driven con override su Firestore
+### 4.5 Config-driven architecture with Firestore overrides
 
-L'architettura separa la **configurazione base** (file TypeScript nel repository, versionate con il codice) dagli **override runtime** (Firestore, modificabili dall'admin senza deployment).
+The architecture separates the **base configuration** (TypeScript files in the repository, versioned with the code) from **runtime overrides** (Firestore, editable by the admin without any deployment).
 
-Questo garantisce:
-- **Fallback robusto**: se Firestore non è disponibile, l'app usa `localStorage`; se anche quello è vuoto, usa la config statica. L'agenzia non va mai offline per un problema di connettività.
-- **Zero downtime per modifiche**: l'agente cambia un prezzo al metro quadro e viene riflesso immediatamente al prossimo caricamento della pagina, senza toccare il codice.
-- **Tracciabilità**: la config base è in git — c'è sempre uno storico delle configurazioni originali.
+This guarantees:
+- **Robust fallback**: if Firestore is unavailable, the app falls back to `localStorage`; if that is also empty, it uses the static config. The agency never goes offline due to a connectivity issue.
+- **Zero-downtime changes**: the agent updates a price per square metre and it is reflected immediately on the next page load, without touching the code.
+- **Traceability**: the base config is in git — there is always a history of the original configurations.
 
 ---
 
-## 5. Cosa rimane da costruire (roadmap)
+## 5. What remains to be built (roadmap)
 
-Le funzionalità già pianificate e in backlog sono:
+The features already planned and in the backlog are:
 
-| Epic | Funzione | Priorità |
+| Epic | Feature | Priority |
 |---|---|---|
-| **U** | Autenticazione admin con Firebase Auth | Alta — da fare prima del go-live |
-| **T** | Cookie consent e compliance GDPR | Alta — necessaria per legge |
-| **K** | Salvataggio lead + notifica email/Telegram agente | Alta — core value |
-| **N** | Dashboard lead nell'admin (filtri, export CSV) | Media |
-| **M** | Export PDF branded con la stima | Media |
+| **U** | Admin authentication with Firebase Auth | High — needed before go-live |
+| **T** | Cookie consent and GDPR compliance | High — legally required |
+| **K** | Lead capture + agent email/Telegram notification | High — core value |
+| **N** | Lead dashboard in admin (filters, CSV export) | Medium |
+| **M** | Branded PDF export with the estimate | Medium |
 
 ---
 
-## 6. Sintesi del valore per il committente
+## 6. Summary of value for the client
 
-hous4cast non è un "form builder migliore di Tally". È una **piattaforma verticale per la lead generation immobiliare** con queste caratteristiche distintive:
+hous4cast is not "a better form builder than Tally". It is a **vertical lead generation platform for real estate** with these distinctive characteristics:
 
-- **Completamente white-label**: l'esperienza del venditore rispecchia al 100% l'identità dell'agenzia
-- **Self-service per l'agente**: nessuna dipendenza da uno sviluppatore per modificare prezzi, zone o testi
-- **Dati proprietari**: i lead appartengono all'agenzia, non a un SaaS terzo
-- **Scalabile a zero costo marginale**: la seconda, quinta, decima agenzia non costa nulla in più di infrastruttura
-- **Sicuro by design**: i coefficienti commerciali non sono mai esposti pubblicamente; l'accesso admin è protetto da autenticazione
+- **Fully white-label**: the seller's experience reflects 100% of the agency's identity
+- **Self-service for the agent**: no dependency on a developer to update prices, zones, or copy
+- **Proprietary data**: leads belong to the agency, not to a third-party SaaS
+- **Scalable at zero marginal cost**: the second, fifth, or tenth agency adds no additional infrastructure cost
+- **Secure by design**: commercial coefficients are never publicly exposed; admin access is protected by authentication
 
-La soluzione Tally esistente dimostrava che il mercato (anche il singolo agente Gabetti) ha già validato il bisogno. hous4cast costruisce sulla stessa necessità con una qualità, flessibilità e ownership che un SaaS generico non può offrire.
+The existing Tally solution proved that the market (even a single Gabetti agent) had already validated the need. hous4cast builds on that same need with a level of quality, flexibility, and data ownership that a generic SaaS cannot offer.
 
 ---
 
-_Documento generato il 09/05/2026 — versione 1.0_
-
+_Document generated on 09/05/2026 — version 1.0_
