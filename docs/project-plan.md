@@ -231,8 +231,12 @@ _Last updated: 2026-05-08_
 
 Goal: the estimate page (and any other public page) shows a GDPR-compliant cookie/privacy consent banner on first visit. The user can accept or decline. Consent is persisted in `localStorage`. No analytics or tracking scripts are loaded before explicit consent. Each agency can configure a link to its own privacy policy.
 
-Key design decisions (to be confirmed in ADR):
-- Minimal cookie banner rendered at the bottom of the page on first visit (or when consent is not yet recorded in `localStorage`).
+Key design decisions:
+- **Implementation approach: custom banner** (no third-party CMP service).
+  - The app currently has zero cookie-based tracking (Firebase uses IndexedDB/localStorage, not cookies). A full CMP like Cookiebot, Usercentrics, or CookieYes would be overkill and would add an external script dependency, a potential SPOF, and third-party branding on the free tier.
+  - When Epic K (lead capture) is implemented and tracking is introduced, this decision should be revisited — tools like **iubenda** (Italian-focused, generates agency privacy policy, ~€27/year) or **CookieYes** (free tier, IAB TCF 2.2 compliant, auto cookie scan) become more relevant.
+  - Decision record to be created as ADR-0016 before implementation.
+- Minimal cookie banner rendered at the bottom of the public estimate page on first visit (or when consent is absent from `localStorage`).
 - Two actions: "Accetta" / "Rifiuta" (localized IT/EN via `i18n`).
 - Consent status stored in `localStorage` under `hous4cast:cookieConsent` (`'accepted'` | `'declined'` | absent).
 - No third-party scripts (Firebase Analytics, etc.) are initialized before `'accepted'`.

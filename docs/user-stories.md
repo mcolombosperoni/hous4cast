@@ -239,7 +239,9 @@ Acceptance criteria:
 - The banner is not shown again on subsequent visits if a consent value is already stored.
 - No analytics or third-party tracking scripts are loaded before consent is `'accepted'`.
 - The banner is not shown on admin routes (`/#/admin*`).
-- The banner is fully keyboard-accessible and screen-reader friendly. — addendum to Epic S)
+- The banner is fully keyboard-accessible and screen-reader friendly.
+
+### US-19-imp - Admin UX improvements (Epic S+ — addendum to Epic S)
 As an agency admin, I want the admin estimation config editor to be fully locale-aware, show contextual explanations for every field, allow me to delete agencies I no longer need, and present all configuration sections (including open-list factor entries) immediately when creating a new agency.
 
 Acceptance criteria:
