@@ -245,6 +245,31 @@ Acceptance criteria:
 - The banner is not shown on admin routes (`/#/admin*`).
 - The banner is fully keyboard-accessible and screen-reader friendly.
 
+### US-21 - Admin authentication with Firebase Auth (Epic U)
+As an agency admin, I want to log in to the admin panel with my email and password (or Google account), so that the admin area is protected from unauthorised access.
+
+Acceptance criteria:
+- The `/admin` route and all its sub-routes (`/admin/*`) are protected: an unauthenticated user is redirected to a `/admin/login` page.
+- The login page contains an email+password form and a "Sign in with Google" button.
+- A logged-in user's session persists across page reloads (Firebase `browserLocalPersistence`).
+- A "Sign out" button is always visible at the top of the admin panel for a logged-in user.
+- Firebase Authentication errors (wrong password, user not found, etc.) are shown inline and localised (IT/EN).
+- No Firebase Auth SDK calls are made on public estimate pages (`/estimate/*`); authentication is strictly an admin concern.
+- Firestore Security Rules for `branding/*`, `estimationConfig/*`, and `agencies/*` are updated to require `request.auth != null` for `write` operations; public `read` remains open.
+- The Firestore `leads/{configId}/submissions` collection retains its write-open, read-closed rule (unchanged from Epic K).
+- All secrets (Firebase config) stay in `.env` / Vite env vars; no new secrets are added to the client bundle.
+- E2E tests cover: unauthenticated redirect to login, successful login with email+password, logout, protected route guard.
+- Unit/component tests cover: `AuthGuard` redirect logic, login form validation, error display.
+
+_Notes for implementation:_
+- Enable **Email/Password** and optionally **Google** provider in Firebase Console → Authentication.
+- New component `AuthGuard` wraps all `/admin` routes; reads `onAuthStateChanged` via a `useAuth` hook.
+- New page `AdminLoginPage` with `signInWithEmailAndPassword` and `signInWithPopup(GoogleAuthProvider)`.
+- `useAuth` hook (in `src/app/hooks/useAuth.ts`) exposes `{ user, loading }` from `onAuthStateChanged`.
+- `AppRouter` wraps `<Route path="/admin/*">` inside `<AuthGuard>`.
+- Firestore Security Rules update: `allow write: if request.auth != null` for admin-only collections.
+- No server or backend change is needed — Firebase handles token validation.
+
 ### US-19-imp - Admin UX improvements (Epic S+ — addendum to Epic S)
 As an agency admin, I want the admin estimation config editor to be fully locale-aware, show contextual explanations for every field, allow me to delete agencies I no longer need, and present all configuration sections (including open-list factor entries) immediately when creating a new agency.
 

@@ -25,6 +25,7 @@ This document outlines the high-level plan for the development of the hous4cast 
   - Epic S: Dynamic agency creation in admin ✅
   - Epic S+: Admin UX improvements — delete agency, full default template, locale-aware editor with calc hints, type system cleanup, engine graceful fallback, a11y nested-button fix ✅
 - Epic T: Cookie consent and GDPR compliance _(planned)_
+- Epic U: Admin authentication with Firebase Auth _(planned)_
 
 ## Epic A — Foundation and CI/CD guardrails
 
@@ -256,7 +257,25 @@ Key design decisions:
 
 _Last updated: 2026-05-09_
 
-## Delivery Workflow
+## Epic U — Admin authentication with Firebase Auth
+
+Goal: protect the admin panel with Firebase Authentication (email+password and/or Google Sign-In), so that only authorised users can access branding, estimation config, and agency management features. Firestore Security Rules are updated to enforce server-side auth for all write operations on admin-managed collections.
+
+Key design decisions:
+- **Firebase Authentication** (Email/Password + Google) on the free Spark plan — no cost for the anticipated number of admin accounts.
+- **Client-side route guard only** (`AuthGuard` component + `onAuthStateChanged`) — sufficient for this use case. The real security boundary is Firestore Security Rules (`allow write: if request.auth != null`), which are enforced server-side regardless of client behaviour.
+- **No separate backend** — Firebase handles token issuance and validation; the SPA calls Firebase Auth SDK directly.
+- **Session persistence**: `browserLocalPersistence` so the admin stays logged in across page reloads.
+- **Scope**: authentication applies only to `/admin/*` routes; public estimate pages (`/estimate/*`) are unaffected and make no Auth SDK calls.
+- **Lead writes remain public**: `leads/{configId}/submissions` keeps `allow create: if true` (sellers must submit without an account); the rule for `read/update/delete` remains `if false`.
+- **Provider choice**: Email/Password is the minimum; Google Sign-In is a zero-cost convenience addition. Phone/SMS and enterprise SSO (SAML/OIDC) are out of scope for MVP (require Blaze plan or are unnecessary).
+- Implementation: `useAuth` hook → `AuthGuard` component → `AdminLoginPage`; `AppRouter` wraps all admin routes in `AuthGuard`.
+
+_Last updated: 2026-05-09_
+
+---
+
+_Last updated: 2026-05-09_
 - All features are developed outside-in: acceptance tests first, then unit/component tests.
 - Each increment is delivered as a complete, tested slice.
 - Push only at increment completion, then wait for explicit approval before continuing.
