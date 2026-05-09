@@ -102,6 +102,7 @@
 | K | US-11 | Lead capture and agent notification — save leads to Firestore, email the agent |
 | M | US-13 | Estimate PDF export — branded downloadable PDF from result page |
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
+| T | US-20 | Cookie consent and GDPR compliance — banner on first visit, per-agency privacy policy link |
 
 > **Epic L (Multi-agency support) superseded by Epic S.** The original goal (a second static agency config) is fully covered by the dynamic agency creation feature: admins can create unlimited agencies from the admin panel without any deployment.
 

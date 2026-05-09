@@ -24,6 +24,7 @@ This document outlines the high-level plan for the development of the hous4cast 
 - Epic R: Zone and property type reorder/remove in admin ✅
   - Epic S: Dynamic agency creation in admin ✅
   - Epic S+: Admin UX improvements — delete agency, full default template, locale-aware editor with calc hints, type system cleanup, engine graceful fallback, a11y nested-button fix ✅
+- Epic T: Cookie consent and GDPR compliance _(planned)_
 
 ## Epic A — Foundation and CI/CD guardrails
 
@@ -225,6 +226,21 @@ Key design decisions:
 - Firebase `setDoc` sync-throw bug fixed: wrapped in `try/catch` in both `estimationConfigApi` and `agencyApi` to prevent uncaught synchronous errors from invalid field values (e.g. `undefined`).
 
 _Last updated: 2026-05-08_
+
+## Epic T — Cookie consent and GDPR compliance
+
+Goal: the estimate page (and any other public page) shows a GDPR-compliant cookie/privacy consent banner on first visit. The user can accept or decline. Consent is persisted in `localStorage`. No analytics or tracking scripts are loaded before explicit consent. Each agency can configure a link to its own privacy policy.
+
+Key design decisions (to be confirmed in ADR):
+- Minimal cookie banner rendered at the bottom of the page on first visit (or when consent is not yet recorded in `localStorage`).
+- Two actions: "Accetta" / "Rifiuta" (localized IT/EN via `i18n`).
+- Consent status stored in `localStorage` under `hous4cast:cookieConsent` (`'accepted'` | `'declined'` | absent).
+- No third-party scripts (Firebase Analytics, etc.) are initialized before `'accepted'`.
+- Privacy policy link is per-agency and already configurable via `AgencyConfig.privacy.link`; the banner links to it when present.
+- Banner is not shown on admin routes (`/#/admin*`) — admins are not end-users.
+- On decline: session continues normally (the app is cookie-free by default); banner is not shown again until `localStorage` is cleared.
+
+_Last updated: 2026-05-09_
 
 ## Delivery Workflow
 - All features are developed outside-in: acceptance tests first, then unit/component tests.

@@ -228,7 +228,18 @@ Acceptance criteria:
 - The new agency's estimate page is immediately accessible at `/#/estimate/:configId`.
 - All acceptance, unit and component tests cover the full lifecycle.
 
-### US-19-imp - Admin UX improvements (Epic S+ — addendum to Epic S)
+### US-20 - Cookie consent and GDPR compliance (Epic T)
+As a seller landing on an agency estimate page, I want to be informed about cookie and privacy policy usage before any data is collected, so that my consent is explicit and legally compliant.
+
+Acceptance criteria:
+- On first visit to any public estimate page, a cookie consent banner is shown at the bottom of the screen.
+- The banner contains: a short privacy notice (localized IT/EN), a link to the agency privacy policy (from `AgencyConfig.privacy.link` when present), an "Accept" button, and a "Decline" button.
+- Clicking "Accept" stores `'accepted'` in `localStorage` under `hous4cast:cookieConsent` and hides the banner.
+- Clicking "Decline" stores `'declined'` and hides the banner. The session continues normally.
+- The banner is not shown again on subsequent visits if a consent value is already stored.
+- No analytics or third-party tracking scripts are loaded before consent is `'accepted'`.
+- The banner is not shown on admin routes (`/#/admin*`).
+- The banner is fully keyboard-accessible and screen-reader friendly. — addendum to Epic S)
 As an agency admin, I want the admin estimation config editor to be fully locale-aware, show contextual explanations for every field, allow me to delete agencies I no longer need, and present all configuration sections (including open-list factor entries) immediately when creating a new agency.
 
 Acceptance criteria:
