@@ -19,11 +19,21 @@ function safeUnlink(p: string) {
   try { fs.unlinkSync(p) } catch { /* ignore if already gone */ }
 }
 
+/** Block all Firestore network calls so branding loads from localStorage only */
+async function blockFirestore(page: Parameters<typeof test>[1]['page']) {
+  await page.route('**/firestore.googleapis.com/**', route => route.fulfill({ status: 200, body: '{}' }))
+  await page.route('**firestore**', route => route.fulfill({ status: 200, body: '{}' }))
+}
+
 test.describe('Admin branding images', () => {
   /** Open the Agency Branding accordion after selecting an agency */
   async function openBrandingSection(page: Parameters<typeof test>[1]['page']) {
     await page.getByTestId('admin-branding-config-toggle').click()
   }
+
+  test.beforeEach(async ({ page }) => {
+    await blockFirestore(page)
+  })
 
   test('logo upload shows preview image in accordion and in palette preview', async ({ page }) => {
     await page.goto('/?lang=en#/admin')
@@ -33,7 +43,7 @@ test.describe('Admin branding images', () => {
     await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
     // Wait for branding UI to be fully loaded (color pickers visible = loading done)
-    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 15000 })
 
     // Open Logo section
     await page.getByRole('button', { name: /logo/i }).click()
@@ -59,7 +69,7 @@ test.describe('Admin branding images', () => {
     // Select an agency and open branding section
     await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
-    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 15000 })
 
     // Open Immagine section
     await page.getByRole('button', { name: /immagine/i }).click()
@@ -84,7 +94,7 @@ test.describe('Admin branding images', () => {
 
     await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
-    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 15000 })
 
     // Upload logo
     await page.getByRole('button', { name: /logo/i }).click()

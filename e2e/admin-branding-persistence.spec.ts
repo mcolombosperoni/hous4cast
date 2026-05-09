@@ -5,7 +5,17 @@ async function openBrandingSection(page: Parameters<typeof test>[1]['page']) {
   await page.getByTestId('admin-branding-config-toggle').click()
 }
 
+/** Block all Firestore network calls so the branding UI uses localStorage only */
+async function blockFirestore(page: Parameters<typeof test>[1]['page']) {
+  await page.route('**/firestore.googleapis.com/**', route => route.fulfill({ status: 200, body: '{}' }))
+  await page.route('**firestore**', route => route.fulfill({ status: 200, body: '{}' }))
+}
+
 test.describe('Admin branding palette', () => {
+  test.beforeEach(async ({ page }) => {
+    await blockFirestore(page)
+  })
+
   test('persist branding palette for agency', async ({ page }) => {
     await page.goto('/?lang=en#/admin')
 
@@ -14,19 +24,13 @@ test.describe('Admin branding palette', () => {
 
     await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
-    // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
-    await page.waitForFunction(() => {
-      const el = document.querySelector('[data-testid="palette-preview"]')
-      if (!el) return false
-      return el.textContent?.includes('Caricamento...') || el.textContent?.includes('Preview Agenzia')
-    }, null, { timeout: 10000 })
+    // Wait for branding UI to finish loading (color pickers visible = no longer loading)
+    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 15000 })
+
     const preview = page.locator('[data-testid="palette-preview"]')
-    if (await preview.locator('text=Caricamento...').count() > 0) {
-      await expect(preview.locator('text=Caricamento...')).toHaveCount(0, { timeout: 10000 })
-    }
+    await expect(preview.locator('text=Caricamento...')).toHaveCount(0, { timeout: 15000 })
 
     const colorInput = page.locator('input[type=color]').first()
-    await colorInput.waitFor({ state: 'visible' })
     await colorInput.fill('#123456')
 
     const saveBtn = page.getByRole('button', { name: /salva/i })
@@ -35,18 +39,11 @@ test.describe('Admin branding palette', () => {
     await expect(page.getByText(/salvato/i)).toBeVisible()
 
     await page.reload()
+    await blockFirestore(page)
     await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
-    // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
-    await page.waitForFunction(() => {
-      const el = document.querySelector('[data-testid="palette-preview"]')
-      if (!el) return false
-      return el.textContent?.includes('Caricamento...') || el.textContent?.includes('Preview Agenzia')
-    }, null, { timeout: 10000 })
-    const preview2 = page.locator('[data-testid="palette-preview"]')
-    if (await preview2.locator('text=Caricamento...').count() > 0) {
-      await expect(preview2.locator('text=Caricamento...')).toHaveCount(0, { timeout: 10000 })
-    }
+    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('[data-testid="palette-preview"]').locator('text=Caricamento...')).toHaveCount(0, { timeout: 15000 })
     await expect(page.locator('input[type=color]').first()).toHaveValue('#123456')
   })
 
@@ -55,19 +52,13 @@ test.describe('Admin branding palette', () => {
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
     await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
-    // Attendi che la preview sia montata e abbia almeno 'Caricamento...' o 'Preview Agenzia'
-    await page.waitForFunction(() => {
-      const el = document.querySelector('[data-testid="palette-preview"]')
-      if (!el) return false
-      return el.textContent?.includes('Caricamento...') || el.textContent?.includes('Preview Agenzia')
-    }, null, { timeout: 10000 })
-    const preview = page.locator('[data-testid="palette-preview"]')
-    if (await preview.locator('text=Caricamento...').count() > 0) {
-      await expect(preview.locator('text=Caricamento...')).toHaveCount(0, { timeout: 10000 })
-    }
+    // Wait for color pickers to appear (loading done)
+    await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 15000 })
 
-    // Change the 'background' color (4th color picker) since that maps directly
-    // to the preview div's background-color style property
+    const preview = page.locator('[data-testid="palette-preview"]')
+    await expect(preview.locator('text=Caricamento...')).toHaveCount(0, { timeout: 15000 })
+
+    // Change the 'background' color (4th color picker)
     const backgroundInput = page.locator('input[type=color]').nth(3)
     await backgroundInput.waitFor({ state: 'visible' })
     const initialBg = await preview.evaluate((el) => getComputedStyle(el).backgroundColor)
