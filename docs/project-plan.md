@@ -26,6 +26,7 @@ This document outlines the high-level plan for the development of the hous4cast 
   - Epic S+: Admin UX improvements — delete agency, full default template, locale-aware editor with calc hints, type system cleanup, engine graceful fallback, a11y nested-button fix ✅
 - Epic T: Cookie consent and GDPR compliance _(planned)_
 - Epic U: Admin authentication with Firebase Auth _(planned)_
+- Epic V: GDPR right to erasure and per-agency Privacy Policy page _(planned)_
 
 ## Epic A — Foundation and CI/CD guardrails
 
@@ -273,9 +274,21 @@ Key design decisions:
 
 _Last updated: 2026-05-09_
 
----
+## Epic V — GDPR Right to Erasure (Art. 17)
+
+Goal: every agency estimate page exposes a footer link to a full, per-agency Privacy Policy page, configurable from the admin panel in IT and EN. The Privacy Policy page includes a mailto-based data erasure request mechanism pre-filled with the correct agency contact, satisfying GDPR Art. 17 without requiring a Cloud Function or server-side infrastructure. Admins can configure full policy text and an optional dedicated erasure email from the estimation config editor.
+
+Key design decisions:
+- **Erasure mechanism: mailto link** — no Cloud Function, no new Firestore collection; GDPR-compliant for small agencies processing requests manually within 30 days. Automated erasure request (written to Firestore) deferred to a future story once Epic K Cloud Functions are operational.
+- **New config fields**: `privacy.fullText: Record<SupportedLocale, string>` and `privacy.erasureEmail?: string` added to `AgencyConfig` and `EstimationConfigOverride`; both optional and backward-compatible.
+- **Footer link resolution**: external (`privacy.link`) takes precedence over the internal `/#/privacy/:configId` page — consistent with the cookie consent banner (Epic T).
+- **Public route** `/#/privacy/:configId` — no auth guard, branded with agency palette, locale-aware.
 
 _Last updated: 2026-05-09_
+
+---
+
+## Delivery Workflow
 - All features are developed outside-in: acceptance tests first, then unit/component tests.
 - Each increment is delivered as a complete, tested slice.
 - Push only at increment completion, then wait for explicit approval before continuing.

@@ -270,6 +270,62 @@ _Notes for implementation:_
 - Firestore Security Rules update: `allow write: if request.auth != null` for admin-only collections.
 - No server or backend change is needed — Firebase handles token validation.
 
+### US-22 - GDPR right to erasure and per-agency Privacy Policy page (Epic V)
+As a potential seller who has submitted my personal data via a hous4cast estimate form, I want to read the agency's full privacy policy and easily send a data erasure request, so that I can exercise my right to be forgotten under GDPR Art. 17.
+
+Acceptance criteria:
+
+**AC-1 — Privacy Policy page**
+- A public route `/#/privacy/:configId` renders a full privacy policy page, branded with the agency palette (logo, colours) loaded from Firestore/localStorage (same mechanism as EstimatePage).
+- The page displays the full privacy policy text in the currently active locale (IT or EN), loaded from `AgencyConfig.privacy.fullText`.
+- If no `privacy.fullText` is configured, the page shows a default placeholder text (IT/EN, localised) that satisfies minimum GDPR disclosure requirements (data controller, purposes, retention period, rights).
+- The locale switcher (IT/EN) is present and functional on the page.
+
+**AC-2 — Footer link on EstimatePage**
+- The estimate page (`/estimate/:configId`) renders a minimal footer containing a "Privacy Policy" link (label localised IT/EN).
+- If `AgencyConfig.privacy.link` is set, the footer link opens that external URL in a new tab.
+- Otherwise the footer link navigates to `/#/privacy/:configId`.
+- The footer is visible on all states of the estimate page (before and after form submission).
+
+**AC-3 — Erasure request via mailto**
+- The Privacy Policy page displays a clearly labelled "Request data erasure" section (localised IT/EN).
+- The section shows a `mailto:` link (button styled) pre-filled with:
+  - **To:** `AgencyConfig.privacy.erasureEmail ?? AgencyConfig.agentEmail`
+  - **Subject:** `[Privacy] Data erasure request – {agencyName}` (localised IT/EN)
+  - **Body:** a short GDPR Art. 17 template (localised IT/EN)
+- If neither `erasureEmail` nor `agentEmail` is configured, the erasure section is hidden and a fallback message invites the user to contact the agency directly.
+
+**AC-4 — New config fields**
+- `privacy.fullText: Record<SupportedLocale, string>` — full privacy policy text (IT/EN), admin-editable.
+- `privacy.erasureEmail?: string` — optional dedicated erasure contact email; falls back to `agentEmail` if absent.
+- Both fields are optional and backward-compatible; existing configs are unaffected.
+
+**AC-5 — Admin editor**
+- The estimation config editor gains a "Privacy Policy" section with:
+  - Textarea for `privacy.fullText.it` and `privacy.fullText.en`.
+  - Text input for `privacy.erasureEmail`.
+  - Existing `privacy.link` inputs remain unchanged immediately above.
+- All fields are saved to Firestore and localStorage as part of the existing `estimationConfig` override.
+
+**AC-6 — Routing**
+- `AppRouter` registers `/#/privacy/:configId` as a public route (no `AuthGuard`).
+- Unknown `configId` shows the same "Config not found" error as EstimatePage.
+
+**AC-7 — Localisation**
+- All new UI strings (page title, section headers, erasure copy, mailto subject/body template, fallback placeholder, footer link label) are added to the `i18n` module for IT and EN.
+
+**AC-8 — Tests**
+- Unit/component: `PrivacyPolicyPage` renders full text, mailto link with correct href, fallback when `agentEmail` absent, placeholder when `fullText` absent.
+- Component: `EstimatePage` footer renders correct link (internal vs. external) depending on `privacy.link`.
+- Admin component: Privacy section saves `privacy.fullText` and `privacy.erasureEmail` correctly.
+- E2e (Playwright): estimate page → click footer Privacy link → land on `#/privacy/:configId` → mailto link has correct `href`.
+
+_Notes for implementation:_
+- **Erasure mechanism: mailto link** — no Cloud Function, no new Firestore collection; GDPR-compliant for small agencies processing requests manually within 30 days.
+- `PrivacyPolicyPage` loads config via `getConfigWithOverrides(configId)` and applies branding via the existing `useBranding` hook.
+- Footer link resolution: `privacy.link` (external) takes precedence over internal `/#/privacy/:configId` — consistent with cookie consent banner (Epic T).
+- If Epic K Cloud Functions are later operational, a future story can upgrade to an automated erasure request written to Firestore.
+
 ### US-19-imp - Admin UX improvements (Epic S+ — addendum to Epic S)
 As an agency admin, I want the admin estimation config editor to be fully locale-aware, show contextual explanations for every field, allow me to delete agencies I no longer need, and present all configuration sections (including open-list factor entries) immediately when creating a new agency.
 

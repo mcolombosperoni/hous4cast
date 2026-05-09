@@ -104,6 +104,7 @@
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
 | T | US-20 | Cookie consent and GDPR compliance — banner on first visit, per-agency privacy policy link |
 | U | US-21 | Admin authentication with Firebase Auth — email+password and Google Sign-In, AuthGuard, Firestore Security Rules |
+| V | US-22 | GDPR right to erasure — Privacy Policy page per agency, footer link, mailto erasure request, admin-configurable full text IT/EN |
 
 > **Epic L (Multi-agency support) superseded by Epic S.** The original goal (a second static agency config) is fully covered by the dynamic agency creation feature: admins can create unlimited agencies from the admin panel without any deployment.
 
