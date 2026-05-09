@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test'
 async function openEstimationConfig(page: Parameters<typeof test>[1]['page']) {
   await page.goto('/?lang=en#/admin')
   await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
-  await page.getByRole('button', { name: /gabetti/i }).click()
+  await page.getByTestId('config-card-gabetti-busto-arsizio').click()
   await page.getByTestId('admin-estimation-config-toggle').click()
   // Wait for the estimation config section content to load
   await expect(page.getByTestId('sqm-bucket-entries-list')).toBeVisible({ timeout: 10000 })

@@ -7,7 +7,7 @@ import { test, expect, Page } from '@playwright/test'
 /** Open admin, select Gabetti, open the Estimation Config accordion. */
 async function openEstimationConfig(page: Page) {
   await page.goto('/#/admin')
-  await page.click('button:has-text("Gabetti Busto Arsizio")')
+  await page.getByTestId('config-card-gabetti-busto-arsizio').click()
   await expect(page.getByTestId('estimation-config-section')).toBeVisible()
   await page.click('[data-testid="admin-estimation-config-toggle"]')
   // Wait for async load to complete
@@ -39,7 +39,7 @@ test.describe.serial('Admin estimation config editor (US-09)', () => {
   test('Estimation Config section appears after selecting an agency', async ({ page }) => {
     await page.goto('/#/admin')
     await expect(page.getByTestId('estimation-config-section')).not.toBeVisible()
-    await page.click('button:has-text("Gabetti Busto Arsizio")')
+    await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await expect(page.getByTestId('estimation-config-section')).toBeVisible()
     // Toggle opens the editor
     await page.click('[data-testid="admin-estimation-config-toggle"]')

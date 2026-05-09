@@ -16,7 +16,7 @@ async function openEstimationConfig(page: Parameters<typeof test>[1]['page']) {
       .filter(k => k.startsWith('hous4cast:estimationConfig:'))
       .forEach(k => localStorage.removeItem(k))
   })
-  await page.getByRole('button', { name: /gabetti/i }).click()
+  await page.getByTestId('config-card-gabetti-busto-arsizio').click()
   await page.getByTestId('admin-estimation-config-toggle').click()
   // Wait for estimation config loaded
   await expect(page.getByTestId('estimation-config-loaded')).toBeVisible({ timeout: 10000 })
@@ -128,7 +128,7 @@ test.describe('Admin property type IT/EN labels', () => {
     // Reload admin and check the value persisted
     await page.reload()
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
-    await page.getByRole('button', { name: /gabetti/i }).click()
+    await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await page.getByTestId('admin-estimation-config-toggle').click()
     await expect(page.getByTestId('estimation-config-loaded')).toBeVisible({ timeout: 10000 })
     const savedValue = await page.getByTestId('property-type-label-it-0').inputValue()

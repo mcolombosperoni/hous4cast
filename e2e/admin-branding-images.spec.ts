@@ -30,7 +30,7 @@ test.describe('Admin branding images', () => {
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
 
     // Select an agency and open branding section
-    await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
+    await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
     // Wait for branding UI to be fully loaded (color pickers visible = loading done)
     await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
@@ -57,7 +57,7 @@ test.describe('Admin branding images', () => {
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
 
     // Select an agency and open branding section
-    await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
+    await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
     await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
 
@@ -82,7 +82,7 @@ test.describe('Admin branding images', () => {
     await page.goto('/?lang=en#/admin')
     await expect(page.getByRole('heading', { name: /admin/i })).toBeVisible({ timeout: 10000 })
 
-    await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
+    await page.getByTestId('config-card-gabetti-busto-arsizio').click()
     await openBrandingSection(page)
     await expect(page.locator('input[type=color]').first()).toBeVisible({ timeout: 10000 })
 

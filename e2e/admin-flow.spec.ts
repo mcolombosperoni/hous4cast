@@ -28,7 +28,7 @@ test('admin flow supports config selection and preview link with dl', async ({ p
   await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
   await expect(page.getByText('Selected configuration')).toHaveCount(0)
 
-  const gabettiCard = page.getByRole('button', { name: /gabetti busto arsizio/i })
+  const gabettiCard = page.getByTestId('config-card-gabetti-busto-arsizio')
   await gabettiCard.click()
 
   await expect(page.getByText('Selected configuration')).toBeVisible()
@@ -67,7 +67,7 @@ test('admin print qr link opens printable page for selected config', async ({ pa
 
   await page.goto('/?lang=en#/admin')
 
-  await page.getByRole('button', { name: /gabetti busto arsizio/i }).click()
+  await page.getByTestId('config-card-gabetti-busto-arsizio').click()
 
   const popupPromise = context.waitForEvent('page')
   await page.getByRole('link', { name: 'Print QR' }).click()

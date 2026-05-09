@@ -7,7 +7,7 @@ import { test, expect, Page } from '@playwright/test'
 /** Open admin, select Gabetti, open the Estimation Config accordion. */
 async function openEstimationConfig(page: Page) {
   await page.goto('/#/admin')
-  await page.click('button:has-text("Gabetti Busto Arsizio")')
+  await page.getByTestId('config-card-gabetti-busto-arsizio').click()
   await expect(page.getByTestId('estimation-config-section')).toBeVisible()
   await page.click('[data-testid="admin-estimation-config-toggle"]')
   await page.waitForSelector('[data-testid="estimation-config-loaded"]', { timeout: 8000 })
