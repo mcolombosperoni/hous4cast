@@ -234,6 +234,7 @@ Goal: the estimate page (and any other public page) shows a GDPR-compliant cooki
 Key design decisions:
 - **Implementation approach: custom banner** (no third-party CMP service).
   - The app currently has zero cookie-based tracking (Firebase uses IndexedDB/localStorage, not cookies). A full CMP like Cookiebot, Usercentrics, or CookieYes would be overkill and would add an external script dependency, a potential SPOF, and third-party branding on the free tier.
+  - **Silktide Consent Manager** was evaluated but ruled out: script-tag only (no npm/TypeScript), "Powered by Silktide" branding on the free tier, and no native support for per-agency dynamic privacy policy URLs.
   - When Epic K (lead capture) is implemented and tracking is introduced, this decision should be revisited — tools like **iubenda** (Italian-focused, generates agency privacy policy, ~€27/year) or **CookieYes** (free tier, IAB TCF 2.2 compliant, auto cookie scan) become more relevant.
   - Decision record to be created as ADR-0016 before implementation.
 - Minimal cookie banner rendered at the bottom of the public estimate page on first visit (or when consent is absent from `localStorage`).
