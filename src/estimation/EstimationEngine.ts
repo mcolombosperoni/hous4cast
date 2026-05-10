@@ -13,6 +13,11 @@ export class EstimationEngineError extends Error {
   }
 }
 
+/** Round a value up to the nearest thousand (e.g. 105,816 → 106,000). */
+function ceilToThousand(value: number): number {
+  return Math.ceil(value / 1000) * 1000
+}
+
 export class EstimationEngine {
   private readonly config: AgencyConfig
   private readonly spread: number
@@ -66,9 +71,9 @@ export class EstimationEngine {
     const eraFactor        = (input.buildEra   && eraEntries?.find((e) => e.value === input.buildEra)?.coefficient)         ?? 1
     const accessoriesBonus = (input.accessories && accessoryEntries?.find((e) => e.value === input.accessories)?.bonus)     ?? 0
 
-    const mid = Math.ceil(pricePerSqm * input.sqm * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
-    const low = Math.ceil(mid * (1 - this.spread))
-    const high = Math.ceil(mid * (1 + this.spread))
+    const mid = ceilToThousand(pricePerSqm * input.sqm * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
+    const low = ceilToThousand(mid * (1 - this.spread))
+    const high = ceilToThousand(mid * (1 + this.spread))
 
     return { low, mid, high, currency: 'EUR' }
   }
@@ -113,9 +118,9 @@ export class EstimationEngine {
     const eraFactor        = (input.buildEra   && eraEntries?.find((e) => e.value === input.buildEra)?.coefficient)         ?? 1
     const accessoriesBonus = (input.accessories && accessoryEntries?.find((e) => e.value === input.accessories)?.bonus)     ?? 0
 
-    const mid  = Math.ceil(base * zoneMultiplier * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
-    const low  = Math.ceil(mid * (1 - this.spread))
-    const high = Math.ceil(mid * (1 + this.spread))
+    const mid  = ceilToThousand(base * zoneMultiplier * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
+    const low  = ceilToThousand(mid * (1 - this.spread))
+    const high = ceilToThousand(mid * (1 + this.spread))
 
     return { low, mid, high, currency: 'EUR' }
   }

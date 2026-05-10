@@ -79,17 +79,20 @@ describe('EstimationEngine — legacy simple mode', () => {
 // ── Gabetti factor-based engine tests ─────────────────────────────────────────
 const engine = new EstimationEngine(gabettiBustoArsizioConfig)
 
+/** Mirror of the engine's internal rounding: ceil to nearest thousand */
+const ceilK = (v: number) => Math.ceil(v / 1000) * 1000
+
 describe('EstimationEngine — Gabetti factor-based mode', () => {
   it('calculates base price for centro, 71–110 sqm bucket, all factors at default', () => {
     // base 352000 × zone 1.0 × condition 1.0 × floor 1.0 × era 1.0 + 0 bonus = 352000
-    // spread = 0.05 → low = 352000 × 0.95 / high = 352000 × 1.05
+    // spread = 0.05 → low = ceil(352000 × 0.95) / high = ceil(352000 × 1.05)
     const result = engine.estimate({
       zoneId: 'centro', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
     })
     expect(result.mid).toBe(352_000)
-    expect(result.low).toBe(Math.round(352_000 * 0.95))
-    expect(result.high).toBe(Math.round(352_000 * 1.05))
+    expect(result.low).toBe(ceilK(352_000 * 0.95))
+    expect(result.high).toBe(ceilK(352_000 * 1.05))
   })
 
   it('applies zone multiplier correctly (sant_edoardo = 0.98)', () => {
@@ -97,7 +100,7 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
       zoneId: 'sant_edoardo', propertyType: 'appartamento', sqm: 60,
       sqmBucket: '51_70', condition: 'ottimo', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
     })
-    expect(result.mid).toBe(Math.round(224_000 * 0.98))
+    expect(result.mid).toBe(ceilK(224_000 * 0.98))
   })
 
   it('applies condition factor (buono = 0.75)', () => {
@@ -105,7 +108,7 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
       zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
       sqmBucket: 'fino_50', condition: 'buono', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
     })
-    expect(result.mid).toBe(Math.round(160_000 * 0.75))
+    expect(result.mid).toBe(ceilK(160_000 * 0.75))
   })
 
   it('applies floor factor (secondo = 1.02)', () => {
@@ -113,7 +116,7 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
       zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
       sqmBucket: 'fino_50', condition: 'ottimo', floor: 'secondo', buildEra: '2016_oggi', accessories: 'nulla',
     })
-    expect(result.mid).toBe(Math.round(160_000 * 1.02))
+    expect(result.mid).toBe(ceilK(160_000 * 1.02))
   })
 
   it('applies era factor (1968–1980 = 0.65)', () => {
@@ -121,7 +124,7 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
       zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
       sqmBucket: 'fino_50', condition: 'ottimo', floor: 'primo', buildEra: '1968_1980', accessories: 'nulla',
     })
-    expect(result.mid).toBe(Math.round(160_000 * 0.65))
+    expect(result.mid).toBe(ceilK(160_000 * 0.65))
   })
 
   it('applies accessories bonus (box_auto = +15000)', () => {
@@ -134,15 +137,15 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
 
   it('combines all factors: ponzella / 71–110 / buono / secondo / 1981–1995 / cantina_box', () => {
     // 352000 × 0.91 × 0.75 × 1.02 × 0.70 + 18000
-    // spread = 0.05 → low = ceil(mid × 0.95), high = ceil(mid × 1.05)
-    const expected = Math.ceil(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
+    // spread = 0.05 → low = ceilK(mid × 0.95), high = ceilK(mid × 1.05)
+    const expected = ceilK(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
     const result = engine.estimate({
       zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
     })
     expect(result.mid).toBe(expected)
-    expect(result.low).toBe(Math.ceil(expected * 0.95))
-    expect(result.high).toBe(Math.ceil(expected * 1.05))
+    expect(result.low).toBe(ceilK(expected * 0.95))
+    expect(result.high).toBe(ceilK(expected * 1.05))
   })
 
   it('falls back to pricePerSqm × sqm when sqmBucket is not provided', () => {
@@ -195,7 +198,7 @@ describe('EstimationEngine — propertyTypeFactors', () => {
 
   it('propertyTypeFactor combines with all FactorEntries', () => {
     const eng = new EstimationEngine({ ...gabettiBustoArsizioConfig, propertyTypeFactors: { appartamento: 0.8 } })
-    const expected = Math.ceil(352_000 * 0.91 * 0.8 * 0.75 * 1.02 * 0.70 + 18_000)
+    const expected = ceilK(352_000 * 0.91 * 0.8 * 0.75 * 1.02 * 0.70 + 18_000)
     expect(eng.estimate({
       zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
@@ -211,21 +214,21 @@ describe('EstimationEngine — FactorEntry open-list lookup', () => {
     expect(eng.estimate({
       zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
       sqmBucket: 'fino_50', condition: 'buono', floor: 'primo', buildEra: '2016_oggi', accessories: 'nulla',
-    }).mid).toBe(Math.round(160_000 * 0.75))
+    }).mid).toBe(ceilK(160_000 * 0.75))
   })
 
   it('resolves floorFactor from floorEntries (secondo = 1.02)', () => {
     expect(eng.estimate({
       zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
       sqmBucket: 'fino_50', condition: 'ottimo', floor: 'secondo', buildEra: '2016_oggi', accessories: 'nulla',
-    }).mid).toBe(Math.round(160_000 * 1.02))
+    }).mid).toBe(ceilK(160_000 * 1.02))
   })
 
   it('resolves eraFactor from eraEntries (1968_1980 = 0.65)', () => {
     expect(eng.estimate({
       zoneId: 'centro', propertyType: 'appartamento', sqm: 40,
       sqmBucket: 'fino_50', condition: 'ottimo', floor: 'primo', buildEra: '1968_1980', accessories: 'nulla',
-    }).mid).toBe(Math.round(160_000 * 0.65))
+    }).mid).toBe(ceilK(160_000 * 0.65))
   })
 
   it('resolves accessoryBonus from accessoryEntries (box_auto = +15000)', () => {
@@ -264,15 +267,15 @@ describe('EstimationEngine — FactorEntry open-list lookup', () => {
   })
 
   it('combines all FactorEntries: ponzella / 71–110 / buono / secondo / 1981–1995 / cantina_box', () => {
-    // spread for gabetti = 0.05 → low = ceil(mid × 0.95)
-    const expected = Math.ceil(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
+    // spread for gabetti = 0.05 → low = ceilK(mid × 0.95)
+    const expected = ceilK(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
     const result = eng.estimate({
       zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
     })
     expect(result.mid).toBe(expected)
-    expect(result.low).toBe(Math.ceil(expected * 0.95))
-    expect(result.high).toBe(Math.ceil(expected * 1.05))
+    expect(result.low).toBe(ceilK(expected * 0.95))
+    expect(result.high).toBe(ceilK(expected * 1.05))
   })
 })
 
@@ -313,7 +316,7 @@ describe('EstimationEngine — sqmBucketEntries (open-list, Epic Q)', () => {
   it('falls back to pricePerSqm × sqm when bucket value not in sqmBucketEntries', () => {
     // 'unknown' bucket not in entries → fallback: pricePerSqm[appartamento]=3200 × 90 sqm × zoneMultiplier 1.0
     const result = engEntries.estimate({ zoneId: 'centro', propertyType: 'appartamento', sqm: 90, sqmBucket: 'unknown' })
-    expect(result.mid).toBe(Math.round(3200 * 90))
+    expect(result.mid).toBe(ceilK(3200 * 90))
     expect(result.low).toBeGreaterThan(0)
   })
 
@@ -338,7 +341,8 @@ describe('EstimationEngine — sqmBucketEntries (open-list, Epic Q)', () => {
     const result = engBoth.estimate({
       zoneId: 'centro', propertyType: 'appartamento', sqm: 40, sqmBucket: 'fino_50',
     })
-    expect(result.mid).toBe(999)
+    // 999 rounds up to nearest thousand → 1000
+    expect(result.mid).toBe(ceilK(999))
   })
 })
 
