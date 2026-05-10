@@ -1022,7 +1022,7 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
               <div className="space-y-2" data-testid="accessory-entries-list">
                 {(formState.accessoryEntries ?? []).map((entry, i) => (
                   <div
-                    key={entry.value || `new-${i}`}
+                    key={i}
                     data-testid={entry.value ? `accessory-entry-row-${entry.value}` : 'accessory-entry-row'}
                     className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-700"
                   >
@@ -1149,7 +1149,7 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
               <div className="space-y-2" data-testid="sqm-bucket-entries-list">
                 {(formState.sqmBucketEntries ?? []).map((entry, i) => (
                   <div
-                    key={entry.value || `new-${i}`}
+                    key={i}
                     data-testid="factor-entry-row"
                     className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-700"
                   >

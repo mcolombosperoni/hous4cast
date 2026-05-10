@@ -134,15 +134,15 @@ describe('EstimationEngine — Gabetti factor-based mode', () => {
 
   it('combines all factors: ponzella / 71–110 / buono / secondo / 1981–1995 / cantina_box', () => {
     // 352000 × 0.91 × 0.75 × 1.02 × 0.70 + 18000
-    // spread = 0.05 → low = mid × 0.95, high = mid × 1.05
-    const expected = Math.round(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
+    // spread = 0.05 → low = ceil(mid × 0.95), high = ceil(mid × 1.05)
+    const expected = Math.ceil(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
     const result = engine.estimate({
       zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
     })
     expect(result.mid).toBe(expected)
-    expect(result.low).toBe(Math.round(expected * 0.95))
-    expect(result.high).toBe(Math.round(expected * 1.05))
+    expect(result.low).toBe(Math.ceil(expected * 0.95))
+    expect(result.high).toBe(Math.ceil(expected * 1.05))
   })
 
   it('falls back to pricePerSqm × sqm when sqmBucket is not provided', () => {
@@ -195,7 +195,7 @@ describe('EstimationEngine — propertyTypeFactors', () => {
 
   it('propertyTypeFactor combines with all FactorEntries', () => {
     const eng = new EstimationEngine({ ...gabettiBustoArsizioConfig, propertyTypeFactors: { appartamento: 0.8 } })
-    const expected = Math.round(352_000 * 0.91 * 0.8 * 0.75 * 1.02 * 0.70 + 18_000)
+    const expected = Math.ceil(352_000 * 0.91 * 0.8 * 0.75 * 1.02 * 0.70 + 18_000)
     expect(eng.estimate({
       zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
@@ -264,15 +264,15 @@ describe('EstimationEngine — FactorEntry open-list lookup', () => {
   })
 
   it('combines all FactorEntries: ponzella / 71–110 / buono / secondo / 1981–1995 / cantina_box', () => {
-    // spread for gabetti = 0.05 → low = mid × 0.95
-    const expected = Math.round(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
+    // spread for gabetti = 0.05 → low = ceil(mid × 0.95)
+    const expected = Math.ceil(352_000 * 0.91 * 0.75 * 1.02 * 0.70 + 18_000)
     const result = eng.estimate({
       zoneId: 'ponzella', propertyType: 'appartamento', sqm: 90,
       sqmBucket: '71_110', condition: 'buono', floor: 'secondo', buildEra: '1981_1995', accessories: 'cantina_box',
     })
     expect(result.mid).toBe(expected)
-    expect(result.low).toBe(Math.round(expected * 0.95))
-    expect(result.high).toBe(Math.round(expected * 1.05))
+    expect(result.low).toBe(Math.ceil(expected * 0.95))
+    expect(result.high).toBe(Math.ceil(expected * 1.05))
   })
 })
 

@@ -66,9 +66,9 @@ export class EstimationEngine {
     const eraFactor        = (input.buildEra   && eraEntries?.find((e) => e.value === input.buildEra)?.coefficient)         ?? 1
     const accessoriesBonus = (input.accessories && accessoryEntries?.find((e) => e.value === input.accessories)?.bonus)     ?? 0
 
-    const mid = Math.round(pricePerSqm * input.sqm * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
-    const low = Math.round(mid * (1 - this.spread))
-    const high = Math.round(mid * (1 + this.spread))
+    const mid = Math.ceil(pricePerSqm * input.sqm * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
+    const low = Math.ceil(mid * (1 - this.spread))
+    const high = Math.ceil(mid * (1 + this.spread))
 
     return { low, mid, high, currency: 'EUR' }
   }
@@ -113,9 +113,9 @@ export class EstimationEngine {
     const eraFactor        = (input.buildEra   && eraEntries?.find((e) => e.value === input.buildEra)?.coefficient)         ?? 1
     const accessoriesBonus = (input.accessories && accessoryEntries?.find((e) => e.value === input.accessories)?.bonus)     ?? 0
 
-    const mid  = Math.round(base * zoneMultiplier * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
-    const low  = Math.round(mid * (1 - this.spread))
-    const high = Math.round(mid * (1 + this.spread))
+    const mid  = Math.ceil(base * zoneMultiplier * propertyTypeFactor * conditionFactor * floorFactor * eraFactor + accessoriesBonus)
+    const low  = Math.ceil(mid * (1 - this.spread))
+    const high = Math.ceil(mid * (1 + this.spread))
 
     return { low, mid, high, currency: 'EUR' }
   }
