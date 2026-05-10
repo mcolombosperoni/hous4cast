@@ -992,10 +992,17 @@ export const AdminEstimationConfig = ({ configId, isDynamicAgency: isDynamic, on
                         >✕</button>
                       </div>
                     )
-                    // When entry has a value, wrap with specific testid; otherwise the inner div itself is the row
-                    return entry.value
-                      ? <div key={entry.value} data-testid={`factor-entry-row-${entry.value}`}>{innerContent}</div>
-                      : <div key={`new-${i}`}>{innerContent}</div>
+                    // Each row uses a stable index key to prevent React remount (and focus loss)
+                    // when the user types in the editable `value` field.
+                    // The outer wrapper carries the specific factor-entry-row-{value} testid when available.
+                    return (
+                      <div
+                        key={i}
+                        data-testid={entry.value ? `factor-entry-row-${entry.value}` : undefined}
+                      >
+                        {innerContent}
+                      </div>
+                    )
                   })}
                 </div>
                 <button
