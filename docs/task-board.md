@@ -178,6 +178,9 @@
 |---|---|---|---|---|---|
 | T116 | - | - | Fix zone/property-type counters in agency card to reflect runtime overrides (localStorage) | done | `AdminPage` uses `getConfigWithLocalOverrides` + `overrideVersion` refresh |
 | T117 | - | - | Wrap Agency Branding in collapsible section (same UX as Estimation Config) | done | `admin-branding-config-toggle` data-testid added; branding e2e tests updated |
+| T143 | - | - | Fix focus loss on factor entry value field — use stable index key for all entry list rows | done | Affected: conditionEntries, floorEntries, eraEntries, accessoryEntries, sqmBucketEntries |
+| T144 | - | - | Round estimate values to nearest thousand ceiling (Math.ceil(v/1000)×1000) | done | `ceilToThousand()` helper in EstimationEngine; tests updated |
+| T145 | - | - | inject `<meta name="robots" content="noindex,nofollow">` at build time via `VITE_ROBOTS_NOINDEX=true` | done | `robotsNoindexPlugin` in `vite.config.ts`; set by default in GitHub Pages workflow |
 
 ## Epic S — Dynamic agency creation in admin (US-19)
 | ID | Epic | User Story | Task | Status | Notes |
