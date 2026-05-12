@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Request, Response } from "express";
 
 // Mock firebase-functions/v2 to avoid Firebase runtime initialisation outside GCP
 vi.mock("firebase-functions/v2", () => ({
@@ -20,7 +19,7 @@ import { handleLeadNotification } from "./index";
  * Minimal mock for Express Request / Response.
  * We only need the subset used by handleLeadNotification.
  */
-function makeMockRes(): Response {
+function makeMockRes() {
   const res = {
     statusCode: 0,
     body: undefined as unknown,
@@ -33,11 +32,11 @@ function makeMockRes(): Response {
       return res;
     },
   };
-  return res as unknown as Response;
+  return res;
 }
 
-function makeMockReq(method: string, body: unknown = {}): Request {
-  return { method, body } as unknown as Request;
+function makeMockReq(method: string, body: unknown = {}) {
+  return { method, body };
 }
 
 describe("handleLeadNotification", () => {
@@ -49,17 +48,15 @@ describe("handleLeadNotification", () => {
     const req = makeMockReq("GET");
     const res = makeMockRes();
     handleLeadNotification(req, res);
-    const mock = res as unknown as { statusCode: number; body: unknown };
-    expect(mock.statusCode).toBe(405);
-    expect(mock.body).toEqual({ error: "Method Not Allowed" });
+    expect(res.statusCode).toBe(405);
+    expect(res.body).toEqual({ error: "Method Not Allowed" });
   });
 
   it("returns 405 for PUT requests", () => {
     const req = makeMockReq("PUT");
     const res = makeMockRes();
     handleLeadNotification(req, res);
-    const mock = res as unknown as { statusCode: number };
-    expect(mock.statusCode).toBe(405);
+    expect(res.statusCode).toBe(405);
   });
 
   it("returns 200 with ok:true for a valid POST", () => {
@@ -74,18 +71,16 @@ describe("handleLeadNotification", () => {
     });
     const res = makeMockRes();
     handleLeadNotification(req, res);
-    const mock = res as unknown as { statusCode: number; body: unknown };
-    expect(mock.statusCode).toBe(200);
-    expect(mock.body).toMatchObject({ ok: true });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ ok: true });
   });
 
   it("returns 200 even for POST with empty body (scaffold does not validate payload)", () => {
     const req = makeMockReq("POST", {});
     const res = makeMockRes();
     handleLeadNotification(req, res);
-    const mock = res as unknown as { statusCode: number; body: unknown };
-    expect(mock.statusCode).toBe(200);
-    expect(mock.body).toMatchObject({ ok: true });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ ok: true });
   });
 
   it("calls logger.info with the received payload on POST", async () => {
