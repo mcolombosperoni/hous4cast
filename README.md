@@ -92,8 +92,6 @@ cp .env.example .env
 | `VITE_BASE_PATH` | Base path for Vite build (e.g. `/hous4cast/` on GitHub Pages) |
 | `VITE_PUBLIC_BASE_URL` | Public URL used for QR code generation |
 | `VITE_ROBOTS_NOINDEX` | Set to `true` to inject `<meta name="robots" content="noindex,nofollow">` — use for staging/GitHub Pages to prevent search engine indexing |
-> ⚠️ **Firebase plan requirement**: the notification feature (Epic K) uses **Firebase Cloud Functions**, which require the **Blaze (pay-as-you-go)** plan. All other features work on the free Spark plan. Cloud Functions stay within the free quota for typical agency volumes (<2M invocations/month). Set a **billing budget alert** in Google Cloud Console to avoid unexpected charges.
-
 | `VITE_FIREBASE_API_KEY` | Firebase project credentials (from Firebase Console) |
 | `VITE_FIREBASE_AUTH_DOMAIN` | |
 | `VITE_FIREBASE_PROJECT_ID` | |
@@ -137,6 +135,56 @@ Admin (/#/admin)
 3. `localStorage.preferredLocale`
 4. `navigator.language` (normalised)
 5. Fallback: `en`
+
+---
+
+## Firebase Cloud Functions
+
+The notification feature (Epic K) uses Firebase Cloud Functions. They live in the `functions/` directory at the repo root, with their own `package.json`, `tsconfig.json`, and [README](./functions/README.md).
+
+> ⚠️ **Firebase plan**: Cloud Functions require the **Blaze (pay-as-you-go)** plan. Set a billing budget alert in [Google Cloud Console](https://console.cloud.google.com/billing) to avoid unexpected charges. Typical agency volumes stay well within the free quota.
+
+### Codebase structure
+
+```
+hous4cast/
+├── src/                  ← Vite + React SPA
+├── functions/            ← Firebase Cloud Functions (Node 20, TypeScript)
+│   ├── src/index.ts      ← Function source
+│   ├── lib/              ← Compiled JS output (git-ignored)
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── README.md         ← Functions-specific docs (deploy, secrets, logs)
+├── .github/workflows/
+│   ├── release-pages.yml     ← Deploys SPA to GitHub Pages on release tag
+│   └── deploy-functions.yml  ← Deploys Cloud Functions on release tag
+└── firebase.json
+```
+
+### Deploy
+
+**Functions are deployed automatically** by the `deploy-functions.yml` GitHub Actions workflow on every `release/*` tag — the same tags that trigger the SPA deployment. No manual `firebase deploy` from localhost.
+
+To enable the workflow, add a `FIREBASE_SERVICE_ACCOUNT` secret to the GitHub repository:
+
+1. Go to [Google Cloud Console → IAM → Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts?project=hous4cast)
+2. Select `firebase-adminsdk-fbsvc@hous4cast.iam.gserviceaccount.com`
+3. Click **Keys → Add Key → Create new key → JSON** — download the file
+4. Go to **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
+5. Name: `FIREBASE_SERVICE_ACCOUNT`, value: paste the full JSON content
+
+### First-time IAM fix (one-off)
+
+The first Cloud Functions deploy also requires the Cloud Build service account to exist and have the correct role. If the deploy fails with a permission error:
+
+1. Go to [IAM → Grant Access](https://console.cloud.google.com/iam-admin/iam?project=hous4cast)
+2. Add principal: `27465716194@cloudbuild.gserviceaccount.com`
+3. Role: **Cloud Build Service Account** (`roles/cloudbuild.builds.builder`)
+4. Save — then re-run the workflow
+
+### Function secrets (Step 2+)
+
+Function-level secrets (e.g. `RESEND_API_KEY`) are stored in Google Cloud Secret Manager, **not** in `.env` or GitHub Secrets. See [`functions/README.md`](./functions/README.md#secrets) for instructions.
 
 ---
 

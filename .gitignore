@@ -157,3 +157,7 @@ example.pdf
 # Test outputs
 playwright-report/
 test-results/
+
+# Firebase Functions build output
+functions/lib/
+functions/node_modules/
