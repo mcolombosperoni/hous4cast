@@ -6,7 +6,9 @@
     "lint": "eslint --ext .ts .",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "engines": {
     "node": "20"
@@ -20,7 +22,9 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^8.57.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^2.0.0",
+    "@types/express": "^5.0.0"
   },
   "private": true
 }

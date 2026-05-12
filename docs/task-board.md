@@ -1,8 +1,8 @@
 # Task Board
 
 ## Current Increment
-- Epic: K — Lead capture and agent notification (email)
-- Status: `in-progress`
+- Epic: K — Cloud Function scaffold with unit tests ✅
+- Status: `waiting-approval`
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -99,7 +99,7 @@
 ## Backlog (planned, not yet started)
 | Epic | User Story | Description |
 |------|-----------|-------------|
-| K | US-11 | Lead capture and agent notification — save leads to Firestore, email the agent |
+| K | US-11 | Lead capture and agent notification — Step 1 (scaffold) ✅; Step 2 (email) todo; Step 3 (Firestore) optional |
 | M | US-13 | Estimate PDF export — branded downloadable PDF from result page |
 | N | US-14 | Admin leads dashboard — view, filter, export leads from admin panel |
 | T | US-20 | Cookie consent and GDPR compliance — banner on first visit, per-agency privacy policy link |
@@ -110,7 +110,7 @@
 | ID | Epic | User Story | Task | Status | Notes |
 |---|---|---|---|---|---|
 | T147 | K | US-11 | Add `agentEmail` field to `AgencyConfig` and `gabetti-busto-arsizio` static config; add `name` field (optional) to `EstimateInput` and form | todo | Prerequisite for all K tasks |
-| T148 | K | US-11 | **Step 1 — Cloud Function scaffold**: initialise `functions/` directory (`firebase init functions --typescript`); deploy a no-op `onRequest` HTTP function that logs the incoming payload and returns 200; document deploy process in `functions/README.md` | todo | Goal: confirm infra, deploy pipeline and codebase position work end-to-end before any business logic |
+| T148 | K | US-11 | **Step 1 — Cloud Function scaffold**: initialise `functions/` directory; deploy a no-op `onRequest` HTTP function that logs the incoming payload and returns 200; unit tests (5 cases, Vitest) for the extracted `handleLeadNotification` handler; CI step added to `deploy-functions.yml` to run tests before deploy; document in `functions/README.md` | done | Tests: GET/PUT → 405, POST → 200 + logger.info; handler extracted from onRequest wrapper |
 | T149 | K | US-11 | **Step 2 — Email notification**: replace the no-op function with a `sendLeadNotification` HTTP function that calls Resend API server-side; store `RESEND_API_KEY` as a Firebase Function secret; send a formatted HTML email to `agentEmail`; wire the SPA to call the function after form submit (non-blocking) | todo | No lead data stored — function is stateless call-and-send |
 | T150 | K | US-11 | **Step 3 (optional) — Lead persistence in Firestore**: write lead to `leads/{configId}/submissions` after successful email send; Firestore Security Rules: `allow create: if true; allow read,update,delete: if false`; assess GDPR and multi-agency data isolation concerns before proceeding | todo | Optional — blocked on privacy/GDPR analysis and multi-agency isolation decision |
 

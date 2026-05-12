@@ -1,5 +1,6 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
+import type { Request, Response } from "express";
 
 /**
  * T148 — Step 1: no-op scaffold function.
@@ -19,22 +20,27 @@ import { logger } from "firebase-functions/v2";
  *   estimate: { low: number, mid: number, high: number, currency: string }
  * }
  */
+
+/**
+ * Pure handler — extracted for unit testability without Firebase runtime.
+ */
+export function handleLeadNotification(req: Request, res: Response): void {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method Not Allowed" });
+    return;
+  }
+
+  const payload = req.body as unknown;
+  logger.info("[sendLeadNotification] received payload", { payload });
+
+  // Step 1: no-op — just acknowledge receipt
+  res.status(200).json({ ok: true, message: "Lead received (scaffold — no email sent yet)" });
+}
+
 export const sendLeadNotification = onRequest(
   {
     region: "europe-west1",
     cors: true,
   },
-  (req, res) => {
-    if (req.method !== "POST") {
-      res.status(405).json({ error: "Method Not Allowed" });
-      return;
-    }
-
-    const payload = req.body as unknown;
-    logger.info("[sendLeadNotification] received payload", { payload });
-
-    // Step 1: no-op — just acknowledge receipt
-    res.status(200).json({ ok: true, message: "Lead received (scaffold — no email sent yet)" });
-  }
+  handleLeadNotification
 );
-

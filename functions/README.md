@@ -21,6 +21,29 @@ Set a [billing budget alert](https://console.cloud.google.com/billing) in Google
 
 ---
 
+## Testing
+
+Unit tests live in `functions/src/index.test.ts` and run with **Vitest** (same version used by the SPA, but isolated inside `functions/`).
+
+```bash
+cd functions
+npm test          # run once (CI mode)
+npm run test:watch  # watch mode for development
+```
+
+The handler (`handleLeadNotification`) is extracted from the `onRequest` wrapper so it can be tested as a pure Node function without requiring a Firebase runtime. `firebase-functions/v2` and `firebase-functions/v2/https` are mocked via `vi.mock()`.
+
+**Current test coverage (5 cases):**
+- `GET` → 405 Method Not Allowed
+- `PUT` → 405 Method Not Allowed
+- `POST` with full payload → 200 `{ ok: true }`
+- `POST` with empty body → 200 (scaffold does not validate payload shape)
+- `POST` → `logger.info` called with the received payload
+
+Tests run automatically in CI before every deploy — a failing test blocks the deployment.
+
+---
+
 ## Local build (for development only)
 
 ```bash
