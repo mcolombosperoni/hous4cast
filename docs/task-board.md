@@ -106,6 +106,14 @@
 | U | US-21 | Admin authentication with Firebase Auth — email+password and Google Sign-In, AuthGuard, Firestore Security Rules |
 | V | US-22 | GDPR right to erasure — Privacy Policy page per agency, footer link, mailto erasure request, admin-configurable full text IT/EN |
 
+## Epic K — Lead capture and agent notification (US-11)
+| ID | Epic | User Story | Task | Status | Notes |
+|---|---|---|---|---|---|
+| T147 | K | US-11 | Add `agentEmail` field to `AgencyConfig` and `gabetti-busto-arsizio` static config; add `name` field (optional) to `EstimateInput` and form | todo | Prerequisite for all K tasks |
+| T148 | K | US-11 | **Step 1 — Cloud Function scaffold**: initialise `functions/` directory (`firebase init functions --typescript`); deploy a no-op `onRequest` HTTP function that logs the incoming payload and returns 200; document deploy process in `functions/README.md` | todo | Goal: confirm infra, deploy pipeline and codebase position work end-to-end before any business logic |
+| T149 | K | US-11 | **Step 2 — Email notification**: replace the no-op function with a `sendLeadNotification` HTTP function that calls Resend API server-side; store `RESEND_API_KEY` as a Firebase Function secret; send a formatted HTML email to `agentEmail`; wire the SPA to call the function after form submit (non-blocking) | todo | No lead data stored — function is stateless call-and-send |
+| T150 | K | US-11 | **Step 3 (optional) — Lead persistence in Firestore**: write lead to `leads/{configId}/submissions` after successful email send; Firestore Security Rules: `allow create: if true; allow read,update,delete: if false`; assess GDPR and multi-agency data isolation concerns before proceeding | todo | Optional — blocked on privacy/GDPR analysis and multi-agency isolation decision |
+
 > **Epic L (Multi-agency support) superseded by Epic S.** The original goal (a second static agency config) is fully covered by the dynamic agency creation feature: admins can create unlimited agencies from the admin panel without any deployment.
 
 ## Epic P — Fully admin-configurable estimation factor lists (US-16)

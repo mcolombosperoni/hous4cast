@@ -92,6 +92,8 @@ cp .env.example .env
 | `VITE_BASE_PATH` | Base path for Vite build (e.g. `/hous4cast/` on GitHub Pages) |
 | `VITE_PUBLIC_BASE_URL` | Public URL used for QR code generation |
 | `VITE_ROBOTS_NOINDEX` | Set to `true` to inject `<meta name="robots" content="noindex,nofollow">` — use for staging/GitHub Pages to prevent search engine indexing |
+> ⚠️ **Firebase plan requirement**: the notification feature (Epic K) uses **Firebase Cloud Functions**, which require the **Blaze (pay-as-you-go)** plan. All other features work on the free Spark plan. Cloud Functions stay within the free quota for typical agency volumes (<2M invocations/month). Set a **billing budget alert** in Google Cloud Console to avoid unexpected charges.
+
 | `VITE_FIREBASE_API_KEY` | Firebase project credentials (from Firebase Console) |
 | `VITE_FIREBASE_AUTH_DOMAIN` | |
 | `VITE_FIREBASE_PROJECT_ID` | |

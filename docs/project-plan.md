@@ -125,22 +125,26 @@ Key design decisions (to be confirmed):
 
 ## Epic K — Lead capture and agent notification
 
-Goal: after form submission, the seller's contact details are saved and the agent receives an immediate notification (email and/or Telegram), without exposing any API key or lead data to the public.
+Goal: after form submission, the agent receives an immediate email notification. Implemented in three incremental steps to keep each deployment small and verifiable.
+
+**Step 1 — Cloud Function scaffold (current):** deploy a no-op HTTP Cloud Function that logs the incoming payload and returns 200. Goal: confirm that the `functions/` directory, TypeScript build, Firebase deploy pipeline, and Function secret management all work correctly before any business logic is introduced.
+
+**Step 2 — Email notification:** replace the no-op with a `sendLeadNotification` HTTP Function that calls Resend server-side and sends a formatted HTML email to the agency's `agentEmail`. The SPA calls the Function endpoint after form submit (non-blocking — estimate result is shown regardless of success/failure).
+
+**Step 3 (optional) — Lead persistence in Firestore:** write the lead to `leads/{configId}/submissions` after successful email delivery. This step is intentionally deferred pending a GDPR and multi-agency data isolation analysis: with multiple agencies on the same Firebase project, Firestore Security Rules must ensure each agency's admin can only read their own leads — this requires Firebase Authentication (Epic U) to be implemented first.
 
 Key design decisions:
-- **Security model**: Firestore `leads/{configId}/submissions` collection uses **write-only Security Rules** (`allow create: if true; allow read, update, delete: if false`). Lead data is write-only from the public internet — no client can read or list submissions.
-- **Why not client-side email (EmailJS, Brevo, SendGrid, Mailgun directly)?** All require an API key in the JS bundle, which is exposed to anyone who opens DevTools. ❌ Ruled out.
-- **Why not Telegram Bot from client?** Bot token exposed in the bundle — anyone could send spam to the agent's chat. ❌ Ruled out for production (acceptable only for a private/internal demo with no security concerns).
-- **Notification architecture: Firebase Cloud Functions**
-  - A `onDocumentCreated` trigger on `leads/{configId}/submissions/{leadId}` sends the notification server-side. The Blaze (pay-as-you-go) plan is required but the free quota covers thousands of leads at no cost.
-  - API keys stored as Firebase Function secrets (`firebase functions:secrets:set`), never in the client bundle.
-- **Email provider: Resend** — modern, developer-friendly, free tier (3,000 emails/month, 100/day). More than sufficient for a small Italian real estate agency. SendGrid (100/day free) or Brevo (300/day free) are alternatives if Resend is unavailable.
-- **Telegram notification (optional, via Cloud Function)**: the Function can also post to the agent's Telegram chat via Bot API. Bot token stored as a Function secret. Zero cost, instant mobile notification.
-- **Per-agency routing**: `agentEmail` (and optionally `agentTelegramChatId`) added to `AgencyConfig`. The Function resolves the notification target from the configId path — no hardcoding per agency.
-- **Non-blocking submission**: the SPA calls `addDoc()` to Firestore after showing the estimate result. If the write fails, a non-blocking toast is shown; the estimate result remains visible.
-- **`name` field**: added to the estimate form (required or optional, configurable per agency via `AgencyConfig`).
+- **Firebase plan**: requires **Blaze (pay-as-you-go)**. All usage stays within the free quota for typical volumes (<2M Function invocations/month, <125K Firestore writes/month). Set a billing budget alert in Google Cloud Console.
+- **Security model (email)**: `RESEND_API_KEY` stored as a Firebase Function secret (`firebase functions:secrets:set RESEND_API_KEY`) — never in the client bundle or `.env` files.
+- **Security model (Firestore, Step 3)**: `leads/{configId}/submissions` uses write-only Security Rules (`allow create: if true; allow read, update, delete: if false`). Read access for admin dashboard (Epic N) requires `request.auth != null` and `request.auth.uid` matching the agency's registered admin UID — requires Epic U first.
+- **Why not client-side email?** All client-side providers (EmailJS, Brevo, SendGrid direct) expose the API key in the JS bundle. ❌ Ruled out.
+- **Email provider: Resend** — free tier: 3,000 emails/month, 100/day. More than sufficient for a small Italian agency.
+- **`name` field**: added to `EstimateInput` and the estimate form (optional, configurable per agency via `AgencyConfig`).
+- **`agentEmail`**: added to `AgencyConfig` to route notifications per agency.
+- **Non-blocking**: the SPA shows the estimate result before and regardless of the Function response. A non-blocking error message is shown only if the call fails.
+- **`functions/` codebase position**: Firebase Functions live in `functions/` at the repo root, alongside `src/`. TypeScript, built with `tsc`, deployed via `firebase deploy --only functions`.
 
-_Last updated: 2026-05-09_
+_Last updated: 2026-05-12_
 
 ## Epic L — Multi-agency support
 
