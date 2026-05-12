@@ -1,8 +1,8 @@
 # Task Board
 
 ## Current Increment
-- Epic: S+ — Admin UX improvements + codebase cleanup ✅
-- Status: `waiting-approval`
+- Epic: K — Lead capture and agent notification (email)
+- Status: `in-progress`
 
 ## Tasks
 | ID | Epic | User Story | Task | Status | Notes |
@@ -181,6 +181,7 @@
 | T143 | - | - | Fix focus loss on factor entry value field — use stable index key for all entry list rows | done | Affected: conditionEntries, floorEntries, eraEntries, accessoryEntries, sqmBucketEntries |
 | T144 | - | - | Round estimate values to nearest thousand ceiling (Math.ceil(v/1000)×1000) | done | `ceilToThousand()` helper in EstimationEngine; tests updated |
 | T145 | - | - | inject `<meta name="robots" content="noindex,nofollow">` at build time via `VITE_ROBOTS_NOINDEX=true` | done | `robotsNoindexPlugin` in `vite.config.ts`; set by default in GitHub Pages workflow |
+| T146 | - | - | Admin branding save: show visual confirmation that Firestore write succeeded (vs localStorage-only) | todo | Minor UX improvement — add save status indicator to `AdminBrandingConfig` |
 
 ## Epic S — Dynamic agency creation in admin (US-19)
 | ID | Epic | User Story | Task | Status | Notes |
